@@ -1,0 +1,29 @@
+.vs
+.vshistory
+bin
+obj
+node_modules
+*.user
+*.map
+.DS_Store
+logs
+
+# секреты и локальное
+/AI/Inbox
+/AI/Outbox
+**/appsettings.Production.json
+**/appsettings.Development.json
+**/Settings.Production.cs
+**/keys
+
+# фронт Web — результат сборки esbuild/tailwind
+**/wwwroot/build
+
+# Web: окружение DEBUG-машины (шаблон .example в git)
+**/AppSettings.Environment.Local.cs
+
+# Web: результат dotnet publish для Docker-образа
+/Deploy/AutoDispatch.Web/publish
+
+# App: ClickOnce
+/Sources/App/**/*.pfx
