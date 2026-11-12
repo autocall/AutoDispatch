@@ -1,0 +1,87 @@
+@model UsersIndexViewModel
+@{
+    ViewData["Title"] = "Users";
+    var filter = Model.Filter;
+    string Tag(bool active) => active ? "btn btn-xs btn-primary" : "btn btn-xs btn-ghost";
+}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Users</h1>
+    <button class="btn btn-primary btn-sm" hx-get="/Admin/Users/Create?companyId=@filter.CompanyId" hx-target="#modal-content">New user</button>
+</div>
+
+@* фильтры как на Logs: теги — ссылки, поля — Enter, крестик очистки (search) или уход из поля *@
+<div class="card bg-base-100 shadow-sm p-3 mb-4 flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-1">
+        <span class="text-xs opacity-60 w-14">Status</span>
+        <a class="@Tag(filter.Deleted == false)" href="@Model.Link(e => e.Deleted = false)">Active</a>
+        <a class="@Tag(filter.Deleted)" href="@Model.Link(e => e.Deleted = true)">Deleted</a>
+    </div>
+    <form method="get" class="flex flex-row flex-wrap items-end gap-2">
+        <input type="hidden" name="Deleted" value="@filter.Deleted.ToString().ToLower()" />
+        @* подпись внутри поля (daisyUI 5), как Days у календаря на Logs *@
+        <label class="input input-sm w-64">
+            <span class="label">Email</span>
+            <input type="search" name="Email" value="@filter.Email" onchange="this.form.requestSubmit()" onsearch="this.form.requestSubmit()" />
+        </label>
+        <label class="select select-sm w-64">
+            <span class="label">Company</span>
+            <select name="CompanyId" onchange="this.form.requestSubmit()">
+                <option value="">All</option>
+                @foreach (var company in Model.Companies) {
+                    <option value="@company.Id" selected="@(filter.CompanyId == company.Id)">@company.Name</option>
+                }
+            </select>
+        </label>
+        @* Reset — только когда фильтр не пустой: Link без пустых параметров даёт голый адрес *@
+        @if (Model.Link(e => { }) != "/Admin/Users") {
+            <a class="btn btn-ghost btn-sm" href="/Admin/Users">Reset</a>
+        }
+    </form>
+</div>
+<div class="card bg-base-100 shadow-sm overflow-x-auto">
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Time zone</th>
+                <th>Created</th>
+                <th>Client Version</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var user in Model.Users) {
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.UserName</td>
+                <td>@user.CompanyName</td>
+                <td><span class="badge badge-ghost badge-sm">@user.Role</span></td>
+                <td class="text-base-content/60">@user.TimeZoneId</td>
+                <td class="text-base-content/60">@user.CreatedDateTime.ToString("yyyy-MM-dd")</td>
+                <td>@user.ClientVersion</td>
+                <td class="text-right whitespace-nowrap">
+                    @if (filter.Deleted) {
+                        <form class="inline" hx-post="/Admin/Users/Restore/@user.Id" hx-confirm="Restore @user.Email?">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-xs">Restore</button>
+                        </form>
+                    } else {
+                        <a class="btn btn-ghost btn-xs" href="/Admin/Logs?UserName=@Uri.EscapeDataString(user.Email)&Period=24h">Logs</a>
+                        <button class="btn btn-ghost btn-xs" hx-get="/Admin/Users/Edit/@user.Id" hx-target="#modal-content">Edit</button>
+                        <form class="inline" hx-post="/Admin/Users/Delete/@user.Id" hx-confirm="Delete @user.Email?">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-xs text-error">Delete</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        @if (Model.Users.Count == 0) {
+            <tr><td colspan="8" class="text-center opacity-60">Nothing here</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

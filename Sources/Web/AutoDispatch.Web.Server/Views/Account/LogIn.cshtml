@@ -1,0 +1,16 @@
+@model LogInViewModel
+@{
+    ViewData["Title"] = "Log in";
+    Layout = "_Layout";
+}
+<div class="flex justify-center pt-8">
+    <div class="card w-96 bg-base-100 shadow-xl">
+        <div class="card-body">
+            @* полный логотип с надписью — тот же, что в окне входа AppV3 (app_logo.png, 232×200, вектора нет) *@
+            <h1 class="card-title justify-center">
+                <img class="h-32" src="~/images/logo.png" asp-append-version="true" alt="AutoDispatch" />
+            </h1>
+            <partial name="_LogInFormPart" model="Model" />
+        </div>
+    </div>
+</div>

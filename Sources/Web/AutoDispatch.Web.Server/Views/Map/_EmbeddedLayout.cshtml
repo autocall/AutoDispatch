@@ -1,0 +1,20 @@
+@* Карта в WebView2 App (Map?embedded=true): без навигации сайта, тема — из настроек карты (ViewData["Theme"]), не задана — системная *@
+<!DOCTYPE html>
+<html lang="en" data-theme="@ViewData["Theme"]">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Map - AutoDispatch</title>
+    <script>
+        if (!document.documentElement.getAttribute("data-theme")) {
+            document.documentElement.setAttribute("data-theme",
+                window.matchMedia("(prefers-color-scheme: dark)").matches ? "business" : "corporate");
+        }
+    </script>
+    <link rel="stylesheet" href="~/build/app.css" asp-append-version="true" />
+    <script src="~/build/app.js" asp-append-version="true" defer></script>
+</head>
+<body class="h-screen overflow-hidden">
+    @RenderBody()
+</body>
+</html>

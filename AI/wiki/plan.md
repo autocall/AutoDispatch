@@ -13,7 +13,9 @@
 CLAUDE.md и `AI/wiki/{web-architecture,frontend,deploy,logging}.md` из AutoCallV3 — эталон, копируются как есть.
 До старта: проверить диск на хосте (сделано: места хватает), замерить канал Windows-сервер → хост на одном каталоге ~1 ГБ,
 снять список Quartz-джобов с прод-конфига WebV1.
-Критерий: структура создана, таблица «Решить» без открытых строк, влияющих на этапы 1–2.
+Решения этапа приняты 2026-11-11: ключи Guid, поддомен `dispatch.myautocall.net`, БД `autodispatch` + `autodispatch_log`,
+своя Identity только с ролями AutoDispatch (см. «Решить»).
+Критерий: структура создана, таблица «Решить» без открытых строк, влияющих на этапы 1–2 — **выполнен**.
 
 ## 1. Скелет WebV3 для AutoDispatch (1–2 недели)
 
@@ -24,6 +26,10 @@ CLAUDE.md и `AI/wiki/{web-architecture,frontend,deploy,logging}.md` из AutoCa
 Удаляется AutoCall-специфика: Pattern, PreparedPattern, RecordFilter, DatSoap, Proxy, Email, UserSetting.
 Критерий: `/Test`, вход админа, `/Admin/Monitor` с обеими БД ok, `Api/Account/SignIn` отдаёт JWT; контейнер на новом
 поддомене с сертификатом.
+**Сделано 2026-11-11** — [[web]]: скелет скопирован, собирается, `/Test` отвечает, логин-страница и редиректы работают, офлайн-тесты проходят.
+Отступления: `UserSetting` оставлен для секции Map карты; метрики DAT/Truckstop/SIP вырезаны; `RoleEnum` сразу = 7 ролей AutoDispatch.
+Осталось для критерия: миграции `Init` обоих контекстов (делает пользователь, `Scripts/commands.txt`) → вход админа, Monitor, SignIn;
+`npm run build` (Node под текущим пользователем нет); первая публикация контейнера по `Deploy/server-setup.txt`.
 
 ## 2. Модель данных и БД (1–2 недели)
 
@@ -86,7 +92,7 @@ Knockout-viewmodels, Kendo и bootstrap 3 переписываются; един
 
 ## 7. Деплой, перенос данных, переключение (1 неделя)
 
-`Deploy/AutoDispatch.Web/Dockerfile` (копия V3 + volume `/files`), `Deploy/nginx/<поддомен>.conf`, `server-setup.txt`,
+`Deploy/AutoDispatch.Web/Dockerfile` (копия V3 + volume `/files`), `Deploy/nginx/dispatch.myautocall.net.conf`, `server-setup.txt`,
 `Scripts/publish-autodispatch-web.ps1` (контейнер `autodispatch.web`, порт 5005), `Scripts/sync-dispatch-files.ps1`,
 `appsettings.Production.json.example` — [[deploy]].
 Перенос данных по блокам из [[data-migration]]: файлы (147 ГБ) заранее, БД и досинк файлов — в окно переключения,
@@ -104,9 +110,10 @@ Knockout-viewmodels, Kendo и bootstrap 3 переписываются; един
 
 | Вопрос | Варианты / решение | Влияет на |
 |---|---|---|
-| Ключи БД | **Рекомендация: оставить Guid.** Контракт 170 типов и 74 метода, `HistoryId`, ссылки между 29 таблицами; int, как в V3, = переписать контракт и клиент. Единственное сознательное отступление от V3 | схема, перенос, контракт |
-| Поддомен | `dispatch.myautocall.net` или `d3.myautocall.net` | nginx, certbot, `Settings.WebUrl` |
-| Пользователи | **Рекомендация: своя Identity-БД.** Переносятся пользователи с ролями Agent/Warehouse/Dispatcher/Sales/Accounting/Owner/Admin 7 компаний; роли V1 сохраняются (на них завязаны `MinAccessAttribute` и `RolesOperator`); пароли — хэш Identity v2 | Seed, перенос, `RoleEnum` |
+| Ключи БД | **Решено 2026-11-11: Guid, как в V1.** Контракт 170 типов и 74 метода, `HistoryId`, ссылки между 29 таблицами; int, как в V3, = переписать контракт и клиент. Единственное сознательное отступление от V3 | схема, перенос, контракт |
+| Поддомен | **Решено 2026-11-11:** `dispatch.myautocall.net` | nginx, certbot, `Settings.WebUrl` |
+| БД | **Решено 2026-11-11:** `db.myautocall.net`, базы `autodispatch` + `autodispatch_log` (без суффикса `_v3`) | [[deploy]], строки подключения, `DataBase/create autodispatch.sql` |
+| Пользователи | **Решено 2026-11-11: своя Identity-БД.** Переносятся пользователи 7 компаний только с ролями AutoDispatch: Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin (`Permissions.cs:11-27`); остальные роли V1 не заводятся. Роли сохраняются как есть (на них завязаны `MinAccessAttribute` и `RolesOperator`); пароли — хэш Identity v2 | Seed, перенос, `RoleEnum` |
 | Активные компании | **Решено 2026-11-11:** компании с `d_Event` за 6 месяцев — 7 компаний, их пользователи, данные и документы | [[data-migration]] |
 | `d_Event` | **Решено 2026-11-11:** переносить для активных компаний, `Id` сохраняются | [[data-migration]] |
 | `d_Message`, `ChatService` | **Решено 2026-11-11:** не переносить. В App чат мёртвый код, на Web используется только AutoCall-стороной | контракт (−2 метода), App |

@@ -1,0 +1,23 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=db.myautocall.net;Database=autodispatch;User Id=autodispatch;Password=<password>;Encrypt=True;TrustServerCertificate=True;PersistSecurityInfo=True",
+    "LogConnection": "Server=db.myautocall.net;Database=autodispatch_log;User Id=autodispatch;Password=<password>;Encrypt=True;TrustServerCertificate=True;PersistSecurityInfo=True"
+  },
+  "Secrets": {
+    "Jwt": { "PrivateKey": "<random string, 32+ chars, not the development one and not the AutoCall V3 one>" },
+    "System": { "Password": "<password for System and Admin users>", "AllowedIps": [ "<ip allowed to use master password>" ] },
+    "Mailgun": { "ApiKey": "<mailgun api key>", "Domain": "mail.myautocall.net", "From": "AutoDispatch <noreply@myautocall.net>" },
+    "Brokersnapshot": { "ApiToken": "<brokersnapshot.com api token with ApiGeocoding feature>" },
+    "GoogleMap": { "JsKey": "<Google Maps JavaScript API key, V1 Release AppSettings.GoogleMapJsKey, add dispatch.myautocall.net to its referrers>" },
+    "AerisWeather": { "Id": "<AERISWEATHER_ID, GpsV4 gps.client/.env>", "Secret": "<AERISWEATHER_SECRET, same file>" },
+    "Map": { "Key": "<32 random bytes in base64: openssl rand -base64 32; changing it invalidates issued map links>" },
+    "Metric": { "Token": "<random string for Api/Metrics/Add, the same in Deploy/metric_cpu.sh on the DB server>" }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "dispatch.myautocall.net"
+}

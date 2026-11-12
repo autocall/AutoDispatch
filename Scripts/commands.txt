@@ -1,0 +1,63 @@
+## AutoDispatch Web — команды разработчика (PowerShell / Git Bash, из D:\Develop\AutoDispatch\Repo), по образцу AutoCall V3 ##
+
+-------- сборка и запуск --------
+
+cd Sources/Web
+dotnet build AutoDispatch.Web.sln
+dotnet run --project AutoDispatch.Web.Server --launch-profile https   # https://localhost:7092, GET /Test (порты не пересекаются с AutoCall V3 7091)
+dotnet test AutoDispatch.Web.Test                                      # против поднятого сервера
+
+## фронт (Node 24 LTS через nvm; Tailwind v4 CLI + esbuild → wwwroot/build, gitignored) ##
+cd Sources/Web/AutoDispatch.Web.Server
+npm install
+npm run build          # app.css + app.js
+npm run watch          # пересборка при изменении Client/ и Views/
+npm run check          # tsc --noEmit
+
+-------- EF Core миграции (делает пользователь, CLAUDE.md) --------
+
+## инструмент dotnet-ef — версия должна быть не ниже EF Core проекта (10.x) ##
+dotnet tool update --global dotnet-ef
+
+## два контекста: AcDbContext (autodispatch, папка Migrations) и AcLogDbContext (autodispatch_log, папка Migrations/Log) ##
+## создать миграцию (из папки Data; startup-проект даёт строки подключения из appsettings.Development.json) ##
+cd Sources/Web/AutoDispatch.Web.Data
+dotnet ef migrations add Init --context AcDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef migrations add Init --context AcLogDbContext --startup-project ../AutoDispatch.Web.Server -o Migrations/Log
+
+## применить к БД (при старте сервер делает это сам, вручную — так) ##
+dotnet ef database update --context AcDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef database update --context AcLogDbContext --startup-project ../AutoDispatch.Web.Server
+
+## удалить последнюю (ещё не применённую) миграцию ##
+dotnet ef migrations remove --context AcDbContext --startup-project ../AutoDispatch.Web.Server
+
+## список миграций, SQL-скрипт миграции ##
+dotnet ef migrations list --context AcDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef migrations script --context AcDbContext --startup-project ../AutoDispatch.Web.Server -o ../../../DataBase/migration.sql
+
+-------- локальная БД (SQL Express 2022, Windows-аутентификация) --------
+
+sqlcmd -S "(local)\SQLEXPRESS" -E -C -i "DataBase/create autodispatch_local.sql"
+sqlcmd -S "(local)\SQLEXPRESS" -E -C -i "DataBase/create autodispatch_log_local.sql"
+sqlcmd -S "(local)\SQLEXPRESS" -E -C -d autodispatch_log_local -i "DataBase/create log indexes.sql"    # после первого запуска (таблицу Log создаёт sink)
+sqlcmd -S "(local)\SQLEXPRESS" -E -C -Q "select name, collation_name from sys.databases where name like 'autodispatch%'"
+
+-------- боевая БД (db.myautocall.net) --------
+
+## базы и логин приложения — DataBase/create autodispatch.sql; DB CPU — DataBase/grant metrics autodispatch.sql ##
+## перенос данных из autocall — DataBase/migrate from autocall dispatch.sql под sa, блоками; сейчас блок 0 (компании, пользователи),
+## прогон «на сухую» — заменить commit на rollback в конце (AI/wiki/data-migration.md) ##
+
+-------- публикация --------
+
+.\Scripts\publish-autodispatch-web.ps1 -Tag 2026.11.11-1       # npm → dotnet publish → docker build на ububuilder → docker run
+.\Scripts\publish-autodispatch-web.ps1 -SkipNpm                 # без пересборки фронта
+
+## прод: проверка, логи, откат ##
+curl -s https://dispatch.myautocall.net/Test
+docker --context ububuilder logs --tail 50 autodispatch.web
+docker --context ububuilder images autodispatch.web               # теги для отката
+ssh root@67.220.74.190                                           # каталоги /home/autodispatch/{logs,keys,config,download,files}, nginx, certbot
+
+## прод БД (db.myautocall.net): read-only через MCP db-readonly из AutoCall V3; схема — миграции при старте контейнера ##

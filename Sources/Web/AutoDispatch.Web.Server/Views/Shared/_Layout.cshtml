@@ -1,0 +1,77 @@
+@{
+    // Fullscreen: страница занимает всё окно под навигацией без container (карта)
+    var fullscreen = ViewData["Fullscreen"] as bool? == true;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} - AutoDispatch" : "AutoDispatch")</title>
+    @* тема до первой отрисовки: сохранённая, иначе системная; имена тем — Client/app.css и theme_controller.ts *@
+    <script>
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem("theme"); } catch (e) { }
+            if (!theme) { theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "business" : "corporate"; }
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <link rel="icon" href="~/favicon.ico" asp-append-version="true" />
+    <link rel="stylesheet" href="~/build/app.css" asp-append-version="true" />
+    <script src="~/build/app.js" asp-append-version="true" defer></script>
+</head>
+<body class="@(fullscreen ? "h-screen flex flex-col overflow-hidden" : "min-h-screen flex flex-col")">
+    @if (User.Identity?.IsAuthenticated == true) {
+        @* на узком экране: лого и тема/email/Log out — первой строкой, вкладки — строкой ниже (order-last + w-full);
+           с sm — всё в одну строку, вкладки между ними *@
+        <div class="navbar flex-wrap border-b shadow-sm">
+            @* шапка 48 px — надпись в логотипе нечитаема, поэтому только знак из стрелок *@
+            <a class="btn btn-ghost px-2" href="/">
+                <img class="h-8" src="~/images/logo-mark.svg" asp-append-version="true" alt="AutoDispatch" />
+            </a>
+            <div class="order-last flex w-full flex-wrap gap-1 sm:order-none sm:w-auto sm:flex-1">
+                <a class="btn btn-ghost btn-sm" href="/Download">Download</a>
+                @if (User.IsInRole(nameof(RoleEnum.Admin))) {
+                    <a class="btn btn-ghost btn-sm" href="/Admin/Companies">Companies</a>
+                    <a class="btn btn-ghost btn-sm" href="/Admin/Users">Users</a>
+                    <a class="btn btn-ghost btn-sm" href="/Admin/Logs">Logs</a>
+                    <a class="btn btn-ghost btn-sm" href="/Admin/Monitor">Overview</a>
+                    <a class="btn btn-ghost btn-sm" href="/Admin/Metrics">Metrics</a>
+                }
+            </div>
+            @* flex-1 (basis 0) на узком: группа не уходит на свою строку, длинный email обрезается *@
+            <div class="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
+                <partial name="_ThemeTogglePart" />
+                <span class="truncate text-sm opacity-70" title="@User.Identity.Name">@User.Identity.Name</span>
+                <form class="shrink-0" method="post" asp-controller="Account" asp-action="LogOut">
+                    <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
+                </form>
+            </div>
+        </div>
+    } else {
+        <div class="flex justify-end p-2">
+            <partial name="_ThemeTogglePart" />
+        </div>
+    }
+    <main class="@(fullscreen ? "relative min-h-0 flex-1" : "container mx-auto w-full flex-1 p-4")">
+        @RenderBody()
+    </main>
+    @* на fullscreen-страницах (карта) футер не показываем — отнимает высоту *@
+    @if (fullscreen == false) {
+        @* стиль как у шапки: navbar + граница + тень *@
+        <footer class="navbar flex-wrap justify-center gap-1 border-t shadow-sm">
+                  <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 opacity-70">                                                                                                                                                              
+                      <span>&copy; @DateTime.Now.Year - AutoDispatch</span>                                                                                                                                                                                  
+                  <a class="link link-hover" href="tel:+18882338947">(888) 233-8947</a>                                                                                                                     
+                     <a class="link link-hover" href="mailto:support@myautocall.net">support@myautocall.net</a>                                                                                                                           
+                  </div>   
+        </footer>
+    }
+    @* Общая модалка: содержимое грузится htmx-ом в #modal-content, открывает modal_controller по htmx:afterSwap *@
+    <dialog id="modal" class="modal" data-controller="modal" data-action="close->modal#clear">
+        <div class="modal-box" id="modal-content"></div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "autodispatch.web",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "tailwindcss -i Client/app.css -o wwwroot/build/app.css --minify",
+    "build:js": "esbuild Client/app.ts --bundle --minify --sourcemap --target=es2020 --outfile=wwwroot/build/app.js",
+    "watch": "concurrently -n css,js \"tailwindcss -i Client/app.css -o wwwroot/build/app.css --watch\" \"esbuild Client/app.ts --bundle --sourcemap --target=es2020 --outfile=wwwroot/build/app.js --watch\"",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "3.2.2",
+    "cally": "0.9.2",
+    "htmx.org": "2.0.11"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "concurrently": "10.0.6",
+    "daisyui": "5.7.47",
+    "esbuild": "0.28.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5.9.0"
+  }
+}

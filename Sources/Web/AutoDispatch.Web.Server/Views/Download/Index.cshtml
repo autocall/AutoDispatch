@@ -1,0 +1,22 @@
+@model DownloadDto
+@{
+    ViewData["Title"] = "Download";
+}
+
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Download</h1>
+</div>
+
+<div class="card bg-base-100 shadow-sm">
+    <div class="card-body gap-3">
+        @if (Model.Version != null) {
+            @* как в V1: кнопка — установщик, ссылка под ней — манифест ClickOnce *@
+            <div class="flex flex-col items-start gap-2">
+                <a href="@AppSettings.DownloadRequestPath/@AppSettings.DownloadSetupFile" class="btn btn-primary">AutoDispatch @Model.Version</a>
+                <a href="@AppSettings.DownloadRequestPath/@AppSettings.DownloadApplicationFile" class="link">Application</a>
+            </div>
+        } else {
+            <p class="opacity-60">AutoDispatch is not published yet</p>
+        }
+    </div>
+</div>

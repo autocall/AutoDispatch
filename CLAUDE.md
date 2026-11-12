@@ -50,7 +50,7 @@ V3 = **AutoDispatch App** (WPF-клиент, копия V1 без модуля A
 |---|---|
 | `Sources/` | код: `App/AutoDispatch.sln` — клиент (копия `Sources/App` V1: `AutoCall.WPF`, `AutoDispatch.*`, `_Common`, `_Dtos`), `Web/AutoDispatch.Web.sln` — сервер (копия скелета `Sources/Web` AutoCall V3), `Shared/AutoDispatch.Dtos` — общий контракт; у каждой папки свой `Directory.Build.props` |
 | `AI/` | база знаний: `AutoDispatch.md` (хаб), `wiki/`, `llm-wiki.md`, `Inbox/` (gitignored) |
-| `DataBase/` | SQL-скрипты: создание `autodispatch_v3`, перенос из `autocall` |
+| `DataBase/` | SQL-скрипты: создание `autodispatch` + `autodispatch_log`, перенос из `autocall` |
 | `Deploy/` | Ubuntu: Dockerfile, nginx, `server-setup.txt`, `appsettings.Production.json.example` |
 | `Scripts/` | публикация Web и App, синхронизация файлов |
 

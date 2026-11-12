@@ -1,0 +1,224 @@
+@using AutoDispatch.Web.Logic.Monitoring
+@model MetricsIndexViewModel
+@{
+    ViewData["Title"] = "Metrics";
+
+    int? Get(Dictionary<MetricTypeEnum, int> values, MetricTypeEnum type) => values.TryGetValue(type, out var value) ? value : null;
+    // цвета и форматы — в MetricsIndexViewModel, границы шкал — MetricConverter.GetSteps;
+    // CPU и задержка: показывается среднее (Values), цвет — по максимуму за период (StepClass).
+    // Колонки dispatch (long-polling, Request, внешние сервисы) — этап 8 плана
+
+    // период + Server (3) + Users (1) + App exceptions
+    var columns = 1 + 3 + 1 + 1;
+
+    // в БД время в UTC, на странице — локальное время сервера (в контейнере это TZ контейнера)
+    // InvariantCulture: AM/PM не зависит от культуры контейнера
+    var invariant = System.Globalization.CultureInfo.InvariantCulture;
+    string Local(DateTime utc, string format) => DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime().ToString(format, invariant);
+
+    // подпись строки и ссылка на уровень ниже: день → его часы, час → его минуты
+    string RowLabel(MetricRowDto row) => Model.Level switch {
+        MetricLevelEnum.Days => Local(row.Start, "ddd MM/dd"),
+        MetricLevelEnum.Hours => Local(row.Start, "MM/dd hh tt"),
+        _ => Local(row.Start, "MM/dd hh:mm tt")
+    };
+    string RowLink(MetricRowDto row) => Model.Level switch {
+        MetricLevelEnum.Days => $"/Admin/Metrics?level=hours&day={Local(row.Start, "yyyy-MM-dd")}",
+        MetricLevelEnum.Hours => $"/Admin/Metrics?level=minutes&hour={row.Start.ToString("yyyy-MM-ddTHH", invariant)}",
+        _ => null
+    };
+    var period = Model.Level switch {
+        MetricLevelEnum.Days => "Day",
+        MetricLevelEnum.Hours => "Hour",
+        _ => "Minute"
+    };
+    string Tag(bool active) => active ? "btn btn-xs btn-primary" : "btn btn-xs btn-ghost";
+}
+
+@* hx-boost: переходы по вкладкам, крошкам и строкам меняют только #metrics, адрес страницы обновляется *@
+<div id="metrics" hx-boost="true" hx-select="#metrics" hx-target="#metrics" hx-swap="outerHTML">
+
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Metrics</h1>
+</div>
+
+@* фильтры как на Logs. Уровень: теги — последние периоды; клик по строке — уровень ниже; крошки — назад *@
+<div class="card bg-base-100 shadow-sm p-3 mb-4 flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-1">
+        <span class="text-xs opacity-60 w-14">Level</span>
+        <a class="@Tag(Model.Level == MetricLevelEnum.Days)" href="/Admin/Metrics?level=days">Days</a>
+        <a class="@Tag(Model.Level == MetricLevelEnum.Hours)" href="/Admin/Metrics?level=hours">Hours</a>
+        <a class="@Tag(Model.Level == MetricLevelEnum.Minutes)" href="/Admin/Metrics?level=minutes">Minutes</a>
+    </div>
+    @* календарь (Cally, пример daisyUI): выбранный день — его 24 часа; даты — в пределах хранения MetricRetainedDays,
+       границы — по локальному дню сервера, как тег Days; Clear — последние часы *@
+    <form action="/Admin/Metrics" method="get" class="flex flex-row flex-wrap items-end gap-2" data-controller="calendar">
+        <input type="hidden" name="level" value="hours" />
+        <input type="hidden" name="day" data-calendar-target="input" />
+        @* вид текстового поля daisyUI: иконка, префикс label, значение (или бледная подсказка), стрелка выбора *@
+        <button type="button" popovertarget="metrics-calendar" class="input input-sm w-48 cursor-pointer"
+                style="anchor-name: --metrics-calendar">
+            <svg class="size-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <path d="M16 2v4M8 2v4M3 10h18"></path>
+            </svg>
+            <span class="label">Day</span>
+            @if (Model.Day is { } selected) {
+                <span class="grow text-left">@selected.ToString("ddd MM/dd", invariant)</span>
+            } else {
+                <span class="grow text-left opacity-50">Select date</span>
+            }
+            <svg class="size-3 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"></path>
+            </svg>
+        </button>
+        <div popover id="metrics-calendar" class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor: --metrics-calendar"
+             data-calendar-target="popover">
+            <calendar-date class="cally" data-action="change->calendar#select"
+                           min="@DateTime.Now.Date.AddDays(-(AppSettings.MetricRetainedDays - 1)).ToString("yyyy-MM-dd", invariant)"
+                           max="@DateTime.Now.Date.ToString("yyyy-MM-dd", invariant)"
+                           value="@Model.Day?.ToString("yyyy-MM-dd", invariant)">
+                <svg aria-label="Previous" class="fill-current size-4" slot="previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M15.75 19.5 8.25 12l7.5-7.5"></path>
+                </svg>
+                <svg aria-label="Next" class="fill-current size-4" slot="next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="m8.25 4.5 7.5 7.5-7.5 7.5"></path>
+                </svg>
+                <calendar-month></calendar-month>
+            </calendar-date>
+            @if (Model.Day != null) {
+                <div class="p-2 text-right">
+                    <button type="button" class="btn btn-ghost btn-xs" data-action="calendar#clear">Clear</button>
+                </div>
+            }
+        </div>
+        @* по умолчанию (/Admin/Metrics) — последние минуты *@
+        @if (Model.Level != MetricLevelEnum.Minutes || Model.Day != null || Model.Hour != null) {
+            <a class="btn btn-ghost btn-sm" href="/Admin/Metrics">Reset</a>
+        }
+    </form>
+</div>
+
+<div class="mb-2">
+    <div class="breadcrumbs text-sm py-0">
+        <ul>
+            @if (Model.Level == MetricLevelEnum.Days) {
+                <li>Last @AppSettings.MetricRecentPeriods days</li>
+            } else if (Model.Level == MetricLevelEnum.Hours && Model.Day is { } day) {
+                <li><a href="/Admin/Metrics?level=days">Days</a></li>
+                <li>@day.ToString("ddd MM/dd", invariant)</li>
+            } else if (Model.Level == MetricLevelEnum.Hours) {
+                <li><a href="/Admin/Metrics?level=days">Days</a></li>
+                <li>Last @AppSettings.MetricRecentPeriods hours</li>
+            } else if (Model.Hour is { } hour) {
+                <li><a href="/Admin/Metrics?level=days">Days</a></li>
+                <li><a href="/Admin/Metrics?level=hours&day=@Local(hour, "yyyy-MM-dd")">@Local(hour, "ddd MM/dd")</a></li>
+                <li>@Local(hour, "hh tt")</li>
+            } else {
+                <li><a href="/Admin/Metrics?level=days">Days</a></li>
+                <li><a href="/Admin/Metrics?level=hours">Hours</a></li>
+                <li>Last @AppSettings.MetricRecentPeriods minutes</li>
+            }
+        </ul>
+    </div>
+</div>
+
+@* как /Admin/Logs: overflow-x-auto — своя горизонтальная прокрутка и обрезка по скруглению карточки *@
+<div class="card bg-base-100 shadow-sm mb-4 overflow-x-auto">
+    <div>
+        @* у daisyUI border-collapse: separate — линии рисуют ячейки, рамка tr не видна: цвет и вертикальные линии — в app.css;
+           border-l нужен ячейкам второй строки шапки после rowspan-колонки — у них нет соседа слева.
+           Закреплённый th — z-10: у daisyUI z-index нет, и элементы с opacity (прочерк, бледный 0) рисуются поверх него *@
+        <table class="table table-sm table-pin-cols text-center">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="text-left z-10">@period</th>
+                    <td colspan="3" class="border-l">Server</td>
+                    <td class="border-l">Users</td>
+                    <td rowspan="2" class="border-l">App<br /><span class="font-normal">exceptions</span></td>
+                </tr>
+                <tr>
+                    <td class="border-l" title="Average, colored by peak: @Model.StepsHint(MetricTypeEnum.WebCpu, e => e.ToString(), "%")">Web CPU</td>
+                    <td title="Average, colored by peak: @Model.StepsHint(MetricTypeEnum.DbCpu, e => e.ToString(), "%")">DB CPU</td>
+                    <td title="Average latency in seconds, colored by peak: @Model.StepsHint(MetricTypeEnum.GeoLatency, e => Model.Seconds(e), "s") · calls">Geocoding<br /><span class="font-normal">latency, s · calls</span></td>
+                    <td class="border-l" title="App open (peak)">Online</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows) {
+                    var values = row.Values;
+                    var link = RowLink(row);
+                    <tr>
+                        <th class="text-left font-normal whitespace-nowrap z-10">
+                            @if (link != null) {
+                                <a class="link link-hover" href="@link">@RowLabel(row)</a>
+                            } else {
+                                <span class="opacity-70">@RowLabel(row)</span>
+                            }
+                        </th>
+                        <td class="border-l @Model.StepClass(row, MetricTypeEnum.WebCpu)">@Percent(Get(values, MetricTypeEnum.WebCpu))</td>
+                        <td class="@Model.StepClass(row, MetricTypeEnum.DbCpu)">@Percent(Get(values, MetricTypeEnum.DbCpu))</td>
+                        @* цвет — только по задержке (максимум за период); ошибки — отдельно, плашкой у числа *@
+                        <td class="whitespace-nowrap @Model.StepClass(row, MetricTypeEnum.GeoLatency)">
+                            @if (Get(values, MetricTypeEnum.GeoLatency) is { } geoLatency) { @Model.Seconds(geoLatency) } else { @Dash }
+                            @if (Get(values, MetricTypeEnum.GeoCounter) is { } geoCount) { <span class="opacity-60">· @Number(geoCount)</span> }
+                            @ErrorBadge(Get(values, MetricTypeEnum.GeoErrorCounter))
+                        </td>
+                        <td class="border-l @Model.ActiveClass(Get(values, MetricTypeEnum.OnlineUsers))">@Number(Get(values, MetricTypeEnum.OnlineUsers))</td>
+                        @* исключения App — плашка, если они были *@
+                        <td class="border-l">
+                            @(Get(values, MetricTypeEnum.AppExceptions) > 0
+                                ? Badge(Get(values, MetricTypeEnum.AppExceptions))
+                                : Number(Get(values, MetricTypeEnum.AppExceptions)))
+                        </td>
+                    </tr>
+                }
+                @if (Model.Rows.Count == 0) {
+                    <tr><td colspan="@columns" class="opacity-60">Nothing here</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+
+@functions {
+    /// <summary>
+    ///     Прочерк — нет данных: отчётов за период не было </summary>
+    private static readonly Microsoft.AspNetCore.Html.IHtmlContent Dash =
+        new Microsoft.AspNetCore.Html.HtmlString("<span class=\"opacity-40\">—</span>");
+
+    /// <summary>
+    ///     Прочерк — нет данных; ноль бледный — отчёт был, событий не было </summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent Number(int? value) {
+        if (value == null) {
+            return Dash;
+        }
+        return value == 0
+            ? new Microsoft.AspNetCore.Html.HtmlString("<span class=\"opacity-40\">0</span>")
+            : new Microsoft.AspNetCore.Html.HtmlString(value.ToString());
+    }
+
+    /// <summary>
+    ///     CPU в процентах; прочерк — нет данных </summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent Percent(int? value) {
+        return value is { } percent ? new Microsoft.AspNetCore.Html.HtmlString($"{percent}%") : Dash;
+    }
+
+    /// <summary>
+    ///     Ошибки после значения: разделитель и плашка, ячейка не красится; нет ошибок — ничего </summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent ErrorBadge(int? value) {
+        return value > 0
+            ? new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"opacity-60\">·</span> {Badge(value)}")
+            : Microsoft.AspNetCore.Html.HtmlString.Empty;
+    }
+
+    /// <summary>
+    ///     Число ошибок — красный фон у числа строчной высоты (daisyUI badge задаёт свою высоту и раздвигает строку) </summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent Badge(int? value) {
+        return new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"bg-error/40 rounded px-1\">{value}</span>");
+    }
+}

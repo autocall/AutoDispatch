@@ -1,0 +1,15 @@
+@model CompanyFormViewModel
+<form hx-post="/Admin/Companies/Save" hx-target="this" hx-swap="outerHTML" class="flex flex-col gap-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <h3 class="text-lg font-semibold">@(Model.Id == 0 ? "New company" : "Edit company")</h3>
+    <label class="form-control">
+        <span class="label-text">Name</span>
+        <input asp-for="Name" class="input input-bordered w-full" autofocus />
+        <span asp-validation-for="Name" class="text-error text-xs"></span>
+    </label>
+    <div class="modal-action">
+        <button type="button" class="btn" data-action="modal#close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>

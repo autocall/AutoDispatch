@@ -1,0 +1,65 @@
+@import "tailwindcss";
+/* corporate — светлая (синий primary), business — тёмная; выбор хранится в localStorage (theme_controller.ts) */
+@plugin "daisyui" {
+  themes: corporate --default, business --prefersdark;
+}
+/* карточки base-100, фон страницы base-200 и шапка (меню, thead) base-300 — темнее штатных, чтобы слои различались;
+   в светлой теме фон и шапка с синим оттенком */
+@plugin "daisyui/theme" {
+    name: "corporate";
+    --color-base-100: oklch(100% 0 0);
+    --color-base-200: oklch(99% 0.012 250);
+    --color-base-300: oklch(96% 0.014 250);
+    --color-base-400: oklch(88% 0.010 250);
+}
+@plugin "daisyui/theme" {
+    name: "business";
+    --color-base-100: oklch(22% 0.01 250);
+    --color-base-200: oklch(18% 0.02 250);
+    --color-base-300: oklch(14% 0.02 250);
+    --color-base-400: oklch(32% 0.01 250);
+}
+/* меню и шапка таблиц одним цветом; у закреплённого th свой фон daisyUI (base-100) — красится отдельно.
+   В utilities вне вложенных слоёв daisyUI — иначе его правила перекрывают */
+@layer utilities {
+  body {
+    background-color: var(--color-base-200);
+  }
+  .navbar,
+  .table thead,
+  .table-pin-cols thead th {
+    background-color: var(--color-base-300);
+  }
+  /* линии меню и таблиц — base-400 (свой у темы); ширину и сторону задают классы border-* в разметке */
+  .navbar,
+  .table :is(th, td) {
+    border-color: var(--color-base-400);
+  }
+    .navbar {
+        min-height: 3rem; /* 48px; было 4rem = 64px */
+        padding-block: 0.25rem; /* отступ сверху и снизу; было 0.5rem */
+    }
+  /* вертикальные линии между колонками во всех таблицах (цвет — правило выше) */
+  .table :is(th, td) + :is(th, td) {
+    border-left-width: 1px;
+    border-left-style: solid;
+  }
+    .navbar .btn-ghost:hover {
+        --btn-bg: var(--color-base-400); /* фон при наведении */
+        --btn-border: transparent; /* без рамки при наведении */
+    }
+  /* рамка карточек (и таблиц в них) — тем же цветом; у daisyUI у card своей рамки нет */
+  .card {
+    border: 1px solid var(--color-base-400);
+  }
+  /* рамка таблицы внутри card-body (Overview): обёртка — у table скругление не обрезает фон шапки */
+  .table-box {
+    border: 1px solid var(--color-base-400);
+    border-radius: var(--radius-box);
+    overflow-x: auto;
+  }
+}
+/* Razor-разметка лежит вне Client/, указываем явно */
+@source "../Views/**/*.cshtml";
+/* классы цветов метрик собраны в модели страницы (MetricsIndexViewModel) */
+@source "../Models/**/*.cs";

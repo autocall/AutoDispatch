@@ -1,0 +1,63 @@
+@model CompaniesIndexViewModel
+@{
+    ViewData["Title"] = "Companies";
+    string Tag(bool active) => active ? "btn btn-xs btn-primary" : "btn btn-xs btn-ghost";
+}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Companies</h1>
+    <button class="btn btn-primary btn-sm" hx-get="/Admin/Companies/Create" hx-target="#modal-content">New company</button>
+</div>
+
+@* фильтры как на Logs: теги — ссылки, поле — Enter, крестик очистки (search) или уход из поля *@
+<div class="card bg-base-100 shadow-sm p-3 mb-4 flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-1">
+        <span class="text-xs opacity-60 w-14">Status</span>
+        <a class="@Tag(Model.Deleted == false)" href="@Model.Link(false)">Active</a>
+        <a class="@Tag(Model.Deleted)" href="@Model.Link(true)">Deleted</a>
+    </div>
+    <form method="get" class="flex flex-row flex-wrap items-end gap-2">
+        <input type="hidden" name="deleted" value="@Model.Deleted.ToString().ToLower()" />
+        @* подпись внутри поля (daisyUI 5), как Days у календаря на Logs *@
+        <label class="input input-sm w-64">
+            <span class="label">Name</span>
+            <input type="search" name="name" value="@Model.Name" onchange="this.form.requestSubmit()" onsearch="this.form.requestSubmit()" />
+        </label>
+        @if (Model.Deleted || String.IsNullOrEmpty(Model.Name) == false) {
+            <a class="btn btn-ghost btn-sm" href="/Admin/Companies">Reset</a>
+        }
+    </form>
+</div>
+<div class="card bg-base-100 shadow-sm">
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Name</th><th>Id</th><th>Created</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var company in Model.Companies) {
+            <tr>
+                <td>@company.Name</td>
+                <td class="text-base-content/60">@company.Id</td>
+                <td class="text-base-content/60">@company.CreatedDateTime.ToString("yyyy-MM-dd")</td>
+                <td class="text-right whitespace-nowrap">
+                    <a class="link text-sm mr-3" href="/Admin/Users?companyId=@company.Id">Users</a>
+                    @if (Model.Deleted) {
+                        <form class="inline" hx-post="/Admin/Companies/Restore/@company.Id" hx-confirm="Restore @company.Name?">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-xs">Restore</button>
+                        </form>
+                    } else {
+                        <button class="btn btn-ghost btn-xs" hx-get="/Admin/Companies/Edit/@company.Id" hx-target="#modal-content">Edit</button>
+                        <form class="inline" hx-post="/Admin/Companies/Delete/@company.Id" hx-confirm="Delete @company.Name?">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-xs text-error">Delete</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        @if (Model.Companies.Count == 0) {
+            <tr><td colspan="4" class="text-center opacity-60">Nothing here</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

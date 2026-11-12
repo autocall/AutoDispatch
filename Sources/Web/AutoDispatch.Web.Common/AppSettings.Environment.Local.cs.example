@@ -1,0 +1,24 @@
+#if DEBUG
+namespace AutoDispatch.Web.Common;
+
+// Не в git (.gitignore): окружение DEBUG-сборки под машину. Скопировать в AppSettings.Environment.Local.cs и поправить пути.
+public partial class AppSettings {
+
+    public const string Website = "https://localhost:7092";
+    public const string DataBaseName = "autodispatch_local";
+    /// <summary>
+    ///     Логи Serilog, журнал входов, активность — отдельная БД </summary>
+    public const string LogDataBaseName = "autodispatch_log_local";
+
+    #region [ Paths ]
+
+    public const string LogsPath = @"D:\Develop\AutoDispatch\Data\logs\";
+    public const string KeysPath = @"D:\Develop\AutoDispatch\Data\keys\";
+    public const string DownloadPath = @"D:\Develop\AutoDispatch\Data\download\";
+    /// <summary>
+    ///     Документы dispatch: каталог {EntityId} груза, карриера или setup packet (V1 FilePath, E:\Files) </summary>
+    public const string FilesPath = @"D:\Develop\AutoDispatch\Data\files\";
+
+    #endregion [ Paths ]
+}
+#endif

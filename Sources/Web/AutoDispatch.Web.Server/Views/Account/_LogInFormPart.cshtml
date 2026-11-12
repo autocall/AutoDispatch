@@ -1,0 +1,29 @@
+@model LogInViewModel
+@* htmx-фрагмент: при ошибке сервер возвращает его же, при успехе — заголовок HX-Redirect *@
+<form method="post" asp-controller="Account" asp-action="LogIn"
+      hx-post="@Url.Action("LogIn", "Account")" hx-target="this" hx-swap="outerHTML"
+      data-controller="login" data-login-error="@(Model.Error != null ? "true" : "false")"
+      class="flex flex-col gap-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ReturnUrl" />
+    @if (Model.Error != null) {
+        <div role="alert" class="alert alert-error text-sm">@Model.Error</div>
+    }
+    <label class="form-control">
+        <span class="label-text">Email</span>
+        <input asp-for="Email" type="email" autocomplete="username" required class="input input-bordered w-full" />
+        <span asp-validation-for="Email" class="text-error text-xs"></span>
+    </label>
+    <label class="form-control">
+        <span class="label-text">Password</span>
+        <input asp-for="Password" type="password" autocomplete="current-password" required
+               class="input input-bordered w-full" data-login-target="password" />
+        <span asp-validation-for="Password" class="text-error text-xs"></span>
+    </label>
+    <label class="label cursor-pointer justify-start gap-2">
+        <input asp-for="RememberMe" type="checkbox" class="checkbox checkbox-sm" />
+        <span class="label-text">Remember me</span>
+    </label>
+    <button type="submit" class="btn btn-primary" data-login-target="submit">Log in</button>
+    <a class="link text-sm text-center" href="/Account/ForgotPassword">Forgot password?</a>
+</form>

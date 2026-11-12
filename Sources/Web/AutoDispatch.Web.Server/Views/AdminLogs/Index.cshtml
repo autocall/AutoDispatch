@@ -1,0 +1,205 @@
+@using AutoDispatch.Web.Logic.Dtos.Log
+@model LogsIndexViewModel
+@{
+    ViewData["Title"] = "Logs";
+    var filter = Model.Filter;
+    var levels = AutoDispatch.Web.Data.Entities.Log.LogEntry.Levels;
+    // цветные метки — soft, как статусы на Home и Overview
+    string Badge(string level) => level switch {
+        "Fatal" or "Error" => "badge-error badge-soft",
+        "Warning" => "badge-warning badge-soft",
+        "Information" => "badge-info badge-soft",
+        _ => "badge-ghost"
+    };
+    string Tag(bool active) => active ? "btn btn-xs btn-primary" : "btn btn-xs btn-ghost";
+    // счётчик тега уровня — записи этого уровня и выше за сутки
+    int DayCount(string level) => levels.Skip(Array.IndexOf(levels, level)).Sum(l => Model.Stats.LastDay.GetValueOrDefault(l));
+    var pageUrl = Model.Link(f => { }, keepPage: true);
+    // JSON в Details (критерии паттерна, тело запроса) — с отступами, остальное как есть
+    string Pretty(string details) {
+        var text = details.TrimStart();
+        if (text.StartsWith('{') || text.StartsWith('[')) {
+            try {
+                return Newtonsoft.Json.Linq.JToken.Parse(text).ToString(Newtonsoft.Json.Formatting.Indented);
+            } catch (Newtonsoft.Json.JsonException) {
+            }
+        }
+        return details;
+    }
+    var lastId = Model.Entries.Count == AppSettings.LogPageSize ? Model.Entries[^1].Id : (int?)null;
+    // в БД UTC, на странице и в календаре — локальное время сервера (в контейнере это TZ контейнера), как на Metrics
+    var invariant = System.Globalization.CultureInfo.InvariantCulture;
+    string Local(DateTime utc, string format) => DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime().ToString(format, invariant);
+    var range = filter.DayRange();
+}
+
+@* hx-boost: теги, форма и Older меняют только #logs, адрес обновляется; Live — тот же запрос раз в 10 с *@
+<div id="logs" hx-boost="true" hx-select="#logs" hx-target="#logs" hx-swap="outerHTML"
+     @if (filter.Live) { <text>hx-get="@pageUrl" hx-trigger="every 10s"</text> }>
+
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Logs</h1>
+    <span class="text-sm opacity-60">last @AppSettings.LogPageSize, server time (@DateTime.Now.ToString("HH:mm", invariant))</span>
+</div>
+
+<div class="card bg-base-100 shadow-sm p-3 mb-4 flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-1">
+        <span class="text-xs opacity-60 w-14">Level</span>
+        @foreach (var level in new[] { "Information", "Warning", "Error" }) {
+            <a class="@Tag(filter.Level == level)" href="@Model.Link(f => f.Level = f.Level == level ? null : level)" title="this level and above, last 24 h">
+                @level <span class="opacity-60 ml-1">@DayCount(level)</span>
+            </a>
+        }
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+        <span class="text-xs opacity-60 w-14">Source</span>
+        <a class="@Tag(filter.Scope.Count == 0 && filter.Group == null)" href="@Model.Link(f => { f.Scope.Clear(); f.Group = null; })">All</a>
+        <a class="@Tag(filter.Scope.Count == 0 && filter.Group == "app")" href="@Model.Link(f => { f.Scope.Clear(); f.Group = "app"; })">App</a>
+        <a class="@Tag(filter.Scope.Count == 0 && filter.Group == "server")" href="@Model.Link(f => { f.Scope.Clear(); f.Group = "server"; })">Server</a>
+        <span class="opacity-30">|</span>
+        @foreach (var scope in Model.Scopes) {
+            var active = filter.Scope.Contains(scope);
+            <a class="@Tag(active)" title="@scope"
+               href="@Model.Link(f => { f.Group = null; if (active) { f.Scope.Remove(scope); } else { f.Scope.Add(scope); } })">
+                @LogsIndexViewModel.ScopeLabel(scope)
+            </a>
+        }
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+        <span class="text-xs opacity-60 w-14">Period</span>
+        @foreach (var period in LogFilterDto.Periods) {
+            <a class="@Tag(filter.Period == period)" href="@Model.Link(f => { f.Period = f.Period == period ? null : period; f.Days = null; })">@period</a>
+        }
+        <span class="opacity-30">|</span>
+                @* разкомментить если логиролвание Requests будет включено  *@
+        @* <a class="@Tag(filter.Requests)" href="@Model.Link(f => f.Requests = !f.Requests)" title="HTTP request log rows">Requests</a> *@
+        <a class="@Tag(filter.Live)" href="@Model.Link(f => f.Live = !filter.Live)" title="reload every 10 s">Live</a>
+    </div>
+    @* выбор периода в календаре отправляет форму целиком (calendar#select), выбранные дни отменяют Period;
+       поля — Enter, крестик очистки (search) или уход из поля *@
+    <form method="get" class="flex flex-row flex-wrap items-end gap-2" data-controller="calendar">
+        <input type="hidden" name="Level" value="@filter.Level" />
+        @foreach (var scope in filter.Scope) {
+            <input type="hidden" name="Scope" value="@scope" />
+        }
+        <input type="hidden" name="Group" value="@filter.Group" />
+        <input type="hidden" name="Period" value="@(range == null ? filter.Period : "")" />
+        <input type="hidden" name="Requests" value="@(filter.Requests ? "true" : "")" />
+        <input type="hidden" name="Days" value="@filter.Days" data-calendar-target="input" />
+        @* подпись внутри поля (daisyUI 5), как Days у календаря *@
+        <label class="input input-sm w-48">
+            <span class="label">User</span>
+            <input type="search" name="UserName" value="@filter.UserName" onchange="this.form.requestSubmit()" onsearch="this.form.requestSubmit()" />
+        </label>
+        <label class="input input-sm w-64">
+            <span class="label">Text</span>
+            <input type="search" name="Text" value="@filter.Text" onchange="this.form.requestSubmit()" onsearch="this.form.requestSubmit()" />
+        </label>
+        <label class="input input-sm w-64">
+            <span class="label">Session</span>
+            <input type="search" name="Session" value="@filter.Session" onchange="this.form.requestSubmit()" onsearch="this.form.requestSubmit()" />
+        </label>
+        @* календарь Cally как на Metrics, но calendar-range: два клика — период, два клика по одному дню — день;
+           дни по локальному времени сервера, в пределах LogRetainedDays *@
+        <button type="button" popovertarget="logs-calendar" class="input input-sm w-auto cursor-pointer" style="anchor-name: --logs-calendar">
+            <svg class="size-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <path d="M16 2v4M8 2v4M3 10h18"></path>
+            </svg>
+            <span class="label">Days</span>
+            @if (range is { } selected) {
+                <span class="whitespace-nowrap">
+                    @selected.From.ToString("ddd MM/dd", invariant)@(selected.To != selected.From ? $" – {selected.To.ToString("ddd MM/dd", invariant)}" : "")
+                </span>
+            } else {
+                <span class="opacity-50">Any</span>
+            }
+            <svg class="size-3 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"></path>
+            </svg>
+        </button>
+        <div popover id="logs-calendar" class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor: --logs-calendar"
+             data-calendar-target="popover">
+            <calendar-range class="cally" data-action="change->calendar#select"
+                            min="@DateTime.Now.Date.AddDays(-(AppSettings.LogRetainedDays - 1)).ToString("yyyy-MM-dd", invariant)"
+                            max="@DateTime.Now.Date.ToString("yyyy-MM-dd", invariant)"
+                            value="@filter.Days">
+                <svg aria-label="Previous" class="fill-current size-4" slot="previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M15.75 19.5 8.25 12l7.5-7.5"></path>
+                </svg>
+                <svg aria-label="Next" class="fill-current size-4" slot="next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="m8.25 4.5 7.5 7.5-7.5 7.5"></path>
+                </svg>
+                <calendar-month></calendar-month>
+            </calendar-range>
+            @if (range != null) {
+                <div class="p-2 text-right">
+                    <button type="button" class="btn btn-ghost btn-xs" data-action="calendar#clear">Clear</button>
+                </div>
+            }
+        </div>
+        @* Reset — только когда фильтр не пустой: Link без пустых параметров даёт голый адрес;
+           Level Information подставляет контроллер по умолчанию — изменением не считается *@
+        @if (Model.Link(f => { if (f.Level == "Information") { f.Level = null; } }) != "/Admin/Logs") {
+            <a class="btn btn-ghost btn-sm" href="/Admin/Logs">Reset</a>
+        }
+    </form>
+</div>
+
+<div class="card bg-base-100 shadow-sm overflow-x-auto">
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Time</th><th>Level</th><th>Scope</th><th>User</th><th>Session</th><th>Path</th><th>Message</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var entry in Model.Entries) {
+            <tr>
+                @* серверное время; подсказка — локальное время браузера *@
+                <td class="whitespace-nowrap text-base-content/70" data-controller="localtime" data-localtime-utc-value="@entry.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")">
+                    @Local(entry.TimeStamp, "MM-dd HH:mm:ss")
+                </td>
+                <td><span class="badge badge-sm @Badge(entry.Level)">@entry.Level</span></td>
+                <td class="text-base-content/70">
+                    @if (entry.Scope != null) {
+                        <a class="link link-hover" href="@Model.Link(f => { f.Group = null; f.Scope = [entry.Scope]; })">@entry.Scope</a>
+                    }
+                </td>
+                <td class="text-base-content/70">
+                    @if (entry.UserName != null) {
+                        <a class="link link-hover" href="@Model.Link(f => f.UserName = entry.UserName)">@entry.UserName</a>
+                    }
+                </td>
+                <td class="text-base-content/70">
+                    @if (entry.Session != null) {
+                        @* в колонке — хвост id (yyyyMMdd-HHmmss-xxxxxx → xxxxxx), полный id в подсказке *@
+                        <a class="link link-hover" href="@Model.Link(f => f.Session = entry.Session)" title="@entry.Session">@entry.Session[(entry.Session.LastIndexOf('-') + 1)..]</a>
+                    }
+                </td>
+                <td class="text-base-content/70 max-w-48 truncate">@entry.RequestPath</td>
+                <td>
+                    @if (entry.Details != null) {
+                        <details>
+                            <summary class="cursor-pointer">@entry.Message</summary>
+                            <pre class="text-xs whitespace-pre-wrap mt-1 p-2 bg-base-200 rounded">@Pretty(entry.Details)</pre>
+                        </details>
+                    } else {
+                        @entry.Message
+                    }
+                </td>
+            </tr>
+        }
+        @if (Model.Entries.Count == 0) {
+            <tr><td colspan="7" class="text-center opacity-60">Nothing here</td></tr>
+        }
+        </tbody>
+    </table>
+    @if (lastId != null) {
+        <div class="p-2 text-center">
+            <a class="btn btn-ghost btn-sm" href="@Model.Link(f => f.Before = lastId, keepPage: true)">Older</a>
+        </div>
+    }
+</div>
+
+</div>

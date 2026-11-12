@@ -3,7 +3,7 @@
 Скрипт `DataBase/migrate from autocall dispatch.sql` по образцу `AutoCallV3/Repo/DataBase/migrate from autocall.sql`:
 разовый T-SQL на `db.myautocall.net` под sa, `autocall.dbo.*` → новая БД, блоками, перезапуск перезаливает блок целиком.
 Отличие от V3: ключи Guid сохраняются, маппинга `EntityId` нет; маппятся только `CompanyId/UserId` → новые Identity-идентификаторы
-(**решить** в [[plan]]: Guid остаются). Замеры сняты 2026-11-11 на боевой `autocall`.
+(решено 2026-11-11: Guid остаются). Замеры сняты 2026-11-11 на боевой `autocall`.
 
 ## Что переносим — решено 2026-11-11
 
@@ -30,7 +30,7 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 
 | Блок | Что | Способ |
 |---|---|---|
-| 0 | 7 компаний, их пользователи с ролями dispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin) | список в скрипте, как список Admin по email в V3; временные таблицы маппинга `CompanyId/UserId` |
+| 0 | 7 компаний, их пользователи только с ролями AutoDispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin), другие роли V1 не переносятся | **написан 2026-11-12** (см. ниже) |
 | 1 | справочники: 25 `d_*` без `d_Message`, `d_Load`, `d_Event`, `d_HistoryObject`, `d_HistoryLocation*` | `insert … select … where CompanyId in (активные)`, одной транзакцией на таблицу |
 | 2 | `d_Load` + `d_HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | то же |
 | 3 | `d_HistoryObject` | пакеты по 100 000 `Id` в транзакции (~50 пакетов), `set identity_insert on`, возобновляемо с последнего `Id`, в конце `dbcc checkident reseed` |
@@ -39,6 +39,21 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 
 `Id` в блоках 3–4 сохраняются: на `d_HistoryObject.Id` ссылаются `HistoryId` в `d_Load`, `d_HistoryLocation*`, справочниках;
 `d_Event.Id` — точка отсчёта `lastEventId` клиента и `max(Id)` сервера.
+
+### Блок 0 — компании и пользователи (написан 2026-11-12, на боевой БД не прогонялся)
+
+Отбор: компании с `d_Event` за 6 месяцев → их пользователи `IsDeleted = 0` с хотя бы одной ролью AutoDispatch (имена ролей
+`Roles.Name` без пробелов = `RoleName` V1) **и входом за 6 месяцев** (`autocall_reference.dbo.Session.LastActivity`, как в V3 —
+бывшие сотрудники без входа не нужны). Email, уже имеющийся в `IdentityUsers`, пропускается; компания с тем же `Name` переиспользуется.
+
+Отличия от V3-скрипта: роли переносятся **все**, какие есть у пользователя (в V1 `RoleName` — флаги, клиент считает сумму `roles`,
+[[protocol]]), `Admin` V1 остаётся `Admin` (в V3 Admin давался по списку email, остальные → Owner) — в [[web]] `GetRoleAsync`
+берёт первую роль, форма `/Admin/Users` при сохранении оставит одну; это принять или поправить на этапах 3–6. Маппинг
+`Guid → int` хранится в постоянных таблицах `dbo._MigrateCompany(LegacyId, NewId)` и `dbo._MigrateUser(LegacyId, NewId, NewCompanyId)`,
+а не во временных, потому что блоки 1–5 — отдельные прогоны и подставляют по ним `CompanyId`/`CreatedById`/`ModifiedById` в `d_*`.
+Диапазоны Id: компании 10 000 000+, пользователи 20 000 000+; повторный запуск удаляет их и заливает заново. Не переносится `Users.Name`
+(отображаемое имя) — в `AcUser` колонки нет, решить при переносе `d_Event`/истории (кто что делал). `TimeZoneId = 'UTC'`, как в V3.
+В конце скрипт выводит итоги и список пользователей активных компаний с ролью AutoDispatch, которые **не** попали в перенос — для контроля.
 
 ### Отбор `d_HistoryObject` — правило QuartzService наоборот
 

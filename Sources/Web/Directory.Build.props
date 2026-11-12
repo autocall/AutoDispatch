@@ -1,0 +1,9 @@
+<Project>
+  <!-- Отдельный от клиента (Sources/Directory.Build.props): web-проекты не наследуют Nullable enable и AutoMapper 12 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS1998</NoWarn>
+  </PropertyGroup>
+</Project>

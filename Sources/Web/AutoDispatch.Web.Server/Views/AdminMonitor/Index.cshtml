@@ -1,0 +1,107 @@
+@model MonitorIndexViewModel
+@{
+    ViewData["Title"] = "Overview";
+    var uptime = DateTime.UtcNow - Model.StartedAt;
+    int Count(Dictionary<string, int> stats, string level) => stats.GetValueOrDefault(level);
+}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Overview</h1>
+    <span class="text-sm opacity-60">@DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") UTC</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-base">Application</h2>
+            <p>Version @Model.Version, @Model.Environment</p>
+            <p>Up @((int)uptime.TotalHours)h @uptime.Minutes m, since @Model.StartedAt.ToString("yyyy-MM-dd HH:mm")</p>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-base">Databases</h2>
+            @foreach (var db in Model.Databases) {
+                <p>
+                    <span class="badge badge-soft badge-sm @(db.Ok ? "badge-success" : "badge-error")">@(db.Ok ? "OK" : "Failed")</span>
+                    @db.Name, @db.Milliseconds.ToString("F0") ms
+                    @if (db.Error != null) { <span class="text-error text-xs">@db.Error</span> }
+                </p>
+            }
+            @if (Model.LogTable != null) {
+                <p class="opacity-70">Log table: @Model.LogTable.Rows.ToString("N0") rows, @Model.LogTable.Megabytes.ToString("F0") MB</p>
+                <p class="opacity-70">
+                    Growth: last 24 h +@Model.LogTable.LastDayRows.ToString("N0") rows,
+                    avg per day (7 d) +@Model.LogTable.DayAverageRows.ToString("N0") rows
+                </p>
+            }
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-base">Log events</h2>
+            <div class="table-box">
+                <table class="table table-sm">
+                    <thead><tr><th></th><th>Hour</th><th>Day</th></tr></thead>
+                    <tbody>
+                        @foreach (var level in new[] { "Fatal", "Error", "Warning", "Information" }) {
+                            <tr>
+                                <td>@level</td>
+                                <td>@Count(Model.LogStats.LastHour, level)</td>
+                                <td>@Count(Model.LogStats.LastDay, level)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <a class="link text-sm" href="/Admin/Logs?Level=Warning">Warnings and errors</a>
+        </div>
+    </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-base">Online now (@Model.Online.Count, last @AppSettings.OnlineTimeout.TotalMinutes min)</h2>
+            <div class="table-box">
+                <table class="table table-sm">
+                    <thead><tr><th>User</th><th>Company</th><th>Source</th><th>Last seen</th></tr></thead>
+                    <tbody>
+                    @foreach (var user in Model.Online) {
+                        <tr>
+                            <td>@user.Email</td>
+                            <td class="text-base-content/70">@user.CompanyId</td>
+                            <td><span class="badge badge-ghost badge-sm">@user.Source</span></td>
+                            <td class="text-base-content/70">@user.LastSeen.ToString("HH:mm:ss")</td>
+                        </tr>
+                    }
+                    @if (Model.Online.Count == 0) {
+                        <tr><td colspan="4" class="text-center opacity-60">Nobody</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-base">Recent logins</h2>
+            <div class="table-box">
+                <table class="table table-sm">
+                    <thead><tr><th>Time</th><th>Email</th><th>Source</th><th>Result</th><th>IP</th></tr></thead>
+                    <tbody>
+                    @foreach (var login in Model.RecentLogins) {
+                        <tr>
+                            <td class="text-base-content/70 whitespace-nowrap">@login.DateTime.ToString("MM-dd HH:mm")</td>
+                            <td>@login.Email</td>
+                            <td><span class="badge badge-ghost badge-sm">@login.Source</span></td>
+                            <td><span class="badge badge-soft badge-sm @(login.Success ? "badge-success" : "badge-error")">@(login.Success ? "OK" : "Failed")</span></td>
+                            <td class="text-base-content/70">@login.Ip</td>
+                        </tr>
+                    }
+                    @if (Model.RecentLogins.Count == 0) {
+                        <tr><td colspan="5" class="text-center opacity-60">Nothing here</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

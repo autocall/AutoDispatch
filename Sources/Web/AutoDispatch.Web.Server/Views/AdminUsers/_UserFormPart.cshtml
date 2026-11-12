@@ -1,0 +1,56 @@
+@model UserFormViewModel
+<form hx-post="/Admin/Users/Save" hx-target="this" hx-swap="outerHTML" class="flex flex-col gap-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <h3 class="text-lg font-semibold">@(Model.Id == 0 ? "New user" : "Edit user")</h3>
+    <div asp-validation-summary="ModelOnly" class="text-error text-sm"></div>
+    <label class="form-control">
+        <span class="label-text">Company</span>
+        <select asp-for="CompanyId" class="select select-bordered w-full">
+            @foreach (var company in Model.Companies) {
+                <option value="@company.Id">@company.Name</option>
+            }
+        </select>
+        <span asp-validation-for="CompanyId" class="text-error text-xs"></span>
+    </label>
+    <label class="form-control">
+        <span class="label-text">Email</span>
+        <input asp-for="Email" type="email" class="input input-bordered w-full" autofocus />
+        <span asp-validation-for="Email" class="text-error text-xs"></span>
+    </label>
+    <label class="form-control">
+        <span class="label-text">Name (shown in the app; empty = email)</span>
+        <input asp-for="UserName" class="input input-bordered w-full" />
+        <span asp-validation-for="UserName" class="text-error text-xs"></span>
+    </label>
+    <div class="grid grid-cols-2 gap-3">
+        <label class="form-control">
+            <span class="label-text">Role</span>
+            <select asp-for="Role" class="select select-bordered w-full">
+                @foreach (var role in Enum.GetValues<RoleEnum>().Where(e => e != RoleEnum.Unknown)) {
+                    <option value="@role">@role</option>
+                }
+            </select>
+            <span asp-validation-for="Role" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Time zone</span>
+            <input asp-for="TimeZoneId" list="timezones" class="input input-bordered w-full" />
+            <datalist id="timezones">
+                @foreach (var tz in Model.TimeZones) {
+                    <option value="@tz"></option>
+                }
+            </datalist>
+            <span asp-validation-for="TimeZoneId" class="text-error text-xs"></span>
+        </label>
+    </div>
+    <label class="form-control">
+        <span class="label-text">@(Model.Id == 0 ? "Password" : "New password (empty = keep current)")</span>
+        <input asp-for="Password" type="password" autocomplete="new-password" class="input input-bordered w-full" />
+        <span asp-validation-for="Password" class="text-error text-xs"></span>
+    </label>
+    <div class="modal-action">
+        <button type="button" class="btn" data-action="modal#close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>

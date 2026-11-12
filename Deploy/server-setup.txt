@@ -1,0 +1,32 @@
+## Первичная настройка хоста 67.220.74.190 для AutoDispatch.Web (Docker, nginx, certbot уже стоят — AutoCall V3, Safer.Fuzzy) ##
+
+-------- каталоги под volume контейнера --------
+sudo mkdir -p /home/autodispatch/logs /home/autodispatch/keys /home/autodispatch/config /home/autodispatch/download /home/autodispatch/files
+# download/ — /Download сайта: ClickOnce-публикация AutoDispatch App (setup.exe, AutoDispatch.application, Application Files/)
+# files/ — документы dispatch, каталог {EntityId} (V1 E:\Files, ~150 ГБ; заливка — Scripts/sync-dispatch-files.ps1, этап 7)
+# конфиг с секретами: шаблон Deploy/AutoDispatch.Web/appsettings.Production.json.example, заполнить и положить сюда
+sudo nano /home/autodispatch/config/appsettings.Production.json
+sudo chmod 600 /home/autodispatch/config/appsettings.Production.json
+
+-------- БД на db.myautocall.net --------
+# DataBase/create autodispatch.sql — базы autodispatch, autodispatch_log и логин autodispatch (пароль из appsettings.Production.json)
+# DataBase/grant metrics autodispatch.sql — DB CPU для метрик
+# проверить доступ с хоста: nc -z -w5 db.myautocall.net 1433
+# после первого старта контейнера (таблицу Log создал sink): DataBase/create log indexes.sql на autodispatch_log
+
+-------- DNS --------
+# A-запись dispatch.myautocall.net → 67.220.74.190
+
+-------- nginx --------
+sudo cp dispatch.myautocall.net.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/dispatch.myautocall.net.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+-------- Let's Encrypt --------
+sudo certbot --nginx -d dispatch.myautocall.net
+# продление автоматическое (systemd timer certbot.timer, стоит с AutoCall V3)
+
+-------- публикация --------
+# с машины разработчика: Scripts/publish-autodispatch-web.ps1 (docker context ububuilder)
+# проверка: curl -s https://dispatch.myautocall.net/Test
+# логи контейнера: docker --context ububuilder logs --tail 50 autodispatch.web

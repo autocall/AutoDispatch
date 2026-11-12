@@ -1,0 +1,16 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(local)\SQLEXPRESS;Database=autodispatch_local;Trusted_Connection=True;TrustServerCertificate=True;PersistSecurityInfo=True",
+    "LogConnection": "Server=(local)\SQLEXPRESS;Database=autodispatch_log_local;Trusted_Connection=True;TrustServerCertificate=True;PersistSecurityInfo=True"
+  },
+  "Secrets": {
+    "Jwt": { "PrivateKey": "<random string, 32+ chars>" },
+    "System": { "Password": "<password for System and Admin users>", "AllowedIps": [ "127.0.0.1", "::1" ] },
+    "Mailgun": { "ApiKey": "<mailgun api key>", "Domain": "mail.myautocall.net", "From": "AutoDispatch <noreply@myautocall.net>" },
+    "Brokersnapshot": { "ApiToken": "<brokersnapshot.com api token with ApiGeocoding feature>" },
+    "GoogleMap": { "JsKey": "<Google Maps JavaScript API key, V1 AppSettings.GoogleMapJsKey>" },
+    "AerisWeather": { "Id": "<AERISWEATHER_ID, GpsV4 gps.client/.env>", "Secret": "<AERISWEATHER_SECRET, same file>" },
+    "Map": { "Key": "<32 random bytes in base64: [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))>" },
+    "Metric": { "Token": "<random string for Api/Metrics/Add>" }
+  }
+}
