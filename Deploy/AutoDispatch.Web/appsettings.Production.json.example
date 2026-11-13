@@ -8,10 +8,13 @@
     "System": { "Password": "<password for System and Admin users>", "AllowedIps": [ "<ip allowed to use master password>" ] },
     "Mailgun": { "ApiKey": "<mailgun api key>", "Domain": "mail.myautocall.net", "From": "AutoDispatch <noreply@myautocall.net>" },
     "Brokersnapshot": { "ApiToken": "<brokersnapshot.com api token with ApiGeocoding feature>" },
-    "GoogleMap": { "JsKey": "<Google Maps JavaScript API key, V1 Release AppSettings.GoogleMapJsKey, add dispatch.myautocall.net to its referrers>" },
+    "GoogleMap": { "JsKey": "<Google Maps JavaScript API key, V1 Release AppSettings.GoogleMapJsKey, add dispatch.myautocall.net to its referrers>", "Api": "<V1 GoogleMapApiKey, server key for Distance Matrix>" },
     "AerisWeather": { "Id": "<AERISWEATHER_ID, GpsV4 gps.client/.env>", "Secret": "<AERISWEATHER_SECRET, same file>" },
     "Map": { "Key": "<32 random bytes in base64: openssl rand -base64 32; changing it invalidates issued map links>" },
-    "Metric": { "Token": "<random string for Api/Metrics/Add, the same in Deploy/metric_cpu.sh on the DB server>" }
+    "Metric": { "Token": "<random string for Api/Metrics/Add, the same in Deploy/metric_cpu.sh on the DB server>" },
+    "Sms": { "Bandwidth": { "ApplicationId": "<V1 BandwidthApplicationId>", "Url": "<V1 BandwidthUrl>", "User": "<V1 BandwidthUser>", "Password": "<V1 BandwidthPassword>" } },
+    "OpenAI": { "ApiKey": "<V1 OPENAI_API_KEY>" },
+    "Keeppingin": { "ApiKey": "<V1 KeepPinginGoogleMapApiKey, Api/GoogleMap/TimeZone_Get>" }
   },
   "Logging": {
     "LogLevel": {

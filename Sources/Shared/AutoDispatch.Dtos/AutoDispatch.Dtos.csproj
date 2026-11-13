@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Общий контракт App и Web (AI/wiki/protocol.md): имя сборки и namespace не меняются — на них держится $type в JSON.
+       Код — копия V1 Sources/_Dtos/AutoDispatch.Dtos; Common/ — три типа AutoCall.Common, от которых зависит контракт
+       (BaseDto, DisplayAttribute, AutoCallEquipmentType) и EnumExtensions, в своих namespace V1. На этапе 6 клиент
+       исключает эти файлы из своей копии AutoCall.Common и берёт их отсюда. netstandard2.0 — чтобы ссылались и net10, и net462 -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>AutoDispatch.Dtos</AssemblyName>
+    <RootNamespace>AutoDispatch.Dtos</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS1591;CS0168;CS0219</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

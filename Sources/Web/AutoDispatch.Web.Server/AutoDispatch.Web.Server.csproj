@@ -32,6 +32,8 @@
 
   <ItemGroup>
     <Content Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- шаблоны писем, RTF/PDF документов и шрифт подписи из V1 Web/{Emails,Documents,Content/fonts} — AppSettings.ResourcesPath -->
+    <Content Include="Resources\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

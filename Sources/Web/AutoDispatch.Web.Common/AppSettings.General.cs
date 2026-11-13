@@ -132,3 +132,59 @@ public partial class AppSettings {
 
     #endregion [ Metrics ]
 }
+
+// Настройки dispatch (V1 IAppSettings и web.config), общие для всех окружений
+public partial class AppSettings {
+
+    #region [ Dispatch ]
+
+    /// <summary>
+    ///     Версия setup packet: шаблоны Documents/*_02.rtf и шаги Step*_02 (V1 SetupPacketVersion = 2) </summary>
+    public const int SetupPacketVersion = 2;
+    /// <summary>
+    ///     Снимки HistoryObject и Event старше этого срока удаляет HistoryCleanupService (V1 QuartzService historyExpires) </summary>
+    public const int HistoryExpiresDays = 30;
+    /// <summary>
+    ///     Опрос BNSF Rail Central раз в 30 минут (V1 BnsfRailwayJob). Выключено: флаг BNSFRailwayFlag V1 хранился в системных
+    ///     настройках, у трёх компаний с логином BnsfLastDone старше 30 дней (проверено 2026-11-13) </summary>
+    public const bool BnsfRefreshEnabled = false;
+    public static readonly TimeSpan BnsfRefreshInterval = TimeSpan.FromMinutes(30);
+    /// <summary>
+    ///     LoadWaitingJob и LoadSendSmsJob V1 — раз в 5 минут </summary>
+    public static readonly TimeSpan LoadWaitingInterval = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan LoadSendSmsInterval = TimeSpan.FromMinutes(5);
+    /// <summary>
+    ///     QuartzJob и CacheLoadJob V1 — раз в сутки </summary>
+    public static readonly TimeSpan HistoryCleanupInterval = TimeSpan.FromHours(24);
+    /// <summary>
+    ///     Сколько ждёт Api/Dispatch/Response новых событий компании перед пустым ответом (V1 ReconnectInterval) </summary>
+    public static readonly TimeSpan EventWaitTimeout = TimeSpan.FromSeconds(30);
+    public static readonly TimeSpan EventPollInterval = TimeSpan.FromSeconds(1);
+    /// <summary>
+    ///     Телефон склада TORPEDO для SMS о грузах из WA (V1 LoadSendSms_Process, захардкожено) и компания, для которой это работает </summary>
+    public const string LoadSendSmsPhone = "(203) 500-6917";
+    public static readonly Guid LoadSendSmsCompanyId = new Guid("D2FD7AFF-5982-4E20-A0B9-06C4DE600684");
+
+    public const string OpenAiModel = "gpt-4o-mini";
+    public const decimal OpenAiTemperature = 0.0M;
+    public const string OpenAiUrl = "https://api.openai.com/v1/chat/completions";
+    public const string CarrierViewUrl = "https://carrierview.com";
+    public static readonly TimeSpan ExternalTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    ///     Шаблоны писем, RTF/PDF документов и шрифт подписи — Resources/ рядом с приложением (V1 Emails/, Documents/, Content/fonts) </summary>
+    public static readonly string ResourcesPath = Path.Combine(AppContext.BaseDirectory, "Resources");
+    public static string DocumentsPath => Path.Combine(ResourcesPath, "Documents");
+    public static string EmailsPath => Path.Combine(ResourcesPath, "Emails");
+    public static string FontsPath => Path.Combine(ResourcesPath, "Fonts");
+    /// <summary>
+    ///     Логи разбора PDF через OpenAI (V1 logs/openai) </summary>
+    public static string OpenAiLogsPath => Path.Combine(LogsPath, "openai");
+    /// <summary>
+    ///     PNG страниц rate confirmation для OpenAI (V1 Web/Temp, отдавался как https://{Domain}/Temp/{file}) — подкаталог FilesPath,
+    ///     отдаётся по TempRequestPath (этап 4) </summary>
+    public static string TempPath => Path.Combine(FilesPath, "_temp");
+    public const string TempRequestPath = "/Temp";
+
+    #endregion [ Dispatch ]
+}

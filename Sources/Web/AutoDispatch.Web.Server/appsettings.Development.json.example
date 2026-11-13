@@ -8,9 +8,12 @@
     "System": { "Password": "<password for System and Admin users>", "AllowedIps": [ "127.0.0.1", "::1" ] },
     "Mailgun": { "ApiKey": "<mailgun api key>", "Domain": "mail.myautocall.net", "From": "AutoDispatch <noreply@myautocall.net>" },
     "Brokersnapshot": { "ApiToken": "<brokersnapshot.com api token with ApiGeocoding feature>" },
-    "GoogleMap": { "JsKey": "<Google Maps JavaScript API key, V1 AppSettings.GoogleMapJsKey>" },
+    "GoogleMap": { "JsKey": "<Google Maps JavaScript API key, V1 AppSettings.GoogleMapJsKey>", "Api": "<V1 GoogleMapApiKey, server key for Distance Matrix>" },
     "AerisWeather": { "Id": "<AERISWEATHER_ID, GpsV4 gps.client/.env>", "Secret": "<AERISWEATHER_SECRET, same file>" },
     "Map": { "Key": "<32 random bytes in base64: [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))>" },
-    "Metric": { "Token": "<random string for Api/Metrics/Add>" }
+    "Metric": { "Token": "<random string for Api/Metrics/Add>" },
+    "Sms": { "Bandwidth": { "ApplicationId": "<V1 BandwidthApplicationId>", "Url": "<V1 BandwidthUrl>", "User": "<V1 BandwidthUser>", "Password": "<V1 BandwidthPassword>" } },
+    "OpenAI": { "ApiKey": "<V1 OPENAI_API_KEY>" },
+    "Keeppingin": { "ApiKey": "<V1 KeepPinginGoogleMapApiKey, Api/GoogleMap/TimeZone_Get>" }
   }
 }

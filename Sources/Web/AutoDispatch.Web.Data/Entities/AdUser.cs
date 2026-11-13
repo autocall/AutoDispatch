@@ -17,6 +17,12 @@ public class AdUser : IdentityUser<Guid> {
     [Column(TypeName = "varchar(64)")]
     public string TimeZoneId { get; set; }
 
+    /// <summary>
+    ///     Подпись агента на confirmation (V1 Users.Signature, ConfirmedSend). Новая колонка IdentityUsers —
+    ///     нужна миграция и перенос из autocall.dbo.Users.Signature (AI/wiki/plan.md) </summary>
+    [Column(TypeName = "varchar(64)")]
+    public string Signature { get; set; }
+
     [Required]
     [Column(TypeName = "smalldatetime")]
     public DateTime CreatedDateTime { get; set; }

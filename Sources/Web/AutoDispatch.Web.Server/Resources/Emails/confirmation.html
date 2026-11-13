@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        body {
+            font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif;
+        }
+
+        .row_title {
+            width: 120px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .row_sub_title {
+            width: 30px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .row_sub_value {
+            width: 60px;
+        }
+
+        .table_location {
+            width: 500px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <tr>
+            <td class="row_title">
+                <span>EFFECTIVE DATE:</span>
+            </td>
+            <td>
+                <span>[now]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>EQUIPMENT:</span>
+            </td>
+            <td>
+                <span>[equipment]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>CARRIER:</span>
+            </td>
+            <td>
+                <span>[carrier]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span></span>
+            </td>
+            <td>
+                <span>MC#: [carrier_mc]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span></span>
+            </td>
+            <td>
+                <span>[carrier_phone]</span>
+            </td>
+        </tr>
+    </table>
+    <br />
+    [begin_pickup_template]
+    <table class="table_location">
+        <tr>
+            <td class="row_title">
+                <span>PICK-UP DATE:</span>
+            </td>
+            <td colspan="5">
+                <span>[pickup_date]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>COMPANY:</span>
+            </td>
+            <td colspan="5">
+                <span>[shipper]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>ADDRESS:</span>
+            </td>
+            <td colspan="5">
+                <span>[origin]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>LENGTH:</span>
+            </td>
+            <td class="row_sub_value">
+                <span>[length]</span>
+            </td>
+            <td class="row_sub_title">
+                <span>WEIGHT:</span>
+            </td>
+            <td class="row_sub_value">
+                <span>[weight]</span>
+            </td>
+            <td class="row_sub_title">
+                <span>PALLETS:</span>
+            </td>
+            <td>
+                <span>[pallets]</span>
+            </td>
+        </tr>
+    </table>
+    <br />
+    [end_pickup_template]
+    [begin_delivery_template]
+    <table class="table_location">
+        <tr>
+            <td class="row_title">
+                <span>DELIVERY DATE:</span>
+            </td>
+            <td colspan="5">
+                <span>[delivery_date]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>COMPANY:</span>
+            </td>
+            <td colspan="5">
+                <span>[receiver]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>ADDRESS:</span>
+            </td>
+            <td colspan="5">
+                <span>[destination]</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="row_title">
+                <span>LENGTH:</span>
+            </td>
+            <td class="row_sub_value">
+                <span>[length]</span>
+            </td>
+            <td class="row_sub_title">
+                <span>WEIGHT:</span>
+            </td>
+            <td class="row_sub_value">
+                <span>[weight]</span>
+            </td>
+            <td class="row_sub_title">
+                <span>PALLETS:</span>
+            </td>
+            <td>
+                <span>[pallets]</span>
+            </td>
+        </tr>
+    </table>
+    <br />
+    [end_delivery_template]
+    [begin_rate_template]
+    <b>[rate_label] [rate_value]$</b><br/>
+    [end_rate_template]
+    <h3><span>Total Carrier Pay: [rate]$</span></h3>
+    <h2>
+        &gt;&gt; <a href="[host_confirmation]">sign confirmation</a> &lt;&lt;
+    </h2>
+    [footer]
+</body>
+</html>

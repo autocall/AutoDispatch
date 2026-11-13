@@ -19,6 +19,9 @@ public partial class AppSettings {
     /// <summary>
     ///     Документы dispatch: каталог {EntityId} груза, карриера или setup packet (V1 FilePath, E:\Files) </summary>
     public const string FilesPath = "/files/";
+    /// <summary>
+    ///     Удалённые через FileDelete документы (V1 RecyclePath, E:Recycle) — подкаталог FilesPath, второй volume не нужен </summary>
+    public const string RecyclePath = FilesPath + "_recycle/";
 
     #endregion [ Paths ]
 }

@@ -43,6 +43,25 @@ public partial class AppSettings {
     public static string MetricToken { get; private set; }
 
     /// <summary>
+    ///     Bandwidth — SMS складу и водителям (V1 Bandwidth*), Voxbone в V1 помечен как не работающий и не переносится </summary>
+    public static string BandwidthApplicationId { get; private set; }
+    public static string BandwidthUrl { get; private set; }
+    public static string BandwidthUser { get; private set; }
+    public static string BandwidthPassword { get; private set; }
+
+    /// <summary>
+    ///     OpenAI — разбор PDF rate confirmation в груз (V1 OPENAI_API_KEY) </summary>
+    public static string OpenAiApiKey { get; private set; }
+
+    /// <summary>
+    ///     keeppingin.com Api/GoogleMap/TimeZone_Get — часовые пояса груза (V1 KeepPinginGoogleMapApiKey) </summary>
+    public static string KeeppinginApiKey { get; private set; }
+
+    /// <summary>
+    ///     Google Maps Distance Matrix (V1 GoogleMapApiKey, серверный ключ) </summary>
+    public static string GoogleMapApiKey { get; private set; }
+
+    /// <summary>
     ///     Вызывать первым в Program: значения читаются из секции "Secrets" конфигурации
     ///     (appsettings.{Environment}.json или переменные Secrets__Jwt__PrivateKey).
     ///     Пустой ключ — исключение в Release, предупреждение в Debug. </summary>
@@ -73,6 +92,13 @@ public partial class AppSettings {
         AerisWeatherSecret = Read("AerisWeather:Secret");
         MapKey = Read("Map:Key");
         MetricToken = Read("Metric:Token");
+        BandwidthApplicationId = Read("Sms:Bandwidth:ApplicationId");
+        BandwidthUrl = Read("Sms:Bandwidth:Url");
+        BandwidthUser = Read("Sms:Bandwidth:User");
+        BandwidthPassword = Read("Sms:Bandwidth:Password");
+        OpenAiApiKey = Read("OpenAI:ApiKey");
+        KeeppinginApiKey = Read("Keeppingin:ApiKey");
+        GoogleMapApiKey = Read("GoogleMap:Api");
 
         if (missing.Count > 0) {
 #if DEBUG

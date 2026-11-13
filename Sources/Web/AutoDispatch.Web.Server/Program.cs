@@ -110,6 +110,7 @@ public class Program {
         var mappingConfig = new MapperConfiguration(conf => {
             conf.AddProfile(new LogicMappingProfile());
             conf.AddProfile(new ViewMappingProfile());
+            conf.AddProfile(new DispatchMappingProfile());
             conf.AllowNullCollections = true;
         });
         services.AddSingleton(mappingConfig.CreateMapper());
@@ -121,6 +122,11 @@ public class Program {
         services.AddHostedService<ActivityFlushService>();
         services.AddHostedService<RetentionService>();
         services.AddHostedService<MetricBackgroundService>();
+        // джобы dispatch (V1 Quartz, AI/wiki/plan.md)
+        services.AddHostedService<HistoryCleanupBackgroundService>();
+        services.AddHostedService<LoadWaitingBackgroundService>();
+        services.AddHostedService<LoadSendSmsBackgroundService>();
+        services.AddHostedService<BnsfRefreshBackgroundService>();
 
         var app = builder.Build();
 
@@ -176,6 +182,10 @@ public class Program {
     private static void ConfigureSerilog(string logConnectionString) {
         Directory.CreateDirectory(AppSettings.LogsPath);
         Directory.CreateDirectory(AppSettings.KeysPath);
+        // документы dispatch (V1 FilePath/RecyclePath, Temp)
+        Directory.CreateDirectory(AppSettings.FilesPath);
+        Directory.CreateDirectory(AppSettings.RecyclePath);
+        Directory.CreateDirectory(AppSettings.TempPath);
 
         // сбои самих синков (недоступна БД логов, нет колонки) иначе теряются молча
         var selfLog = File.AppendText(Path.Combine(AppSettings.LogsPath, "serilog-selflog.txt"));
