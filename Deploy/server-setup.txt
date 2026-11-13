@@ -30,3 +30,9 @@ sudo certbot --nginx -d dispatch.myautocall.net
 # с машины разработчика: Scripts/publish-autodispatch-web.ps1 (docker context ububuilder)
 # проверка: curl -s https://dispatch.myautocall.net/Test
 # логи контейнера: docker --context ububuilder logs --tail 50 autodispatch.web
+# AllowedHosts в appsettings.Production.json = dispatch.myautocall.net, иначе приложение отвечает 400 «hostname is invalid»
+
+-------- метрика CPU (сделано 2026-11-13) --------
+# Deploy/metric_cpu.sh → /usr/local/bin/metric_cpu_3.sh на этом же хосте (рядом с metric_cpu_2.sh AutoCall V3), TOKEN = Secrets:Metric:Token
+# sed -i 's/\r$//' + chmod +x; cron root: * * * * * /usr/local/bin/metric_cpu_3.sh >> /var/log/cron
+# проверка: grep Metrics/Add /var/log/nginx/access.log — по два запроса в минуту (V3 + dispatch), код 200

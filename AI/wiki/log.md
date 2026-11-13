@@ -27,3 +27,9 @@ Email/DatSoap/Proxy/Settings/CallReport/Vodia и метрики AutoCall; `RoleE
 ## [2026-11-12] build | блок 0 переноса — компании и пользователи
 
 Написан `DataBase/migrate from autocall dispatch.sql` (только блок 0): активные компании по `d_Event`, пользователи с ролями AutoDispatch и входом за 6 месяцев, все роли, постоянные таблицы маппинга `_MigrateCompany`/`_MigrateUser`. На боевой БД не прогонялся (нет доступа из сессии). [[data-migration]] дополнена.
+
+## [2026-11-13] deploy | первая публикация AutoDispatch Web
+
+`dispatch.myautocall.net` поднят: БД, nginx, certbot, контейнер `2026.11.13-2`, метрика CPU в cron веб-хоста. В [[deploy]] добавлен раздел
+«Первая публикация» с граблями (`AllowedHosts` из V3, nvm под другим пользователем, фактическое место `metric_cpu.sh`). Обновлены
+`Deploy/server-setup.txt` и шапка `Deploy/metric_cpu.sh`.

@@ -1,6 +1,7 @@
 #!/bin/bash
-# DB CPU -> AutoDispatch.Web Api/Metrics/Add (type 2 = DbCpu), runs on the DB server (same as AutoCall V3 / Safer metric_cpu.sh).
-# cron, 3 times a minute: * * * * * for i in 0 1 2; do /opt/autodispatch/metric_cpu.sh; sleep 20; done
+# CPU -> AutoDispatch.Web Api/Metrics/Add (type 2 = DbCpu). Installed 2026-11-13 as /usr/local/bin/metric_cpu_3.sh on the web host
+# 67.220.74.190 next to AutoCall V3 metric_cpu_2.sh (not on the DB server, as the V3 template says — AI/wiki/deploy.md).
+# cron (root): * * * * * /usr/local/bin/metric_cpu_3.sh >> /var/log/cron
 # TOKEN = Secrets:Metric:Token of the web server (appsettings.Production.json on 67.220.74.190).
 
 TOKEN="<Secrets:Metric:Token>"

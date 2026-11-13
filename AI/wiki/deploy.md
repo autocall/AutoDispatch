@@ -28,6 +28,24 @@
 5. `appsettings.Production.json` из `Deploy/AutoDispatch.Web/appsettings.Production.json.example`.
 6. `Scripts/publish-autodispatch-web.ps1`; проверка `curl /Test`, `docker logs`.
 
+## Первая публикация — 2026-11-13
+
+Выполнено по `server-setup.txt`: БД `autodispatch`/`autodispatch_log` и логин созданы, индексы логов созданы, nginx + certbot
+(сертификат до 2027-02-11), контейнер `autodispatch.web:2026.11.13-2` на `127.0.0.1:5005`, `/Test` отвечает 200.
+Грабли и уточнения:
+
+- `appsettings.Production.json` скопирован с V3 — осталось `AllowedHosts: v3.myautocall.net`, приложение отвечало 400
+  «The request hostname is invalid» (HostFiltering). Проверять при копировании конфига.
+- **Метрика CPU**: у V3 скрипт стоит не на сервере БД, а на самом веб-хосте `67.220.74.190` — `/usr/local/bin/metric_cpu_2.sh`,
+  cron root раз в минуту (`>> /var/log/cron`). Для AutoDispatch сделано так же: `/usr/local/bin/metric_cpu_3.sh`. То есть
+  «DB CPU» (type 2) фактически измеряет CPU веб-хоста. `error code: 502` в `/var/log/cron` — от старого `metric_cpu.sh`
+  (brokersnapshot.com), не наш.
+- Публикация с машины разработчика под пользователем, отличным от Administrator: Node стоит через nvm в профиле Administrator,
+  `C:\Program Files\nodejs` — symlink туда. Нужен доступ `nata:(RX)` на `C:\Users\Administrator`, `\AppData`, `\AppData\Roaming`
+  и рекурсивно на `\AppData\Roaming\nvm` (`icacls`), иначе `npm` падает с EPERM при realpath. Временный обход —
+  `NODE_OPTIONS=--preserve-symlinks --preserve-symlinks-main`.
+- Образ без `npm run build` работает (API, `/Test`), но страницы без `wwwroot/build` — без стилей.
+
 ## Секреты `appsettings.Production.json`
 
 `ConnectionStrings: Default, Log`; `Secrets: Jwt:PrivateKey, System:Password/AllowedIps, Mailgun, GoogleMap (Api + JsKey),
