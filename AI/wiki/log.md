@@ -47,3 +47,29 @@ Email/DatSoap/Proxy/Settings/CallReport/Vodia и метрики AutoCall; `RoleE
 Записано в [[plan]] («Решить»): `geography` → `Latitude/Longitude decimal(9,6)` (как в V3; радиус в `LoadHistory2` — гаверсинус в сыром SQL,
 автокомплит — `PlaceService`/Safer); таблиц `City/State/Country` нет, `State`/`Country` — статический класс в коде с прежними Id для
 `d_SetupPacket*`. Вопросов, влияющих на схему этапа 2, не осталось. Префикс классов `Ac` → `Ad` сделан в коде и wiki.
+
+## [2026-11-13] ingest | этап 2: 28 сущностей dispatch перенесены в AutoDispatch.Web.Data
+
+Новая страница [[data-model]]. Источник — V1 `Entities/Dispatch`, `Entities/Base`, `Mappings/Dispatch` (2084 строки). Перенесены как есть с
+решениями дня: таблицы без `d_`, `ActualCompany` → `DispatchCompany` (+ `ActualCompanyId` → `DispatchCompanyId`), `geography` → decimal-пары,
+без FK на IdentityUsers и State/Country, все FK NoAction, nvarchar как в V1. `DispatchMap` подключён в `AdDbContext` и `LinqToDbContext`,
+тест `07_DispatchModel` (EF-модель без БД, пары навигаций, колонки LinqToDB) — 3 теста проходят. Обновлены [[plan]], [[data-migration]], index.
+Дальше: миграция `Dispatch` (пользователь), публикация, блоки 1–5 скрипта переноса.
+
+## [2026-11-13] deploy | публикация с миграцией Dispatch
+
+Контейнер `autodispatch.web:6292491`: `Migrating AdDbContext` → `Seeding database` → старт, `/Test` ok. 28 таблиц dispatch созданы на проде.
+EF предупреждал о decimal без типа (`DefectRepair.Cost`, `Load.CarrierViewTracking/LineHaul/DatRate`) — в миграции и так `decimal(18,2)`,
+в сущностях тип задан явно, снапшот не меняется, новая миграция не нужна.
+
+## [2026-11-13] ingest | блоки 1–6 скрипта переноса
+
+`DataBase/migrate from autocall dispatch.sql` дописан: блоки 1–2 (объекты, грузы, история положений — списки колонок сгенерированы из миграции
+`Dispatch`, переименования `ActualCompanyId`/geography подставлены), 3–4 (`HistoryObject`/`Event` пакетами, возобновляемо, `_MigrateHistoryKeep`),
+5 (список каталогов файлов), 6 (включение FK с проверкой). На боевой БД не прогонялся. [[data-migration]] обновлена.
+
+## [2026-11-13] query | проверка переноса на боевой БД через db-readonly
+
+MCP `db-readonly` подключён к репозиторию (`.mcp.json`, `AI/mcp/db-readonly`, `.env` в gitignore); запросы дольше 15 с — через `sqlcmd` тем же логином.
+Сверены колонки `d_*` ↔ `autodispatch`, FK активных компаний (3 висячие ссылки — блок 6 обнуляет), замеры, активность компаний, кандидаты-пользователи.
+Решения в [[plan]]: признак входа = `Users.LastModifiedDate` или `Session` (16 пользователей), все строки dispatch — `varchar`. [[data-migration]], [[data-model]] обновлены.

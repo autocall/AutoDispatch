@@ -7,7 +7,8 @@
 - [protocol](protocol.md) — протокол App↔Web: один эндпоинт `Api/Dispatch/Request` с конвертом `EventRequest {Name, Data}`, вызов метода `IDispatchService` по имени через reflection, `TypeNameHandling.All`, long-polling `Response`; решения для V3 (контракт и имя сборки как есть, таблица `Name → handler`, `SerializationBinder`), список 74 методов
 - [data-migration](data-migration.md) — перенос из `autocall`: замеры 2026-11-11 (7 активных компаний, 89 тыс. грузов, 4.85 млн снимков / 7.9 ГБ, 10.6 млн событий, 147.5 ГБ документов), блоки скрипта, отбор `d_HistoryObject` по ссылкам, `tar | ssh` для файлов, окно переключения
 - [deploy](deploy.md) — тот же хост `67.220.74.190`, контейнер `autodispatch.web` на `127.0.0.1:5005`, поддомен `dispatch.myautocall.net`, БД `autodispatch` + `autodispatch_log`, каталоги `/home/autodispatch/*`, volume `/files`, секреты, отличия `Program.cs` и nginx от V3
-- [web](web.md) — скелет AutoDispatch Web (этап 1, 2026-11-11): что скопировано из AutoCall V3, что вырезано, отличия (UserSetting для Map, RoleEnum, метрики, окружение, Identity и Company на Guid с 2026-11-13, миграции не копировались), Deploy/Scripts/DataBase, что проверено и что ждёт миграций
+- [web](web.md) — скелет AutoDispatch Web (этап 1, 2026-11-11): что скопировано из AutoCall V3, что вырезано, отличия (UserSetting для Map, RoleEnum, метрики, окружение, Identity и Company на Guid с 2026-11-13, миграции не копировались), Deploy/Scripts/DataBase, что проверено и что ждёт миграций
+- [data-model](data-model.md) — модель данных AutoDispatch Web (этап 2, 2026-11-13): 28 сущностей dispatch в `Entities/Dispatch`, базовые классы, `DispatchMap` (EF Core + LinqToDB), отличия от V1 (таблицы без `d_`, `DispatchCompany`, координаты decimal, без FK на пользователей и справочники, NoAction, nvarchar)
 
 ## Эталоны (не копируются, читаются по месту)
 

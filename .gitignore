@@ -27,3 +27,6 @@ logs
 
 # App: ClickOnce
 /Sources/App/**/*.pfx
+
+# MCP db-readonly: пароль логина, как в AutoCallV3
+/AI/mcp/db-readonly/.env

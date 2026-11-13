@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AutoDispatch.Web.Data.Entities;
 using AutoDispatch.Web.Data.Mappings;
+using AutoDispatch.Web.Data.Mappings.Dispatch;
 
 namespace AutoDispatch.Web.Data.Context;
 
@@ -28,5 +29,8 @@ public class AdDbContext : IdentityDbContext<AdUser, AdRole, Guid, AdUserClaim, 
 
         // настройки карты пользователя (секция Map)
         modelBuilder.ApplyConfiguration(new UserSettingMap());
+
+        // 28 сущностей dispatch (этап 2)
+        DispatchMap.Configure(modelBuilder);
     }
 }

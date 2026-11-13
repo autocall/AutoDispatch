@@ -31,14 +31,21 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 | Блок | Что | Способ |
 |---|---|---|
 | 0 | 7 компаний, их пользователи только с ролями AutoDispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin) и статусом allowed, другие роли V1 не переносятся | **написан 2026-11-12, переписан под Guid 2026-11-13** (см. ниже) |
-| 1 | справочники: 25 `d_*` без `d_Message`, `d_Load`, `d_Event`, `d_HistoryObject`, `d_HistoryLocation*` | `insert … select … where CompanyId in (активные)`, одной транзакцией на таблицу |
-| 2 | `d_Load` + `d_HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | то же |
-| 3 | `d_HistoryObject` | пакеты по 100 000 `Id` в транзакции (~50 пакетов), `set identity_insert on`, возобновляемо с последнего `Id`, в конце `dbcc checkident reseed` |
-| 4 | `d_Event` активных компаний с `HistoryId` среди перенесённых снимков | пакеты по 500 000 `Id` (~20), `identity_insert`, reseed |
-| 5 | файлы | см. ниже |
+| 1 | 19 таблиц объектов и справочников компаний (`DispatchCompany*`, `DatCompany`, `DatDriver`, `Driver`, `Truck`, `Trailer`, `Warehouse`, `Yard`, `SetupPacket*`, `Customer/ShipperReceiverCompany`, `CompanyCustomStatus`, `Defect*`) | **написан 2026-11-13**: одна транзакция, `delete` + `insert … select … where CompanyId in (#active)`; setup-packet контакты/агентства/рекомендации — по `#sp` активных компаний |
+| 2 | `Load`, `CacheLoadIndex`, `HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | **написан 2026-11-13**: одна транзакция, `identity_insert` + reseed, история положений — по объектам активных компаний |
+| 3 | `HistoryObject` | **написан 2026-11-13**: отбор в постоянную `dbo._MigrateHistoryKeep`, пакеты по 100 000 `Id` без общей транзакции, возобновляемо с `max(Id)`, reseed |
+| 4 | `Event` активных компаний с `HistoryId` среди перенесённых снимков (или null) | **написан 2026-11-13**: пакеты по 500 000 `Id`, возобновляемо, reseed |
+| 5 | файлы | **написан 2026-11-13**: запрос списка каталогов; копирование — см. ниже |
+| 6 | FK | на время блоков 1–5 `nocheck constraint all` (блоки идут не в порядке зависимостей: `HistoryId` → блок 3), в конце `dbcc checkconstraints` + `with check check constraint all` |
 
 `Id` в блоках 3–4 сохраняются: на `d_HistoryObject.Id` ссылаются `HistoryId` в `d_Load`, `d_HistoryLocation*`, справочниках;
 `d_Event.Id` — точка отсчёта `lastEventId` клиента и `max(Id)` сервера.
+
+Схема приёмника — [[data-model]] (2026-11-13): таблицы без `d_` (`autocall.dbo.d_Load` → `autodispatch.dbo.Load`), `d_ActualCompany` →
+`DispatchCompany`, `d_ActualCompanyCustom` → `DispatchCompanyCustom`, колонки `ActualCompanyId` → `DispatchCompanyId` (`Load`, `DatCompany`,
+`DispatchCompanyCustom`); `geography` → пары: `OriginLocation.Lat / .Long` → `OriginLatitude/OriginLongitude`, так же `DestinationLocation`,
+`Location` (`Warehouse`, `Yard`, `HistoryLocation*` → `Latitude/Longitude`), `CurrentLocation` → `CurrentLatitude/CurrentLongitude`.
+Поля `*StateId/*CountryId` и `CreatedById/LastModifiedById/UserId` копируются как есть (FK нет). Остальные колонки — один в один.
 
 ### Блок 0 — компании и пользователи (написан 2026-11-12, переписан 2026-11-13, на боевой БД не прогонялся)
 
@@ -118,3 +125,24 @@ union select EntityId from autocall.dbo.d_SetupPacket where CompanyId in (select
 
 Остановить запись в V1 → блоки 0–2 → хвосты блоков 3–4 с последнего `Id` → досинк файлов → reseed → ссылка ClickOnce
 нового App пользователям 7 компаний. Укладывается в один вечер; DNS не трогается, у нового сервера свой поддомен.
+
+## Проверка на боевой БД — 2026-11-13 (MCP `db-readonly`, `sqlcmd`)
+
+- **Колонки**: все колонки 28 таблиц `d_*` есть в `autodispatch` (с учётом переименований). Отличия типов — только расширяющие: в V1 часть строк
+  `varchar` (`Load`, `DatCompany`, `SetupPacket` — там, где стоял `DataType("VARCHAR")` и миграция была поправлена руками), у нас везде `nvarchar`;
+  `DefectRepair.Date`, `Event.CreatedDate`, `Load.LastStatusChangedDate/BindDate/AssignedTrailerDate`, `DispatchCompany.BnsfLastDone`,
+  `SetupPacket.EmailSent/WorkersCompensationSignatureDate` — `datetime` → `datetime2`. Оставлено как есть, `insert … select` проходит без конвертаций.
+- **Ссылки**: по всем FK `Load` и остальных таблиц для активных компаний «висячих» нет, кроме трёх удалённых грузов (`IsDeleted = 1`) одной из активных компаний,
+  ссылающихся на `DatCompany`, `Shipper/Receiver` и `ActualCompany` неактивной компании `82C1221B…` — блок 6 обнуляет.
+  `HistoryId` всех объектов и `HistoryLocation*` есть в `d_HistoryObject`; `Location`/`OriginLocation` не null; координаты влезают в `decimal(9,6)`.
+- **Замеры** (6 месяцев на 2026-11-13): `d_Load` 164 284 / 89 490 активных, `d_DatCompany` 53 973 / 24 502, `d_ShipperReceiverCompany` 65 067 / 36 054,
+  `d_CustomerCompany` 10 938 / 5 938, `d_SetupPacket` 12 882 / 4 531, `d_Trailer` 6 906 / 4 706, `d_DatDriver` 1 502 / 1 332, `d_CacheLoadIndex` 67 917 / 38 656,
+  `d_ActualCompany` 150 / 52, `d_Driver` 298 / 147, `d_Truck` 330 / 149, `d_Warehouse` 51 / 17, `d_Yard` 14 / 5, `d_SetupPacketFactoringCompany` 188 (все).
+- **Активность 7 компаний** (события за 6 мес / создано грузов): TORPEDO 517 979 / 2 701, Baltic 24 561 / 1 478, DDM 15 568 / 272, BEST SOURCE 120 / 10,
+  LEVSKI 8 / 4, UA LOGISTICS 2 / 1, BEST AMERICAN 1 / 0. Две последние фактически неактивны, все их пользователи blocked/deleted — переносятся данные без пользователей.
+- **Пользователи, правило «вход за 6 месяцев» не годится**: `autocall_reference.dbo.Session` пишется только сайтом (User-Agent браузера), входы App
+  там не отражены. У TORPEDO пользователь `billing` (6 334 правки грузов за полгода) и у Baltic `Vlad` (94) по Session «не входили» и выпали бы.
+  **Решено 2026-11-13**: признак входа = `Users.LastModifiedDate >= 12 мес` (окно год, у компаний 6 месяцев) (обновляется при работе из App: у `billing` без веб-сессий — 2026-11-06,
+  у всех кандидатов заполнен `AppVersion`) **или** `Session.LastActivity`. Кандидатов (`IsDeleted = 0`, `VerifyId = 2`, роль) 19, с входом за год 17:
+  выпадают `Nina` DDM (2023) и один из TORPEDO; за 12 месяцев событий у 8 компаний против 7 за 6 — окно компаний не трогаем. Дублей отображаемых имён нет, пустых `Users.Name` нет.
+- Системный `Support` (Admin, компания вне активных) правит грузы всех компаний — в V3 его роль выполняет штатный Admin из Seed.

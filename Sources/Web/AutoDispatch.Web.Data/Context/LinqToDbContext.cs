@@ -2,6 +2,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using AutoDispatch.Web.Data.Mappings;
+using AutoDispatch.Web.Data.Mappings.Dispatch;
 
 namespace AutoDispatch.Web.Data.Context;
 
@@ -15,6 +16,7 @@ public class LinqToDbContext : DataConnection {
         CompanyMap.LinqToDbConfigure(builder);
         UserMap.LinqToDbConfigure(builder);
         UserSettingMap.LinqToDbConfigure(builder);
+        DispatchMap.LinqToDbConfigure(builder);
         builder.Build();
         this.AddMappingSchema(mappingSchema);
     }

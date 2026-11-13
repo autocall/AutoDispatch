@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "db-readonly": {
+      "command": "node",
+      "args": ["AI/mcp/db-readonly/server.js"],
+      "type": "stdio"
+    }
+  }
+}
