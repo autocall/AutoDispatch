@@ -7,8 +7,8 @@ namespace AutoDispatch.Web.Logic.Mapping;
 
 public class LogicMappingProfile : Profile {
     public LogicMappingProfile() {
-        CreateMap<AcUserDto, AcUser>().ReverseMap();
-        CreateMap<AcRoleDto, AcRole>().ReverseMap();
+        CreateMap<AdUserDto, AdUser>().ReverseMap();
+        CreateMap<AdRoleDto, AdRole>().ReverseMap();
         CreateMap<CompanyDto, Company>().ReverseMap();
         CreateMap<CreateCompanyDto, Company>();
         CreateMap<UpdateCompanyDto, Company>();

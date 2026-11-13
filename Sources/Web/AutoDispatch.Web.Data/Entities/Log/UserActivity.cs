@@ -11,8 +11,8 @@ public class UserActivity {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
     public long Id { get; set; }
 
-    public int UserId { get; set; }
-    public int CompanyId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid CompanyId { get; set; }
 
     [Column(TypeName = "datetime2(0)")]
     public DateTime SeenAt { get; set; }

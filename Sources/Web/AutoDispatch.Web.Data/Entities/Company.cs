@@ -11,11 +11,11 @@ public class Company : BaseEntity, ICompanyUpdateMap {
 
     // Колонки автора остаются (аудит), но без FK на IdentityUsers: системная компания создаётся раньше первого пользователя
     [NotMapped]
-    public override AcUser CreatedBy { get; set; }
+    public override AdUser CreatedBy { get; set; }
     [NotMapped]
-    public override AcUser ModifiedBy { get; set; }
+    public override AdUser ModifiedBy { get; set; }
 
-    public static int SystemCompanyId = 1000;
+    public static Guid SystemCompanyId = new Guid("00000000-0000-0000-0000-000000001000");
 }
 
 public interface ICompanyUpdateMap : IBaseUpdateMap {

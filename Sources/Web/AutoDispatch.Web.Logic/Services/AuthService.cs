@@ -13,7 +13,7 @@ public class AuthService : BaseService {
 
     public AuthService(ServicesHost host) : base(host) { }
 
-    public async Task<string> CreateTokenAsync(AcUser user) {
+    public async Task<string> CreateTokenAsync(AdUser user) {
         var handler = new JwtSecurityTokenHandler();
         var privateKey = Encoding.UTF8.GetBytes(AppSettings.JwtPrivateKey);
         var credentials = new SigningCredentials(new SymmetricSecurityKey(privateKey), SecurityAlgorithms.HmacSha256);
@@ -30,7 +30,7 @@ public class AuthService : BaseService {
 
     #region [ private ]
 
-    private async Task<ClaimsIdentity> GenerateClaimsAsync(AcUser user) {
+    private async Task<ClaimsIdentity> GenerateClaimsAsync(AdUser user) {
         var ci = new ClaimsIdentity();
 
         ci.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));

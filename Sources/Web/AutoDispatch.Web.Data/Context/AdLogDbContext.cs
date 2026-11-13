@@ -6,9 +6,9 @@ namespace AutoDispatch.Web.Data.Context;
 /// <summary>
 ///     EF Core для БД логов (LogDataBaseName): только миграции таблиц UserLogin, UserActivity и Metric.
 ///     Таблицу Log создаёт Serilog sink, запросы — через LogLinqToDbContext </summary>
-public class AcLogDbContext : DbContext {
+public class AdLogDbContext : DbContext {
 
-    public AcLogDbContext(DbContextOptions<AcLogDbContext> options) : base(options) {
+    public AdLogDbContext(DbContextOptions<AdLogDbContext> options) : base(options) {
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {

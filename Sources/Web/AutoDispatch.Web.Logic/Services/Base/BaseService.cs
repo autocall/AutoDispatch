@@ -21,7 +21,7 @@ public abstract class BaseService : IService {
 
     /// <summary>
     ///     Репозиторий арендатора: все запросы и вставки с CompanyId </summary>
-    public IRepository<T> Rep<T>(int companyId) where T : BaseCompanyEntity => this.UnitOfWork.GetRepository<T>(companyId);
+    public IRepository<T> Rep<T>(Guid companyId) where T : BaseCompanyEntity => this.UnitOfWork.GetRepository<T>(companyId);
 
     /// <summary>
     ///     Репозиторий без фильтра по компании (справочники, сами компании) </summary>

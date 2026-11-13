@@ -32,7 +32,7 @@ public class RequestContextMiddleware {
             userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.Identity.Name;
             var companyClaim = user.FindFirst("CompanyId");
             if (companyClaim != null) {
-                tracker.Touch(user.GetUserId(), Int32.Parse(companyClaim.Value), userName, context.Request.GetLoginSource());
+                tracker.Touch(user.GetUserId(), Guid.Parse(companyClaim.Value), userName, context.Request.GetLoginSource());
             }
         }
         using (LogContext.PushProperty("RequestPath", context.Request.Path.Value))

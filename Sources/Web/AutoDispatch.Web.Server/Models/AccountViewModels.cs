@@ -47,7 +47,7 @@ public class ChangePasswordViewModel {
 
 public class ResetPasswordViewModel {
     [Required]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     [Required]
     public string Code { get; set; }
     [Required, DataType(DataType.Password), MinLength(6)]

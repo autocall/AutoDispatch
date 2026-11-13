@@ -6,8 +6,8 @@ namespace AutoDispatch.Web.Data.Context;
 
 /// <summary>
 ///     Design-time для dotnet ef: строка подключения из appsettings.Development.json проекта Server </summary>
-public class AcDbContextFactory : IDesignTimeDbContextFactory<AcDbContext> {
-    public AcDbContext CreateDbContext(string[] args) {
+public class AdDbContextFactory : IDesignTimeDbContextFactory<AdDbContext> {
+    public AdDbContext CreateDbContext(string[] args) {
         var serverDir = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "AutoDispatch.Web.Server"));
         var basePath = Directory.Exists(serverDir) ? serverDir : Directory.GetCurrentDirectory();
         var configuration = new ConfigurationBuilder()
@@ -19,8 +19,8 @@ public class AcDbContextFactory : IDesignTimeDbContextFactory<AcDbContext> {
 #endif
             .Build();
 
-        var optionsBuilder = new DbContextOptionsBuilder<AcDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<AdDbContext>();
         optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-        return new AcDbContext(optionsBuilder.Options);
+        return new AdDbContext(optionsBuilder.Options);
     }
 }

@@ -22,7 +22,7 @@ Email/DatSoap/Proxy/Settings/CallReport/Vodia и метрики AutoCall; `RoleE
 Созданы `Deploy/AutoDispatch.Web`, `Deploy/nginx/dispatch.myautocall.net.conf`, `server-setup.txt`, `Scripts/publish-autodispatch-web.ps1`,
 `Scripts/commands.txt`, `DataBase/create autodispatch*.sql`, `create log indexes.sql`. Локальные БД `autodispatch_local` и
 `autodispatch_log_local` созданы в SQL Express. Проверено: build, `/Test`, логин-страница, таблица `Log`, офлайн-тесты.
-Ждёт пользователя: миграции `Init` (`AcDbContext`, `AcLogDbContext`), сборка фронта (Node), первая публикация. Страница [[web]].
+Ждёт пользователя: миграции `Init` (`AdDbContext`, `AdLogDbContext`), сборка фронта (Node), первая публикация. Страница [[web]].
 
 ## [2026-11-12] build | блок 0 переноса — компании и пользователи
 
@@ -33,3 +33,17 @@ Email/DatSoap/Proxy/Settings/CallReport/Vodia и метрики AutoCall; `RoleE
 `dispatch.myautocall.net` поднят: БД, nginx, certbot, контейнер `2026.11.13-2`, метрика CPU в cron веб-хоста. В [[deploy]] добавлен раздел
 «Первая публикация» с граблями (`AllowedHosts` из V3, nvm под другим пользователем, фактическое место `metric_cpu.sh`). Обновлены
 `Deploy/server-setup.txt` и шапка `Deploy/metric_cpu.sh`.
+
+## [2026-11-13] decision | этап 2: Guid для Identity, UserVerify → IsDeleted, Users.Name → UserName
+
+Решения пользователя записаны в [[plan]] («Решить»): ключи пользователей и компаний — Guid со старыми Id (контракт несёт Guid, маппинг не нужен);
+`UserVerify` не переносится — статус = `IsDeleted`, как в V3, проверка на `Request` — этап 4; отображаемое имя — `UserName`.
+Скелет [[web]] переведён на `IdentityUser<Guid>` (47 файлов, сборка и 8 офлайн-тестов ок, 3 HTTP-теста ждут сервер),
+`DataBase/migrate from autocall dispatch.sql` блок 0 переписан без таблиц маппинга, [[data-migration]] обновлена.
+Миграцию `Init` пересоздаёт пользователь. Открыто для этапа 2: `DbGeography` на Linux, справочники `City/State/Country`. Префикс классов `Ac` → `Ad` (AutoDispatch) переименован в коде и wiki.
+
+## [2026-11-13] decision | этап 2: геоданные и справочники
+
+Записано в [[plan]] («Решить»): `geography` → `Latitude/Longitude decimal(9,6)` (как в V3; радиус в `LoadHistory2` — гаверсинус в сыром SQL,
+автокомплит — `PlaceService`/Safer); таблиц `City/State/Country` нет, `State`/`Country` — статический класс в коде с прежними Id для
+`d_SetupPacket*`. Вопросов, влияющих на схему этапа 2, не осталось. Префикс классов `Ac` → `Ad` сделан в коде и wiki.

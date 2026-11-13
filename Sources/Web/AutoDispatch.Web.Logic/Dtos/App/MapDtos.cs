@@ -25,7 +25,7 @@ public class MapPointDto {
 /// <summary>
 ///     Содержимое ссылки r: кто открыл и что рисовать </summary>
 public class MapLinkDto {
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     public List<MapPointDto> Points { get; set; }
 }
 

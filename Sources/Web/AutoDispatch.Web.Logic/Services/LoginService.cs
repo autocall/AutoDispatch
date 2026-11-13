@@ -20,7 +20,7 @@ public class LoginService : BaseService {
 
     public LoginService(ServicesHost host) : base(host) { }
 
-    public async Task RecordAsync(string email, AcUser user, bool success, LoginSourceEnum source, string ip, string userAgent) {
+    public async Task RecordAsync(string email, AdUser user, bool success, LoginSourceEnum source, string ip, string userAgent) {
         try {
             await UnitOfWork.LogContext.InsertAsync(new UserLogin {
                 Id = DbRandomHelper.NewInt64(),
@@ -44,7 +44,7 @@ public class LoginService : BaseService {
 
     /// <summary>
     ///     Версия AutoDispatch App по пользователям — из User-Agent "AutoDispatch/1.0.1.9" последнего успешного входа App (AccountApi клиента) </summary>
-    public async Task<Dictionary<int, string>> GetAppVersionsAsync() {
+    public async Task<Dictionary<Guid, string>> GetAppVersionsAsync() {
         var table = UnitOfWork.LogContext.GetTable<UserLogin>();
         var logins = table.Where(e => e.Success && e.Source == LoginSourceEnum.App && e.UserId != null);
         var query =

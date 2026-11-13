@@ -7,9 +7,9 @@ namespace AutoDispatch.Web.Data.Context;
 
 /// <summary>
 ///     EF Core: Identity и миграции. Запросы и записи бизнес-данных — через LinqToDbContext </summary>
-public class AcDbContext : IdentityDbContext<AcUser, AcRole, int, AcUserClaim, AcUserRole, AcUserLogin, AcRoleClaim, AcUserToken> {
+public class AdDbContext : IdentityDbContext<AdUser, AdRole, Guid, AdUserClaim, AdUserRole, AdUserLogin, AdRoleClaim, AdUserToken> {
 
-    public AcDbContext(DbContextOptions<AcDbContext> options) : base(options) {
+    public AdDbContext(DbContextOptions<AdDbContext> options) : base(options) {
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
@@ -17,12 +17,12 @@ public class AcDbContext : IdentityDbContext<AcUser, AcRole, int, AcUserClaim, A
 
         // Identity
         modelBuilder.ApplyConfiguration(new UserMap());
-        modelBuilder.Entity<AcRole>().ToTable("IdentityRoles");
-        modelBuilder.Entity<AcUserRole>().ToTable("IdentityUserRoles");
-        modelBuilder.Entity<AcRoleClaim>().ToTable("IdentityRoleClaim");
-        modelBuilder.Entity<AcUserLogin>().ToTable("IdentityUserLogins");
-        modelBuilder.Entity<AcUserClaim>().ToTable("IdentityUserClaims");
-        modelBuilder.Entity<AcUserToken>().ToTable("IdentityUserToken");
+        modelBuilder.Entity<AdRole>().ToTable("IdentityRoles");
+        modelBuilder.Entity<AdUserRole>().ToTable("IdentityUserRoles");
+        modelBuilder.Entity<AdRoleClaim>().ToTable("IdentityRoleClaim");
+        modelBuilder.Entity<AdUserLogin>().ToTable("IdentityUserLogins");
+        modelBuilder.Entity<AdUserClaim>().ToTable("IdentityUserClaims");
+        modelBuilder.Entity<AdUserToken>().ToTable("IdentityUserToken");
 
         modelBuilder.ApplyConfiguration(new CompanyMap());
 

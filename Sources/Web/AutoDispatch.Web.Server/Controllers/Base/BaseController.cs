@@ -71,6 +71,6 @@ public abstract class BaseController : Controller {
         return Mapper.Map<Dictionary<string, string>>(ModelState);
     }
 
-    protected int GetUserId() => base.User.GetUserId();
-    protected int GetCompanyId() => base.User.GetCompanyId();
+    protected Guid GetUserId() => base.User.GetUserId();
+    protected Guid GetCompanyId() => base.User.GetCompanyId();
 }

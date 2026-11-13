@@ -18,6 +18,8 @@ public class Metrics_Test {
 
     private DateTime _now = new DateTime(2026, 10, 15, 10, 0, 10, DateTimeKind.Utc);
 
+    private static readonly Guid User1 = Guid.NewGuid(), User2 = Guid.NewGuid();
+
     private static ClientMetricsDto Report(int exceptions = 0) => new() { Exceptions = exceptions };
 
     private static int Value(List<Metric> rows, MetricTypeEnum type) => rows.Single(e => e.MetricId == type).Value;
@@ -27,10 +29,10 @@ public class Metrics_Test {
     [Fact]
     public void Test01_TwoReportsPerMinute() {
         var collector = new MetricCollector(() => _now);
-        collector.AddClientReport(1, Report(exceptions: 1));
+        collector.AddClientReport(User1, Report(exceptions: 1));
         _now = _now.AddSeconds(30);
-        collector.AddClientReport(1, Report(exceptions: 2));
-        collector.AddClientReport(2, Report());
+        collector.AddClientReport(User1, Report(exceptions: 2));
+        collector.AddClientReport(User2, Report());
         Assert.Empty(collector.TakeClosed());
 
         _now = _now.AddMinutes(1);

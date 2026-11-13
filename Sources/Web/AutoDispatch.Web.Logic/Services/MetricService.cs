@@ -18,7 +18,7 @@ public class MetricService : BaseService {
 
     public MetricService(ServicesHost host) : base(host) { }
 
-    public void AddClientReport(int userId, ClientMetricsDto dto) {
+    public void AddClientReport(Guid userId, ClientMetricsDto dto) {
         Collector.AddClientReport(userId, dto);
     }
 

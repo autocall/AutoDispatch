@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AutoDispatch.Web.Data.Migrations
 {
-    [DbContext(typeof(AcDbContext))]
-    partial class AcDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AdDbContext))]
+    partial class AdDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -22,10 +22,10 @@ namespace AutoDispatch.Web.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcRole", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdRole", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -49,7 +49,7 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("IdentityRoles", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcRoleClaim", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdRoleClaim", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,8 +63,8 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -73,16 +73,16 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("IdentityRoleClaim", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUser", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUser", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -91,8 +91,8 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<DateTime>("CreatedDateTime")
                         .HasColumnType("smalldatetime");
 
-                    b.Property<int?>("CreatedId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -113,8 +113,8 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<DateTime>("ModifiedDateTime")
                         .HasColumnType("smalldatetime");
 
-                    b.Property<int?>("ModifiedId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ModifiedId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -161,7 +161,7 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("IdentityUsers", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserClaim", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserClaim", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -175,8 +175,8 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -185,7 +185,7 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("IdentityUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserLogin", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserLogin", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -196,8 +196,8 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -206,13 +206,13 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("IdentityUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserRole", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserRole", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -221,10 +221,10 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("IdentityUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserToken", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserToken", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -242,11 +242,11 @@ namespace AutoDispatch.Web.Data.Migrations
 
             modelBuilder.Entity("AutoDispatch.Web.Data.Entities.Company", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedDateTime")
                         .HasColumnType("smalldatetime");
@@ -254,8 +254,8 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("ModifiedById")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ModifiedById")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ModifiedDateTime")
                         .HasColumnType("smalldatetime");
@@ -270,8 +270,8 @@ namespace AutoDispatch.Web.Data.Migrations
 
             modelBuilder.Entity("AutoDispatch.Web.Data.Entities.UserSetting", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Section")
                         .HasColumnType("varchar(50)");
@@ -287,16 +287,16 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("UserSetting", (string)null);
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcRoleClaim", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdRoleClaim", b =>
                 {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcRole", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUser", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUser", b =>
                 {
                     b.HasOne("AutoDispatch.Web.Data.Entities.Company", "Company")
                         .WithMany()
@@ -307,42 +307,42 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserClaim", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserClaim", b =>
                 {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcUser", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserLogin", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserLogin", b =>
                 {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcUser", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserRole", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserRole", b =>
                 {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcRole", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcUser", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AcUserToken", b =>
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.AdUserToken", b =>
                 {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcUser", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -351,7 +351,7 @@ namespace AutoDispatch.Web.Data.Migrations
 
             modelBuilder.Entity("AutoDispatch.Web.Data.Entities.UserSetting", b =>
                 {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.AcUser", null)
+                    b.HasOne("AutoDispatch.Web.Data.Entities.AdUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)

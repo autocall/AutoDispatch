@@ -14,7 +14,7 @@ public class ClientLogQuota {
     }
 
     private readonly Func<DateTime> _now;
-    private readonly Dictionary<int, Entry> _users = new();
+    private readonly Dictionary<Guid, Entry> _users = new();
 
     public ClientLogQuota(Func<DateTime> now = null) {
         this._now = now ?? (() => DateTime.UtcNow);
@@ -22,7 +22,7 @@ public class ClientLogQuota {
 
     /// <summary>
     ///     true — пачку писать; firstDrop — первый отказ в окне, чтобы предупреждение в лог ушло один раз </summary>
-    public bool TryTake(int userId, int count, out bool firstDrop) {
+    public bool TryTake(Guid userId, int count, out bool firstDrop) {
         var now = _now();
         lock (_users) {
             if (_users.TryGetValue(userId, out var entry) == false || now - entry.Started >= AppSettings.ClientLogQuotaWindow) {

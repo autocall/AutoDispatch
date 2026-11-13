@@ -6,9 +6,9 @@ using AutoDispatch.Web.Logic.Dtos.Identity;
 namespace AutoDispatch.Web.Server.Models;
 
 /// <summary>
-///     Форма компании в модалке: Id = 0 — создание </summary>
+///     Форма компании в модалке: Id = Guid.Empty — создание </summary>
 public class CompanyFormViewModel {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     [Required, MinLength(2), MaxLength(100)]
     public string Name { get; set; }
 }
@@ -27,11 +27,11 @@ public class CompaniesIndexViewModel {
 }
 
 /// <summary>
-///     Форма пользователя в модалке: Id = 0 — создание, тогда пароль обязателен </summary>
+///     Форма пользователя в модалке: Id = Guid.Empty — создание, тогда пароль обязателен </summary>
 public class UserFormViewModel {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     [Required]
-    public int CompanyId { get; set; }
+    public Guid CompanyId { get; set; }
     [Required, EmailAddress, MaxLength(256)]
     public string Email { get; set; }
     [MaxLength(256)]

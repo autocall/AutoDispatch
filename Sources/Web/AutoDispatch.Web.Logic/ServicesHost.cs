@@ -13,21 +13,21 @@ public class ServicesHost {
 
     private readonly Dictionary<Type, IService> services = new Dictionary<Type, IService>();
 
-    private RoleManager<AcRole> _roleManager;
-    public RoleManager<AcRole> RoleManager {
+    private RoleManager<AdRole> _roleManager;
+    public RoleManager<AdRole> RoleManager {
         get {
             if (_roleManager == null) {
-                _roleManager = this.ServiceProvider.GetRequiredService<RoleManager<AcRole>>();
+                _roleManager = this.ServiceProvider.GetRequiredService<RoleManager<AdRole>>();
             }
             return _roleManager;
         }
     }
 
-    private UserManager<AcUser> _userManager;
-    public UserManager<AcUser> UserManager {
+    private UserManager<AdUser> _userManager;
+    public UserManager<AdUser> UserManager {
         get {
             if (_userManager == null) {
-                _userManager = this.ServiceProvider.GetRequiredService<UserManager<AcUser>>();
+                _userManager = this.ServiceProvider.GetRequiredService<UserManager<AdUser>>();
             }
             return _userManager;
         }

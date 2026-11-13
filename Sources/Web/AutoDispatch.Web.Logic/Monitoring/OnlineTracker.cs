@@ -9,11 +9,11 @@ namespace AutoDispatch.Web.Logic.Monitoring;
 ///     читается страницей мониторинга, сбрасывается в UserActivity фоновым сервисом </summary>
 public class OnlineTracker {
 
-    public record Entry(int UserId, int CompanyId, string Email, LoginSourceEnum Source, DateTime LastSeen);
+    public record Entry(Guid UserId, Guid CompanyId, string Email, LoginSourceEnum Source, DateTime LastSeen);
 
-    private readonly ConcurrentDictionary<int, Entry> _entries = new();
+    private readonly ConcurrentDictionary<Guid, Entry> _entries = new();
 
-    public void Touch(int userId, int companyId, string email, LoginSourceEnum source) {
+    public void Touch(Guid userId, Guid companyId, string email, LoginSourceEnum source) {
         _entries[userId] = new Entry(userId, companyId, email, source, DateTime.UtcNow);
     }
 

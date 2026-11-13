@@ -46,22 +46,22 @@ public class Program {
 
         var services = builder.Services;
 
-        services.AddDbContext<AcDbContext>(options =>
+        services.AddDbContext<AdDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.CommandTimeout((int)AppSettings.SqlTimeout.TotalSeconds)));
-        services.AddDbContext<AcLogDbContext>(options =>
+        services.AddDbContext<AdLogDbContext>(options =>
             options.UseSqlServer(logConnectionString, sql => sql.CommandTimeout((int)AppSettings.SqlTimeout.TotalSeconds)));
         services.AddLinqToDBContext<LinqToDbContext>((provider, options) => options.UseSqlServer(connectionString));
         services.AddLinqToDBContext<LogLinqToDbContext>((provider, options) => options.UseSqlServer(logConnectionString));
 
         #region [ Identity: cookie для сайта, Bearer для Api/* ]
 
-        services.AddIdentity<AcUser, AcRole>()
-            .AddEntityFrameworkStores<AcDbContext>()
+        services.AddIdentity<AdUser, AdRole>()
+            .AddEntityFrameworkStores<AdDbContext>()
             .AddDefaultTokenProviders();
-        services.AddTransient<IUserStore<AcUser>, AcUserStore>();
-        services.AddTransient<IRoleStore<AcRole>, AcRoleStore>();
+        services.AddTransient<IUserStore<AdUser>, AdUserStore>();
+        services.AddTransient<IRoleStore<AdRole>, AdRoleStore>();
         // в cookie добавляются CompanyId и TimeZoneId — те же claims, что в JWT
-        services.AddScoped<IUserClaimsPrincipalFactory<AcUser>, AcClaimsPrincipalFactory>();
+        services.AddScoped<IUserClaimsPrincipalFactory<AdUser>, AdClaimsPrincipalFactory>();
 
         services.Configure<IdentityOptions>(options => {
             options.Password.RequireDigit = false;
@@ -232,13 +232,13 @@ public class Program {
         using var scope = app.Services.CreateScope();
         var provider = scope.ServiceProvider;
 
-        Migrate(provider.GetRequiredService<AcLogDbContext>(), "AcLogDbContext");
-        if (Migrate(provider.GetRequiredService<AcDbContext>(), "AcDbContext") == false) {
+        Migrate(provider.GetRequiredService<AdLogDbContext>(), "AdLogDbContext");
+        if (Migrate(provider.GetRequiredService<AdDbContext>(), "AdDbContext") == false) {
             return;
         }
         _l.i("Seeding database");
         var host = provider.GetRequiredService<ServicesHost>();
-        AcDbContextSeed.SeedAsync(provider.GetRequiredService<LinqToDbContext>(), host.UserManager, host.RoleManager).Wait();
+        AdDbContextSeed.SeedAsync(provider.GetRequiredService<LinqToDbContext>(), host.UserManager, host.RoleManager).Wait();
     }
 
     /// <summary>

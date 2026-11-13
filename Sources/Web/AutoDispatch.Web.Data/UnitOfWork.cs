@@ -17,18 +17,18 @@ public class UnitOfWork : IDisposable {
 
     /// <summary>
     ///     Кэш репозиториев по типу и CompanyId (default — без фильтра) </summary>
-    private readonly Dictionary<(Type, int), IRepository> repositories = new();
+    private readonly Dictionary<(Type, Guid), IRepository> repositories = new();
 
     public UnitOfWork(LinqToDbContext context, LogLinqToDbContext logContext) {
         this.Context = context;
         this.LogContext = logContext;
     }
 
-    private List<AcRole> roles = null;
-    public List<AcRole> Roles {
+    private List<AdRole> roles = null;
+    public List<AdRole> Roles {
         get {
             if (roles == null) {
-                roles = this.Context.GetTable<AcRole>().ToList();
+                roles = this.Context.GetTable<AdRole>().ToList();
             }
             return roles;
         }
@@ -43,7 +43,7 @@ public class UnitOfWork : IDisposable {
         return repository;
     }
 
-    public IRepository<T> GetRepository<T>(int companyId) where T : BaseCompanyEntity {
+    public IRepository<T> GetRepository<T>(Guid companyId) where T : BaseCompanyEntity {
         if (repositories.ContainsKey((typeof(T), companyId))) {
             return repositories[(typeof(T), companyId)] as CompanyLinqToDbRepository<T>;
         }

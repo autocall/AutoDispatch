@@ -4,7 +4,7 @@ namespace AutoDispatch.Web.Data.Entities;
 
 public abstract class BaseCompanyEntity : BaseEntity {
 
-    public int CompanyId { get; set; }
+    public Guid CompanyId { get; set; }
 
     [ForeignKey("CompanyId")]
     public virtual Company Company { get; set; }

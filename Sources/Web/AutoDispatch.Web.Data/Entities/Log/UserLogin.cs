@@ -16,8 +16,8 @@ public class UserLogin {
 
     /// <summary>
     ///     null — email не найден </summary>
-    public int? UserId { get; set; }
-    public int? CompanyId { get; set; }
+    public Guid? UserId { get; set; }
+    public Guid? CompanyId { get; set; }
 
     [Column(TypeName = "varchar(256)")]
     public string Email { get; set; }

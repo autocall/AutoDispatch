@@ -34,8 +34,8 @@ public class AdminCompaniesController : BaseController {
         return PartialView("_CompanyFormPart", new CompanyFormViewModel());
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult> Edit(int id) {
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult> Edit(Guid id) {
         var dto = await Service.GetAsync(id);
         if (dto == null) return NotFound();
         return PartialView("_CompanyFormPart", Mapper.Map<CompanyFormViewModel>(dto));
@@ -46,7 +46,7 @@ public class AdminCompaniesController : BaseController {
         if (ModelState.IsValid == false) {
             return PartialView("_CompanyFormPart", model);
         }
-        if (model.Id == 0) {
+        if (model.Id == Guid.Empty) {
             await Service.CreateAsync(Mapper.Map<CreateCompanyDto>(model), GetUserId());
         } else {
             await Service.UpdateAsync(Mapper.Map<UpdateCompanyDto>(model), GetUserId());
@@ -54,14 +54,14 @@ public class AdminCompaniesController : BaseController {
         return RedirectAfterPost("/Admin/Companies");
     }
 
-    [HttpPost("{id:int}"), ValidateAntiForgeryToken]
-    public async Task<ActionResult> Delete(int id) {
+    [HttpPost("{id:guid}"), ValidateAntiForgeryToken]
+    public async Task<ActionResult> Delete(Guid id) {
         await Service.DeleteAsync(id, GetUserId());
         return RedirectAfterPost("/Admin/Companies");
     }
 
-    [HttpPost("{id:int}"), ValidateAntiForgeryToken]
-    public async Task<ActionResult> Restore(int id) {
+    [HttpPost("{id:guid}"), ValidateAntiForgeryToken]
+    public async Task<ActionResult> Restore(Guid id) {
         await Service.RestoreAsync(id, GetUserId());
         return RedirectAfterPost("/Admin/Companies?deleted=true");
     }

@@ -22,25 +22,28 @@ public class UserService : BaseService {
         var db = UnitOfWork.Context;
         var email = String.IsNullOrWhiteSpace(filter.Email) ? null : filter.Email.Trim();
         var query =
-            from u in db.GetTable<AcUser>()
+            from u in db.GetTable<AdUser>()
             join c in db.GetTable<Company>() on u.CompanyId equals c.Id
-            join ur in db.GetTable<AcUserRole>() on u.Id equals ur.UserId into urs
+            join ur in db.GetTable<AdUserRole>() on u.Id equals ur.UserId into urs
             from ur in urs.DefaultIfEmpty()
             where u.IsDeleted == filter.Deleted && (filter.CompanyId == null || u.CompanyId == filter.CompanyId)
                 && (email == null || u.Email.Contains(email))
             orderby c.Name, u.Email
-            select new UserDto {
-                Id = u.Id,
-                CompanyId = u.CompanyId,
-                CompanyName = c.Name,
-                UserName = u.UserName,
-                Email = u.Email,
-                TimeZoneId = u.TimeZoneId,
-                Role = ur == null ? RoleEnum.Unknown : (RoleEnum)ur.RoleId,
-                CreatedDateTime = u.CreatedDateTime,
-                IsDeleted = u.IsDeleted
+            select new {
+                RoleId = ur == null ? Guid.Empty : ur.RoleId,
+                Dto = new UserDto {
+                    Id = u.Id,
+                    CompanyId = u.CompanyId,
+                    CompanyName = c.Name,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    TimeZoneId = u.TimeZoneId,
+                    CreatedDateTime = u.CreatedDateTime,
+                    IsDeleted = u.IsDeleted
+                }
             };
-        var users = await query.ToListAsync();
+        // RoleId -> RoleEnum (RoleEnumExtension) в SQL не переводится — после выборки
+        var users = (await query.ToListAsync()).Select(e => { e.Dto.Role = e.RoleId.ToRoleEnum(); return e.Dto; }).ToList();
 
         var versions = await Host.GetService<LoginService>().GetAppVersionsAsync();
         foreach (var user in users) {
@@ -49,7 +52,7 @@ public class UserService : BaseService {
         return users;
     }
 
-    public async Task<UserDto> GetAsync(int id) {
+    public async Task<UserDto> GetAsync(Guid id) {
         var user = await Host.UserManager.FindByIdAsync(id.ToString());
         if (user == null) return null;
         var company = await base.Rep<Company>().GetByIdAsync(user.CompanyId);
@@ -68,7 +71,7 @@ public class UserService : BaseService {
 
     /// <summary>
     ///     Ответ входа App: токен плюс всё для сессии клиента </summary>
-    public async Task<SessionDto> GetSessionAsync(AcUser user, string token) {
+    public async Task<SessionDto> GetSessionAsync(AdUser user, string token) {
         var roles = await Host.UserManager.GetRolesAsync(user);
         var company = await base.Rep<Company>().GetByIdAsync(user.CompanyId);
         return new SessionDto {
@@ -83,7 +86,7 @@ public class UserService : BaseService {
         };
     }
 
-    public async Task<IdentityDto> GetIdentityAsync(AcUser user) {
+    public async Task<IdentityDto> GetIdentityAsync(AdUser user) {
         var roles = await Host.UserManager.GetRolesAsync(user);
         return new IdentityDto {
             Id = user.Id,
@@ -95,9 +98,9 @@ public class UserService : BaseService {
         };
     }
 
-    public async Task<UserDto> CreateAsync(CreateUserDto dto, int userId) {
-        var user = new AcUser {
-            Id = DbRandomHelper.NewInt32(),
+    public async Task<UserDto> CreateAsync(CreateUserDto dto, Guid userId) {
+        var user = new AdUser {
+            Id = Guid.NewGuid(),
             CompanyId = dto.CompanyId,
             Email = Normalize(dto.Email),
             UserName = String.IsNullOrWhiteSpace(dto.UserName) ? Normalize(dto.Email) : dto.UserName.Trim(),
@@ -112,7 +115,7 @@ public class UserService : BaseService {
         return await GetAsync(user.Id);
     }
 
-    public async Task<UserDto> UpdateAsync(UpdateUserDto dto, int userId) {
+    public async Task<UserDto> UpdateAsync(UpdateUserDto dto, Guid userId) {
         var user = await Host.UserManager.FindByIdAsync(dto.Id.ToString());
         if (user == null) throw new InfoException("User not found");
 
@@ -140,7 +143,7 @@ public class UserService : BaseService {
 
     /// <summary>
     ///     Soft delete: IsDeleted + lockout + новый security stamp, чтобы cookie и токены перестали действовать </summary>
-    public async Task DeleteAsync(int id, int userId) {
+    public async Task DeleteAsync(Guid id, Guid userId) {
         var user = await Host.UserManager.FindByIdAsync(id.ToString());
         if (user == null) throw new InfoException("User not found");
         if (user.Id == userId) throw new InfoException("You cannot delete yourself");
@@ -153,7 +156,7 @@ public class UserService : BaseService {
         Check(await Host.UserManager.UpdateSecurityStampAsync(user));
     }
 
-    public async Task RestoreAsync(int id, int userId) {
+    public async Task RestoreAsync(Guid id, Guid userId) {
         var user = await Host.UserManager.FindByIdAsync(id.ToString());
         if (user == null) throw new InfoException("User not found");
         user.IsDeleted = false;
@@ -165,7 +168,7 @@ public class UserService : BaseService {
 
     #region [ private ]
 
-    private async Task<RoleEnum> GetRoleAsync(AcUser user) {
+    private async Task<RoleEnum> GetRoleAsync(AdUser user) {
         var roles = await Host.UserManager.GetRolesAsync(user);
         var name = roles.FirstOrDefault();
         return name != null && Enum.TryParse<RoleEnum>(name, out var role) ? role : RoleEnum.Unknown;

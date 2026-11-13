@@ -2,9 +2,9 @@ using AutoDispatch.Web.Data.Enums;
 
 namespace AutoDispatch.Web.Logic.Dtos.Identity;
 
-public class AcUserDto {
-    public int Id { get; set; }
-    public int CompanyId { get; set; }
+public class AdUserDto {
+    public Guid Id { get; set; }
+    public Guid CompanyId { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
@@ -12,16 +12,16 @@ public class AcUserDto {
     public bool IsDeleted { get; set; }
 }
 
-public class AcRoleDto {
-    public int Id { get; set; }
+public class AdRoleDto {
+    public Guid Id { get; set; }
     public string Name { get; set; }
 }
 
 /// <summary>
 ///     Ответ Api/Account/Identity и SignIn </summary>
 public class IdentityDto {
-    public int Id { get; set; }
-    public int CompanyId { get; set; }
+    public Guid Id { get; set; }
+    public Guid CompanyId { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
@@ -31,8 +31,8 @@ public class IdentityDto {
 /// <summary>
 ///     Строка списка пользователей в админке: одна роль на пользователя </summary>
 public class UserDto {
-    public int Id { get; set; }
-    public int CompanyId { get; set; }
+    public Guid Id { get; set; }
+    public Guid CompanyId { get; set; }
     public string CompanyName { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }
@@ -48,7 +48,7 @@ public class UserDto {
 /// <summary>
 ///     Фильтр /Admin/Users </summary>
 public class UserFilterDto {
-    public int? CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public bool Deleted { get; set; }
     public string Email { get; set; }
 
@@ -56,7 +56,7 @@ public class UserFilterDto {
 }
 
 public class CreateUserDto {
-    public int CompanyId { get; set; }
+    public Guid CompanyId { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
@@ -65,8 +65,8 @@ public class CreateUserDto {
 }
 
 public class UpdateUserDto {
-    public int Id { get; set; }
-    public int CompanyId { get; set; }
+    public Guid Id { get; set; }
+    public Guid CompanyId { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }
     public string TimeZoneId { get; set; }

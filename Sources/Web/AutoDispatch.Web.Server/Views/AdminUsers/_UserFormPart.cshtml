@@ -2,7 +2,7 @@
 <form hx-post="/Admin/Users/Save" hx-target="this" hx-swap="outerHTML" class="flex flex-col gap-3">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
-    <h3 class="text-lg font-semibold">@(Model.Id == 0 ? "New user" : "Edit user")</h3>
+    <h3 class="text-lg font-semibold">@(Model.Id == Guid.Empty ? "New user" : "Edit user")</h3>
     <div asp-validation-summary="ModelOnly" class="text-error text-sm"></div>
     <label class="form-control">
         <span class="label-text">Company</span>
@@ -45,7 +45,7 @@
         </label>
     </div>
     <label class="form-control">
-        <span class="label-text">@(Model.Id == 0 ? "Password" : "New password (empty = keep current)")</span>
+        <span class="label-text">@(Model.Id == Guid.Empty ? "Password" : "New password (empty = keep current)")</span>
         <input asp-for="Password" type="password" autocomplete="new-password" class="input input-bordered w-full" />
         <span asp-validation-for="Password" class="text-error text-xs"></span>
     </label>

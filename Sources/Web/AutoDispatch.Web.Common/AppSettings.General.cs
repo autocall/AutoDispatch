@@ -82,7 +82,7 @@ public partial class AppSettings {
     ///     Свойство с id запуска App — колонка Session таблицы Log </summary>
     public const string LogSessionProperty = "Session";
     /// <summary>
-    ///     Таблица Serilog в LogDataBaseName (создаёт сам sink; существующую не меняет — колонки через миграции AcLogDbContext) </summary>
+    ///     Таблица Serilog в LogDataBaseName (создаёт сам sink; существующую не меняет — колонки через миграции AdLogDbContext) </summary>
     public const string LogTableName = "Log";
     /// <summary>
     ///     Клиентское время записи из Api/Logs — в LogEvent; TimeStamp — время получения сервером </summary>

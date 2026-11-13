@@ -6,8 +6,8 @@
 
 ## Что осталось от V3
 
-Common (`AppSettings` partial: `General`, `Secrets`, `Environment.Remote/Local`), Data (`AcDbContext` Identity int-ключи,
-`LinqToDbContext`, `AcLogDbContext`/`LogLinqToDbContext`, `UnitOfWork`, репозитории, `Company`, `AcUser`, `UserSetting`),
+Common (`AppSettings` partial: `General`, `Secrets`, `Environment.Remote/Local`), Data (`AdDbContext` Identity int-ключи,
+`LinqToDbContext`, `AdLogDbContext`/`LogLinqToDbContext`, `UnitOfWork`, репозитории, `Company`, `AdUser`, `UserSetting`),
 Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `CompanyService`, `LoginService`, `LogService`,
 `MetricService`, `MonitorService`, `PasswordService`, `DownloadService`, `MapService`, `PlaceService`, `UserSettingService`;
 `WebServices/` Mailgun и Brokersnapshot), Server (`Account`, `Admin{Companies,Users,Logs,Monitor,Metrics}`, `ApiAccount`,
@@ -22,7 +22,7 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
 | `Pattern`, `PreparedPattern`, `RecordFilter`, `BasePatternEntity`, `PatternEnums`, `EmailAccount/EmailMessage`, `AppMaps` | Data |
 | `PatternService`, `PreparedPatternService`, `RecordFilterService`, `EmailService`, `CallReportService`, `VodiaWebService`, `DatSoap/DatAlarmQueue`, `PatternDtos`, `CallReportDtos`, email-DTO | Logic |
 | `ApiPatterns`, `ApiPreparedPatterns`, `ApiRecordFilters`, `ApiSettings`, `ApiEmail`, `ApiProxy` (Truckstop), `ApiDatSoap`, `CallReport`, `Email`, блоки Congestion/Emails на Home, views `CallReport/`, `Email/` | Server |
-| `AcUser.AutoCall/SipLogin/SipPassword`, `SessionDto.AutoCall/Sip*/Email*`, `UserDto.SipLogin/DataSources`, колонки Data Source и AutoPhone в `/Admin/Users` | модель и админка |
+| `AdUser.AutoCall/SipLogin/SipPassword`, `SessionDto.AutoCall/Sip*/Email*`, `UserDto.SipLogin/DataSources`, колонки Data Source и AutoPhone в `/Admin/Users` | модель и админка |
 | `AppSettings`: SMTP Gmail, Vodia, DatSoap; `Secrets:Vodia` | Common |
 | Метрики DAT v2/v1, Truckstop, MicroSIP, AbtoPhone (`MetricTypeEnum` 31–46, `ClientMetricsDto.Sources/Calls/SipRegistered`, колонки `/Admin/Metrics`) | Logic, Server |
 | Тесты `03_DatSoap`, `06_CallReport` | Test |
@@ -39,6 +39,14 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
   БД `autodispatch`/`autodispatch_log` (локально `autodispatch_local`/`autodispatch_log_local`, SQL Express, collation UTF8),
   `FilesPath` (`/files/`, локально `D:\Develop\AutoDispatch\Data\files\`), локальные порты 7092/7082 (V3 занимает 7091/7081),
   `DownloadApplicationFile` `AutoDispatch.application`, User-Agent App `AutoDispatch/`.
+- **Префикс `Ad` вместо `Ac`** (решено 2026-11-13): `AdUser`, `AdRole`, `AdDbContext`, `AdLogDbContext`, `AdUserStore`, `AdClaimsPrincipalFactory` и т.д. — классы и файлы;
+  имена таблиц (`IdentityUsers`, `Company`) не менялись.
+- **Identity и `Company` на Guid** (решено 2026-11-13, [[plan]]): `AdUser : IdentityUser<Guid>`, `AdRole` и остальные Identity-типы `<Guid>`,
+  `BaseEntity.Id`/`CreatedById`/`ModifiedById`, `UserSetting.UserId`, `UserLogin`/`UserActivity` в БД логов — Guid. Новые ключи — `Guid.NewGuid()`
+  (`DbRandomHelper.NewInt32` удалён, `NewInt64` остался для БД логов). Системные Id: компания и System `…-000000001000`, Admin `…-000000001001`;
+  Id роли = `RoleEnum.ToRoleId()` (`Enums/RoleEnumExtension.cs`), обратно — `ToRoleEnum()` в памяти (в SQL не переводится, `UserService.GetAllAsync`).
+  Ссылка карты (`MapService`): в payload вместо int32 — 16 байт Guid. Маршруты админки `{id:guid}`, формы: `Id == Guid.Empty` — создание.
+  Миграция `Init` от 2026-11-12 сделана под int — пересоздаётся пользователем.
 - **Миграции не копировались** (их делает пользователь — CLAUDE.md): `Migrations/` пуст, при старте сервер пишет предупреждение
   и пропускает seed. Для `Log` таблицу создаёт sink сразу с колонками `Details`/`Session`, индексы — `DataBase/create log indexes.sql`
   после первого запуска (у V3 это делала миграция `Alter_Log`).

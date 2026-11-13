@@ -9,7 +9,7 @@ public class UserSettingMap : IEntityTypeConfiguration<UserSetting> {
     public void Configure(EntityTypeBuilder<UserSetting> builder) {
         builder.ToTable("UserSetting");
         builder.HasKey(e => new { e.UserId, e.Section });
-        builder.HasOne<AcUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<AdUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.NoAction);
     }
 
     public static void LinqToDbConfigure(FluentMappingBuilder builder) {

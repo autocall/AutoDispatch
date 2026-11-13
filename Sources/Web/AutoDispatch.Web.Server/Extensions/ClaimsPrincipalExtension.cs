@@ -4,17 +4,17 @@ namespace AutoDispatch.Web.Server.Extensions;
 
 public static class ClaimsPrincipalExtension {
 
-    public static int GetUserId(this ClaimsPrincipal principal) {
+    public static Guid GetUserId(this ClaimsPrincipal principal) {
         var claim = principal.FindFirst(ClaimTypes.NameIdentifier);
-        return claim == null ? default : Int32.Parse(claim.Value);
+        return claim == null ? default : Guid.Parse(claim.Value);
     }
 
-    public static int GetCompanyId(this ClaimsPrincipal principal) {
+    public static Guid GetCompanyId(this ClaimsPrincipal principal) {
         var claim = principal.FindFirst("CompanyId");
         if (claim == null) {
             throw new Exception("CompanyId claim not found");
         }
-        return Int32.Parse(claim.Value);
+        return Guid.Parse(claim.Value);
     }
 
     public static string GetEmail(this ClaimsPrincipal principal) {

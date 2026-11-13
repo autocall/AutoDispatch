@@ -25,23 +25,23 @@ public class LinqToDbRepository<T> : IRepository<T> where T : BaseEntity {
         return includeIsDeleted ? Table() : Table().Where(e => e.IsDeleted == false);
     }
 
-    public virtual async Task<T> GetByIdAsync(int id) {
+    public virtual async Task<T> GetByIdAsync(Guid id) {
         return await Table().FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public virtual async Task InsertAsync(T model, int userId) {
+    public virtual async Task InsertAsync(T model, Guid userId) {
         Stamp(model, userId);
         await Connection.InsertAsync(model);
     }
 
-    public virtual async Task InsertAsync(IEnumerable<T> models, int userId) {
+    public virtual async Task InsertAsync(IEnumerable<T> models, Guid userId) {
         foreach (var model in models) {
             Stamp(model, userId);
         }
         await Connection.BulkCopyAsync(models);
     }
 
-    public virtual async Task<int> UpdateAsync<TMap>(T newModel, int userId) where TMap : IBaseUpdateMap {
+    public virtual async Task<int> UpdateAsync<TMap>(T newModel, Guid userId) where TMap : IBaseUpdateMap {
         IUpdatable<T> query = Table()
             .Where(e => e.Id == newModel.Id)
             .Set(e => e.ModifiedById, userId)
@@ -59,7 +59,7 @@ public class LinqToDbRepository<T> : IRepository<T> where T : BaseEntity {
         return await query.UpdateAsync();
     }
 
-    public virtual async Task<int> UpdateIsDeletedAsync(int id, bool value, int userId) {
+    public virtual async Task<int> UpdateIsDeletedAsync(Guid id, bool value, Guid userId) {
         return await Table()
             .Where(e => e.Id == id)
             .Set(e => e.IsDeleted, value)
@@ -68,15 +68,15 @@ public class LinqToDbRepository<T> : IRepository<T> where T : BaseEntity {
             .UpdateAsync();
     }
 
-    public virtual async Task<int> DeleteAsync(int id) {
+    public virtual async Task<int> DeleteAsync(Guid id) {
         return await Table().Where(e => e.Id == id).DeleteAsync();
     }
 
     #region [ private ]
 
-    private static void Stamp(T model, int userId) {
+    private static void Stamp(T model, Guid userId) {
         if (model.Id == default) {
-            model.Id = DbRandomHelper.NewInt32();
+            model.Id = Guid.NewGuid();
         }
         model.CreatedById = userId;
         model.ModifiedById = userId;

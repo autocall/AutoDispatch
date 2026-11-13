@@ -33,13 +33,13 @@ public class AdminUsersController : BaseController {
     }
 
     [HttpGet]
-    public async Task<ActionResult> Create(int? companyId = null) {
-        var model = new UserFormViewModel { CompanyId = companyId ?? 0, TimeZoneId = TimeZoneHelper.UtcId };
+    public async Task<ActionResult> Create(Guid? companyId = null) {
+        var model = new UserFormViewModel { CompanyId = companyId ?? Guid.Empty, TimeZoneId = TimeZoneHelper.UtcId };
         return PartialView("_UserFormPart", await FillAsync(model));
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult> Edit(int id) {
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult> Edit(Guid id) {
         var dto = await Service.GetAsync(id);
         if (dto == null) return NotFound();
         return PartialView("_UserFormPart", await FillAsync(Mapper.Map<UserFormViewModel>(dto)));
@@ -47,7 +47,7 @@ public class AdminUsersController : BaseController {
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<ActionResult> Save(UserFormViewModel model) {
-        if (model.Id == 0 && String.IsNullOrEmpty(model.Password)) {
+        if (model.Id == Guid.Empty && String.IsNullOrEmpty(model.Password)) {
             ModelState.AddModelError(nameof(model.Password), "Password is required for a new user");
         }
         if (model.Role == RoleEnum.Unknown) {
@@ -57,7 +57,7 @@ public class AdminUsersController : BaseController {
             return PartialView("_UserFormPart", await FillAsync(model));
         }
         using var scope = _l.Scope("admin");
-        if (model.Id == 0) {
+        if (model.Id == Guid.Empty) {
             var dto = await Service.CreateAsync(Mapper.Map<CreateUserDto>(model), GetUserId());
             _l.i($"User created: {dto.Email} ({dto.Id}) by {User.Identity?.Name}");
         } else {
@@ -67,16 +67,16 @@ public class AdminUsersController : BaseController {
         return RedirectAfterPost("/Admin/Users");
     }
 
-    [HttpPost("{id:int}"), ValidateAntiForgeryToken]
-    public async Task<ActionResult> Delete(int id) {
+    [HttpPost("{id:guid}"), ValidateAntiForgeryToken]
+    public async Task<ActionResult> Delete(Guid id) {
         using var scope = _l.Scope("admin");
         await Service.DeleteAsync(id, GetUserId());
         _l.i($"User deleted: {id} by {User.Identity?.Name}");
         return RedirectAfterPost("/Admin/Users");
     }
 
-    [HttpPost("{id:int}"), ValidateAntiForgeryToken]
-    public async Task<ActionResult> Restore(int id) {
+    [HttpPost("{id:guid}"), ValidateAntiForgeryToken]
+    public async Task<ActionResult> Restore(Guid id) {
         using var scope = _l.Scope("admin");
         await Service.RestoreAsync(id, GetUserId());
         _l.i($"User restored: {id} by {User.Identity?.Name}");

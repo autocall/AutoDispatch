@@ -27,7 +27,7 @@ public class LogService : BaseService {
     /// <summary>
     ///     Пачка App в лог: уровень и Scope из записи (Scope только app.*), Session и ClientTime свойствами, UserName ставит
     ///     RequestContextMiddleware. Сверх квоты — пачка отбрасывается, одно предупреждение на окно </summary>
-    public void WriteClient(int userId, ClientLogBatchDto dto) {
+    public void WriteClient(Guid userId, ClientLogBatchDto dto) {
         var entries = dto.Entries.Where(e => String.IsNullOrWhiteSpace(e.Message) == false).Take(AppSettings.ClientLogBatchLimit).ToList();
         if (entries.Count == 0) {
             return;

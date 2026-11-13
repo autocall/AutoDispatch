@@ -19,22 +19,22 @@ npm run check          # tsc --noEmit
 ## инструмент dotnet-ef — версия должна быть не ниже EF Core проекта (10.x) ##
 dotnet tool update --global dotnet-ef
 
-## два контекста: AcDbContext (autodispatch, папка Migrations) и AcLogDbContext (autodispatch_log, папка Migrations/Log) ##
+## два контекста: AdDbContext (autodispatch, папка Migrations) и AdLogDbContext (autodispatch_log, папка Migrations/Log) ##
 ## создать миграцию (из папки Data; startup-проект даёт строки подключения из appsettings.Development.json) ##
 cd Sources/Web/AutoDispatch.Web.Data
-dotnet ef migrations add Init --context AcDbContext --startup-project ../AutoDispatch.Web.Server
-dotnet ef migrations add Init --context AcLogDbContext --startup-project ../AutoDispatch.Web.Server -o Migrations/Log
+dotnet ef migrations add Init --context AdDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef migrations add Init --context AdLogDbContext --startup-project ../AutoDispatch.Web.Server -o Migrations/Log
 
 ## применить к БД (при старте сервер делает это сам, вручную — так) ##
-dotnet ef database update --context AcDbContext --startup-project ../AutoDispatch.Web.Server
-dotnet ef database update --context AcLogDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef database update --context AdDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef database update --context AdLogDbContext --startup-project ../AutoDispatch.Web.Server
 
 ## удалить последнюю (ещё не применённую) миграцию ##
-dotnet ef migrations remove --context AcDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef migrations remove --context AdDbContext --startup-project ../AutoDispatch.Web.Server
 
 ## список миграций, SQL-скрипт миграции ##
-dotnet ef migrations list --context AcDbContext --startup-project ../AutoDispatch.Web.Server
-dotnet ef migrations script --context AcDbContext --startup-project ../AutoDispatch.Web.Server -o ../../../DataBase/migration.sql
+dotnet ef migrations list --context AdDbContext --startup-project ../AutoDispatch.Web.Server
+dotnet ef migrations script --context AdDbContext --startup-project ../AutoDispatch.Web.Server -o ../../../DataBase/migration.sql
 
 -------- локальная БД (SQL Express 2022, Windows-аутентификация) --------
 

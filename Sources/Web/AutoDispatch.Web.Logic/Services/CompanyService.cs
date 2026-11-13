@@ -21,31 +21,31 @@ public class CompanyService : BaseService {
         return Mapper.Map<List<CompanyDto>>(models);
     }
 
-    public async Task<CompanyDto> GetAsync(int id) {
+    public async Task<CompanyDto> GetAsync(Guid id) {
         var model = await Rep.GetByIdAsync(id);
         return Mapper.Map<CompanyDto>(model);
     }
 
-    public async Task<CompanyDto> CreateAsync(CreateCompanyDto dto, int userId) {
+    public async Task<CompanyDto> CreateAsync(CreateCompanyDto dto, Guid userId) {
         var model = Mapper.Map<Company>(dto);
         await Rep.InsertAsync(model, userId);
         return await GetAsync(model.Id);
     }
 
-    public async Task<CompanyDto> UpdateAsync(UpdateCompanyDto dto, int userId) {
+    public async Task<CompanyDto> UpdateAsync(UpdateCompanyDto dto, Guid userId) {
         var model = Mapper.Map<Company>(dto);
         await Rep.UpdateAsync<ICompanyUpdateMap>(model, userId);
         return await GetAsync(dto.Id);
     }
 
-    public async Task DeleteAsync(int id, int userId) {
+    public async Task DeleteAsync(Guid id, Guid userId) {
         if (id == Company.SystemCompanyId) {
             throw new InfoException("System company cannot be deleted");
         }
         await Rep.UpdateIsDeletedAsync(id, true, userId);
     }
 
-    public async Task RestoreAsync(int id, int userId) {
+    public async Task RestoreAsync(Guid id, Guid userId) {
         await Rep.UpdateIsDeletedAsync(id, false, userId);
     }
 }

@@ -35,7 +35,7 @@ public class MapService : BaseService {
 
     /// <summary>
     ///     Абсолютный URL страницы; точек может не быть — пустая карта (кнопка Map в App) </summary>
-    public string CreateLink(int userId, IReadOnlyList<MapPointDto> points) {
+    public string CreateLink(Guid userId, IReadOnlyList<MapPointDto> points) {
         return $"{AppSettings.Website}{AppSettings.MapPath}?r={CreateToken(userId, points)}";
     }
 
@@ -53,16 +53,16 @@ public class MapService : BaseService {
     }
 
     /// <summary>
-    ///     r = base64url(nonce + AES-GCM(userId int32, [kind byte, lat int32, lng int32]…) + tag), без срока действия;
+    ///     r = base64url(nonce + AES-GCM(userId Guid 16 байт, [kind byte, lat int32, lng int32]…) + tag), без срока действия;
     ///     координаты — целые с 6 знаками, little-endian; ~80 символов на 3 точки против ~200 у Data Protection </summary>
-    private string CreateToken(int userId, IReadOnlyList<MapPointDto> points) {
+    private string CreateToken(Guid userId, IReadOnlyList<MapPointDto> points) {
         foreach (var point in points) {
             if (point.Kind == MapPointKindEnum.Unknown) throw new InfoException("Point kind is required");
             Validate(point.Latitude, point.Longitude);
         }
-        var payload = new byte[4 + points.Count * PointSize];
-        BinaryPrimitives.WriteInt32LittleEndian(payload, userId);
-        var offset = 4;
+        var payload = new byte[16 + points.Count * PointSize];
+        userId.TryWriteBytes(payload);
+        var offset = 16;
         foreach (var point in points) {
             payload[offset] = (byte)point.Kind;
             BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(offset + 1), ToInt(point.Latitude));
@@ -90,7 +90,7 @@ public class MapService : BaseService {
             return null;
         }
         var length = bytes.Length - NonceSize - TagSize;
-        if (length < 4 || (length - 4) % PointSize != 0) {
+        if (length < 16 || (length - 16) % PointSize != 0) {
             return null;
         }
         var payload = new byte[length];
@@ -101,8 +101,8 @@ public class MapService : BaseService {
         } catch (CryptographicException) {
             return null;
         }
-        var link = new MapLinkDto { UserId = BinaryPrimitives.ReadInt32LittleEndian(payload), Points = new List<MapPointDto>() };
-        for (var offset = 4; offset < payload.Length; offset += PointSize) {
+        var link = new MapLinkDto { UserId = new Guid(payload.AsSpan(0, 16)), Points = new List<MapPointDto>() };
+        for (var offset = 16; offset < payload.Length; offset += PointSize) {
             link.Points.Add(new MapPointDto {
                 Kind = (MapPointKindEnum)payload[offset],
                 Latitude = (decimal)BinaryPrimitives.ReadInt32LittleEndian(payload.AsSpan(offset + 1)) / CoordinateScale,

@@ -2,7 +2,7 @@ namespace AutoDispatch.Web.Data.Entities.Log;
 
 /// <summary>
 ///     Строка таблицы Log, которую создаёт и пишет Serilog MSSqlServer sink. Только чтение через LinqToDB, в EF-модель не входит;
-///     колонки Details и Session добавлены миграцией AcLogDbContext </summary>
+///     колонки Details и Session добавлены миграцией AdLogDbContext </summary>
 public class LogEntry {
     public int Id { get; set; }
     /// <summary>

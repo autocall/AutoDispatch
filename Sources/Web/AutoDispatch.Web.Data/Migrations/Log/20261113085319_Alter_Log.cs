@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AutoDispatch.Web.Data.Migrations.Log
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Alter_Log : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,8 +29,8 @@ namespace AutoDispatch.Web.Data.Migrations.Log
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    CompanyId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CompanyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SeenAt = table.Column<DateTime>(type: "datetime2(0)", nullable: false),
                     Source = table.Column<byte>(type: "tinyint", nullable: false)
                 },
@@ -45,8 +45,8 @@ namespace AutoDispatch.Web.Data.Migrations.Log
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false),
                     DateTime = table.Column<DateTime>(type: "datetime2(0)", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: true),
-                    CompanyId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CompanyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Email = table.Column<string>(type: "varchar(256)", nullable: true),
                     Source = table.Column<byte>(type: "tinyint", nullable: false),
                     Success = table.Column<bool>(type: "bit", nullable: false),

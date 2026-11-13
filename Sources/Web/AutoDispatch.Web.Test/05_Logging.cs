@@ -93,19 +93,20 @@ public class Logging_Test {
     ///     после окна счётчик с нуля </summary>
     [Fact]
     public void Test04_ClientQuota() {
+        Guid user1 = Guid.NewGuid(), user2 = Guid.NewGuid();
         var now = new DateTime(2026, 10, 23, 10, 0, 0, DateTimeKind.Utc);
         var quota = new ClientLogQuota(() => now);
 
-        Assert.True(quota.TryTake(1, AppSettings.ClientLogQuota - 1, out _));
-        Assert.True(quota.TryTake(1, 1, out _));
-        Assert.False(quota.TryTake(1, 1, out var firstDrop));
+        Assert.True(quota.TryTake(user1, AppSettings.ClientLogQuota - 1, out _));
+        Assert.True(quota.TryTake(user1, 1, out _));
+        Assert.False(quota.TryTake(user1, 1, out var firstDrop));
         Assert.True(firstDrop);
-        Assert.False(quota.TryTake(1, 1, out firstDrop));
+        Assert.False(quota.TryTake(user1, 1, out firstDrop));
         Assert.False(firstDrop);
-        Assert.True(quota.TryTake(2, 1, out _));
+        Assert.True(quota.TryTake(user2, 1, out _));
 
         now += AppSettings.ClientLogQuotaWindow;
-        Assert.True(quota.TryTake(1, 1, out _));
+        Assert.True(quota.TryTake(user1, 1, out _));
     }
 
     /// <summary>

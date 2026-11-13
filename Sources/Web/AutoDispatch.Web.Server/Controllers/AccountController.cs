@@ -16,13 +16,13 @@ namespace AutoDispatch.Web.Server.Controllers;
 ///     Вход на сайт по cookie (Identity). App входит через ApiAccountController и JWT </summary>
 public class AccountController : BaseController {
 
-    private readonly SignInManager<AcUser> _signInManager;
+    private readonly SignInManager<AdUser> _signInManager;
     private LoginService LoginService => Host.GetService<LoginService>();
     private PasswordService PasswordService => Host.GetService<PasswordService>();
 
     #region [ .ctor ]
 
-    public AccountController(ServicesHost host, SignInManager<AcUser> signInManager) : base(host) {
+    public AccountController(ServicesHost host, SignInManager<AdUser> signInManager) : base(host) {
         this._signInManager = signInManager;
     }
 
@@ -88,8 +88,8 @@ public class AccountController : BaseController {
     }
 
     [HttpGet, AllowAnonymous]
-    public ActionResult ResetPassword(int userId, string code) {
-        if (userId == 0 || String.IsNullOrEmpty(code)) {
+    public ActionResult ResetPassword(Guid userId, string code) {
+        if (userId == Guid.Empty || String.IsNullOrEmpty(code)) {
             return View(new ResetPasswordViewModel { Error = "Invalid reset link" });
         }
         return View(new ResetPasswordViewModel { UserId = userId, Code = code });

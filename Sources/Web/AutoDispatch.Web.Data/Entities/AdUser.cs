@@ -5,12 +5,12 @@ using AutoDispatch.Web.Common;
 
 namespace AutoDispatch.Web.Data.Entities;
 
-public class AcUser : IdentityUser<int> {
+public class AdUser : IdentityUser<Guid> {
 
     [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
-    public override int Id { get; set; }
+    public override Guid Id { get; set; }
 
-    public int CompanyId { get; set; }
+    public Guid CompanyId { get; set; }
 
     /// <summary>
     ///     IANA time zone name </summary>
@@ -24,19 +24,19 @@ public class AcUser : IdentityUser<int> {
     [Column(TypeName = "smalldatetime")]
     public DateTime ModifiedDateTime { get; set; }
 
-    public int? CreatedId { get; set; }
-    public int? ModifiedId { get; set; }
+    public Guid? CreatedId { get; set; }
+    public Guid? ModifiedId { get; set; }
 
     public bool IsDeleted { get; set; }
 
     [ForeignKey("CompanyId")]
     public virtual Company Company { get; set; }
 
-    public static int SystemUserId = 1000;
-    public static int AdminUserId = 1001;
+    public static Guid SystemUserId = new Guid("00000000-0000-0000-0000-000000001000");
+    public static Guid AdminUserId = new Guid("00000000-0000-0000-0000-000000001001");
 
     [NotMapped]
-    public static AcUser SystemUser => new AcUser {
+    public static AdUser SystemUser => new AdUser {
         Id = SystemUserId,
         CompanyId = Company.SystemCompanyId,
         CreatedId = SystemUserId,
@@ -48,7 +48,7 @@ public class AcUser : IdentityUser<int> {
     };
 
     [NotMapped]
-    public static AcUser AdminUser => new AcUser {
+    public static AdUser AdminUser => new AdUser {
         Id = AdminUserId,
         CompanyId = Company.SystemCompanyId,
         CreatedId = SystemUserId,

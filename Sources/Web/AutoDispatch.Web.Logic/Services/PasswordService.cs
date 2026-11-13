@@ -14,7 +14,7 @@ public class PasswordService : BaseService {
 
     public PasswordService(ServicesHost host) : base(host) { }
 
-    public async Task ChangeAsync(AcUser user, string currentPassword, string newPassword) {
+    public async Task ChangeAsync(AdUser user, string currentPassword, string newPassword) {
         var result = await Host.UserManager.ChangePasswordAsync(user, currentPassword, newPassword);
         if (result.Succeeded == false) {
             throw new InfoException(String.Join("; ", result.Errors.Select(e => e.Description)));
@@ -46,7 +46,7 @@ public class PasswordService : BaseService {
         _l.i($"ForgotPassword: email sent to {user.Email}");
     }
 
-    public async Task ResetAsync(int userId, string code, string newPassword) {
+    public async Task ResetAsync(Guid userId, string code, string newPassword) {
         var user = await Host.UserManager.FindByIdAsync(userId.ToString());
         if (user == null || user.IsDeleted) {
             throw new InfoException("Invalid reset link");

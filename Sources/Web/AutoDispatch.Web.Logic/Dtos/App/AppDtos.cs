@@ -6,8 +6,8 @@ namespace AutoDispatch.Web.Logic.Dtos.App;
 ///     Ответ Api/Account/SignIn: токен и всё, что клиенту нужно для сессии (замена Api/Token WebV1; роли — для бордов App) </summary>
 public class SessionDto {
     public string Token { get; set; }
-    public int Id { get; set; }
-    public int CompanyId { get; set; }
+    public Guid Id { get; set; }
+    public Guid CompanyId { get; set; }
     public string CompanyName { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }

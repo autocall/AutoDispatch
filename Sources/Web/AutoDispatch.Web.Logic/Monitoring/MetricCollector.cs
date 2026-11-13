@@ -13,7 +13,7 @@ public class MetricCollector {
         public readonly Dictionary<MetricTypeEnum, List<int>> Values = new();
         /// <summary>
         ///     DistinctUsers и LastPerUser: userId → признак </summary>
-        public readonly Dictionary<MetricTypeEnum, Dictionary<int, bool>> Users = new();
+        public readonly Dictionary<MetricTypeEnum, Dictionary<Guid, bool>> Users = new();
     }
 
     private readonly Dictionary<DateTime, Bucket> _buckets = new();
@@ -47,11 +47,11 @@ public class MetricCollector {
         this.Add(counterType, 1);
     }
 
-    public void AddUser(MetricTypeEnum type, int userId, bool flag) {
+    public void AddUser(MetricTypeEnum type, Guid userId, bool flag) {
         lock (_lock) {
             var users = this.Current().Users;
             if (users.TryGetValue(type, out var map) == false) {
-                users[type] = map = new Dictionary<int, bool>();
+                users[type] = map = new Dictionary<Guid, bool>();
             }
             map[userId] = MetricConverter.TypeToKind(type) == MetricKindEnum.LastPerUser
                 ? flag
@@ -59,7 +59,7 @@ public class MetricCollector {
         }
     }
 
-    public void AddClientReport(int userId, ClientMetricsDto dto) {
+    public void AddClientReport(Guid userId, ClientMetricsDto dto) {
         // отчёт приходит, пока App открыт, — уже онлайн
         this.AddUser(MetricTypeEnum.OnlineUsers, userId, true);
         this.Add(MetricTypeEnum.AppExceptions, dto.Exceptions);

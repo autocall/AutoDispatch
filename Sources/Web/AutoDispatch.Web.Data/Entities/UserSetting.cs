@@ -6,7 +6,7 @@ namespace AutoDispatch.Web.Data.Entities;
 ///     Настройки пользователя по секциям, ключ (UserId, Section); в AutoDispatch используется только секция Map (карта /Map, как в AutoCall V3) </summary>
 public class UserSetting {
 
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 
     [Column(TypeName = "varchar(50)")]
     public string Section { get; set; }

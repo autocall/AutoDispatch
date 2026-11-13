@@ -12,25 +12,25 @@ public interface IRepository<T> : IRepository {
 
     /// <summary>
     ///     Gets entity by PK Id </summary>
-    Task<T> GetByIdAsync(int id);
+    Task<T> GetByIdAsync(Guid id);
 
     /// <summary>
     ///     Insert: Id (если 0), Created*/Modified* проставляются здесь </summary>
-    Task InsertAsync(T model, int userId);
+    Task InsertAsync(T model, Guid userId);
 
     /// <summary>
     ///     Bulk insert </summary>
-    Task InsertAsync(IEnumerable<T> models, int userId);
+    Task InsertAsync(IEnumerable<T> models, Guid userId);
 
     /// <summary>
     ///     Update только свойств TMap плюс Modified* </summary>
-    Task<int> UpdateAsync<TMap>(T newModel, int userId) where TMap : IBaseUpdateMap;
+    Task<int> UpdateAsync<TMap>(T newModel, Guid userId) where TMap : IBaseUpdateMap;
 
     /// <summary>
     ///     Soft delete / restore </summary>
-    Task<int> UpdateIsDeletedAsync(int id, bool value, int userId);
+    Task<int> UpdateIsDeletedAsync(Guid id, bool value, Guid userId);
 
     /// <summary>
     ///     Физическое удаление по Id </summary>
-    Task<int> DeleteAsync(int id);
+    Task<int> DeleteAsync(Guid id);
 }

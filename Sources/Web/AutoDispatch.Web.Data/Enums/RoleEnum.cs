@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace AutoDispatch.Web.Data.Enums;
 
 /// <summary>
-///     Значение = Id роли в IdentityRoles. Роли V1 с модулем AutoDispatch (Permissions.cs V1); остальные роли V1 не заводятся
+///     Id роли в IdentityRoles = ToRoleId() (RoleEnumExtension). Роли V1 с модулем AutoDispatch (Permissions.cs V1); остальные роли V1 не заводятся
 ///     (решено 2026-11-11, AI/wiki/plan.md). Права по ролям — MinAccessAttribute и RolesOperator V1, переносятся на этапах 3–6 </summary>
 public enum RoleEnum {
     Unknown = 0,

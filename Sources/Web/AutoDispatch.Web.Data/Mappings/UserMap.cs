@@ -5,15 +5,15 @@ using AutoDispatch.Web.Data.Entities;
 
 namespace AutoDispatch.Web.Data.Mappings;
 
-public class UserMap : IEntityTypeConfiguration<AcUser> {
-    public void Configure(EntityTypeBuilder<AcUser> builder) {
+public class UserMap : IEntityTypeConfiguration<AdUser> {
+    public void Configure(EntityTypeBuilder<AdUser> builder) {
         builder.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.NoAction);
         builder.ToTable("IdentityUsers");
     }
 
     public static void LinqToDbConfigure(FluentMappingBuilder builder) {
-        builder.Entity<AcUser>().HasTableName("IdentityUsers");
-        builder.Entity<AcRole>().HasTableName("IdentityRoles");
-        builder.Entity<AcUserRole>().HasTableName("IdentityUserRoles");
+        builder.Entity<AdUser>().HasTableName("IdentityUsers");
+        builder.Entity<AdRole>().HasTableName("IdentityRoles");
+        builder.Entity<AdUserRole>().HasTableName("IdentityUserRoles");
     }
 }

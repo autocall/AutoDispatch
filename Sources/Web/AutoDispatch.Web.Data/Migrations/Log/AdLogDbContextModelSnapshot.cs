@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AutoDispatch.Web.Data.Migrations.Log
 {
-    [DbContext(typeof(AcLogDbContext))]
-    partial class AcLogDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AdLogDbContext))]
+    partial class AdLogDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -43,8 +43,8 @@ namespace AutoDispatch.Web.Data.Migrations.Log
                     b.Property<long>("Id")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("SeenAt")
                         .HasColumnType("datetime2(0)");
@@ -52,8 +52,8 @@ namespace AutoDispatch.Web.Data.Migrations.Log
                     b.Property<byte>("Source")
                         .HasColumnType("tinyint");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -69,8 +69,8 @@ namespace AutoDispatch.Web.Data.Migrations.Log
                     b.Property<long>("Id")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2(0)");
@@ -90,8 +90,8 @@ namespace AutoDispatch.Web.Data.Migrations.Log
                     b.Property<string>("UserAgent")
                         .HasColumnType("varchar(256)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 

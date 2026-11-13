@@ -35,8 +35,10 @@ CLAUDE.md и `AI/wiki/{web-architecture,frontend,deploy,logging}.md` из AutoCa
 
 29 сущностей `Entities/Dispatch` V1 переносятся в `AutoDispatch.Web.Data` как есть: Guid `EntityId`, `IsDeleted`,
 `CreatedDate`; EF6-мапы `Mappings/Dispatch/*Map.cs` → `IEntityTypeConfiguration`, LinqToDB-маппинг.
-Без `d_Message` (решено 2026-11-11). `Users/Company` V1 → `AcUser/Company` V3 с полями, которые читает dispatch
-(`VerifyId`, флаги компании, SMTP компании для писем). Миграцию EF делает пользователь.
+Без `d_Message` (решено 2026-11-11). `Users/Company` V1 → `AdUser/Company` V3: Identity на Guid-ключах со старыми `Id` пользователей и
+`EntityId` компаний (решено 2026-11-13, скелет переведён, миграцию `Init` пользователь пересоздаёт); `Users.Name` → `UserName`;
+`UserVerify` не переносится — статус = `IsDeleted` (см. «Решить»). Геоданные: `geography` → пары `Latitude/Longitude decimal(9,6)`, справочники `State/Country` — статический класс в коде, `City` не нужна
+(решено 2026-11-13, см. «Решить»). Открытых вопросов, влияющих на схему, нет.
 Критерий: миграция `Init` применена, Seed отработал, скрипт переноса ([[data-migration]]) прогнан на копии, 7 компаний видны
 в `/Admin/Companies`.
 
@@ -111,6 +113,11 @@ Knockout-viewmodels, Kendo и bootstrap 3 переписываются; един
 | Вопрос | Варианты / решение | Влияет на |
 |---|---|---|
 | Ключи БД | **Решено 2026-11-11: Guid, как в V1.** Контракт 170 типов и 74 метода, `HistoryId`, ссылки между 29 таблицами; int, как в V3, = переписать контракт и клиент. Единственное сознательное отступление от V3 | схема, перенос, контракт |
+| Ключи пользователей и компаний | **Решено 2026-11-13: тоже Guid, старые `Id` сохраняются.** `IdentityUser<Guid>`, `Company.Id` Guid, `BaseEntity.Id` Guid; контракт несёт `Guid CompanyId/CreatedById/UserId`, с int-Identity V3 пришлось бы конвертировать на каждом ответе. Маппинг `_MigrateCompany/_MigrateUser` в скрипте переноса убран. Id ролей = `RoleEnum.ToRoleId()` (`00000000-0000-0000-0000-00000000000N`), System/Admin = `…001000/…001001` | скелет [[web]], миграция `Init` (пересоздать), [[data-migration]] |
+| `UserVerify` / `VerifyId` | **Решено 2026-11-13: не переносить, как в V3.** Статус пользователя = `AdUser.IsDeleted` (Delete/Restore в `/Admin/Users`, lockout + security stamp). Проверку V1 «на каждом `Request` статус из БД» повторить в `ApiDispatchController` проверкой `IsDeleted` (этап 4), иначе заблокированный работает по JWT до 30 дней. Переносятся только `VerifyId = 2` (allowed) | этап 4, [[data-migration]] |
+| `Users.Name` | **Решено 2026-11-13:** отображаемое имя = `AdUser.UserName` (пусто → email). `NormalizedUserName` уникален — при дублях скрипт добавляет email | [[data-migration]] |
+| Геоданные `geography` | **Решено 2026-11-13: заменить на пары `Latitude/Longitude decimal(9,6)`**, как в V3 (`MapPointDto`), без NetTopologySuite и `Microsoft.SqlServer.Types` на Linux. Колонки: `d_Load.OriginLocation/DestinationLocation`, `d_Warehouse.Location`, `d_Yard.Location`, `CurrentLocation` у `BaseDispatchEntity` (позиции CarrierView/BNSF). Единственный пространственный запрос — радиус в `LoadHistory2` (`DispatchService.cs:988-995`, сырой SQL `STDistance`) → гаверсинус в том же SQL. Контракт `LocationDto` уже `Latitude/Longitude`. Перенос: `OriginLocation.Lat/.Long` в [[data-migration]]. Автокомплит и геокодинг — `PlaceService` через Safer, как в V3 (этапы 3–4) | этап 2 схема, этап 3 `LoadHistory2`, [[data-migration]] |
+| Справочники `City/State/Country` | **Решено 2026-11-13: таблиц в БД нет, как в V3.** `City` не нужна (`d_Load` хранит город строкой, `GeocodeService` → Safer). `State` и `Country` остаются статическим классом в коде с теми же `Id/Code/Name` (снять один раз с боевых таблиц `State`, `Country`): на них ссылаются `byte` колонки `d_SetupPacket.Physical/Mailing/W9StateId`, `Physical/MailingCountryId`, `d_SetupPacketFactoringCompany.StateId` — переносятся как есть, без FK. Читают `ReportService` (PDF), `SetupPacketController`/`PrintController` (списки), `FactoringCompanyService` (поиск по штату — в памяти), `GeocodeService`, SQL `DispatchService.cs:3689` | этап 2 схема, этапы 3 и 5 |
 | Поддомен | **Решено 2026-11-11:** `dispatch.myautocall.net` | nginx, certbot, `Settings.WebUrl` |
 | БД | **Решено 2026-11-11:** `db.myautocall.net`, базы `autodispatch` + `autodispatch_log` (без суффикса `_v3`) | [[deploy]], строки подключения, `DataBase/create autodispatch.sql` |
 | Пользователи | **Решено 2026-11-11: своя Identity-БД.** Переносятся пользователи 7 компаний только с ролями AutoDispatch: Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin (`Permissions.cs:11-27`); остальные роли V1 не заводятся. Роли сохраняются как есть (на них завязаны `MinAccessAttribute` и `RolesOperator`); пароли — хэш Identity v2 | Seed, перенос, `RoleEnum` |

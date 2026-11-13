@@ -5,9 +5,9 @@ using Microsoft.Extensions.Configuration;
 namespace AutoDispatch.Web.Data.Context;
 
 /// <summary>
-///     Design-time для dotnet ef --context AcLogDbContext: строка LogConnection из appsettings проекта Server </summary>
-public class AcLogDbContextFactory : IDesignTimeDbContextFactory<AcLogDbContext> {
-    public AcLogDbContext CreateDbContext(string[] args) {
+///     Design-time для dotnet ef --context AdLogDbContext: строка LogConnection из appsettings проекта Server </summary>
+public class AdLogDbContextFactory : IDesignTimeDbContextFactory<AdLogDbContext> {
+    public AdLogDbContext CreateDbContext(string[] args) {
         var serverDir = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "AutoDispatch.Web.Server"));
         var basePath = Directory.Exists(serverDir) ? serverDir : Directory.GetCurrentDirectory();
         var configuration = new ConfigurationBuilder()
@@ -19,8 +19,8 @@ public class AcLogDbContextFactory : IDesignTimeDbContextFactory<AcLogDbContext>
 #endif
             .Build();
 
-        var optionsBuilder = new DbContextOptionsBuilder<AcLogDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<AdLogDbContext>();
         optionsBuilder.UseSqlServer(configuration.GetConnectionString("LogConnection"));
-        return new AcLogDbContext(optionsBuilder.Options);
+        return new AdLogDbContext(optionsBuilder.Options);
     }
 }

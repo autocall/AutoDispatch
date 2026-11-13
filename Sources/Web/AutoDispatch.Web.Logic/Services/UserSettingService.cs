@@ -15,13 +15,13 @@ public class UserSettingService : BaseService {
 
     public UserSettingService(ServicesHost host) : base(host) { }
 
-    public async Task<MapSettingsDto> GetMapAsync(int userId) {
+    public async Task<MapSettingsDto> GetMapAsync(Guid userId) {
         var json = await UnitOfWork.Context.GetTable<UserSetting>().Where(e => e.UserId == userId && e.Section == MapSection)
             .Select(e => e.Json).FirstOrDefaultAsync();
         return json == null ? new MapSettingsDto() : JsonExtension.Deserialize<MapSettingsDto>(json);
     }
 
-    public async Task SetMapAsync(int userId, MapSettingsDto settings) {
+    public async Task SetMapAsync(Guid userId, MapSettingsDto settings) {
         await UnitOfWork.Context.InsertOrReplaceAsync(new UserSetting {
             UserId = userId,
             Section = MapSection,
