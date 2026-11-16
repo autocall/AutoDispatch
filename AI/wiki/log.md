@@ -73,3 +73,19 @@ EF предупреждал о decimal без типа (`DefectRepair.Cost`, `Lo
 MCP `db-readonly` подключён к репозиторию (`.mcp.json`, `AI/mcp/db-readonly`, `.env` в gitignore); запросы дольше 15 с — через `sqlcmd` тем же логином.
 Сверены колонки `d_*` ↔ `autodispatch`, FK активных компаний (3 висячие ссылки — блок 6 обнуляет), замеры, активность компаний, кандидаты-пользователи.
 Решения в [[plan]]: признак входа = `Users.LastModifiedDate` или `Session` (16 пользователей), все строки dispatch — `varchar`. [[data-migration]], [[data-model]] обновлены.
+
+## [2026-11-13] query | collation и перенос
+
+Прогон блока 2 упал на `CacheLoadIndex.City` (`Québec…`): `autodispatch` в UTF-8, `varchar(N)` там в байтах. Скан строк `d_*`: вне ASCII — массово,
+вне Latin-1 — 52 строки мусора. Вопрос collation записан в [[plan]] как открытый (рекомендация — `SQL_Latin1_General_CP1_CI_AS`, как у `autocall`),
+решить до боевого прогона переноса; этап 3 от него не зависит. Также исправлен скрипт: `#active` создаётся один раз в шапке.
+
+## [2026-11-13] ingest | этап 3 — серверная логика dispatch
+
+Перенесён BLL V1 в `AutoDispatch.Web.Logic` (~11 тыс. строк): `DispatchService` 9 partial-файлов и `IDispatchService` (74 метода, без чата и
+`ReportSimilarLoads` — решено не портировать), 15 сервисов, конвертеры + `DispatchMappingProfile`, `WebServices` (CarrierView, Bnsf, Safer, Bandwidth,
+OpenAI), `Utils` (PDF, письма), хелперы, общий контракт `Sources/Shared/AutoDispatch.Dtos` с `Common/` из `AutoCall.Common`. В Server: профиль в
+`Program.cs`, 4 `BackgroundService` вместо Quartz (список снят с `JobScheduler.cs`), `Resources/` из V1, каталоги `files/_recycle`, `files/_temp`,
+новые ключи `Secrets` в примерах конфигов. `AdUser.Signature` добавлена (миграция — пользователь). Тест `08_DispatchLogic` (8) проходит, решение собирается.
+Не реализовано: `ReportService.RtfToPdf` (Telerik, открыто). Новая страница [[web-logic]], [[plan]] — статус этапа 3 и строки «Решить»
+(ReportSimilarLoads, iTextSharp LGPL, AdUser.Signature, PDF для OpenAI, кэш геокодинга, Telerik, Quartz).

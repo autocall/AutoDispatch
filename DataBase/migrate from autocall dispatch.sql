@@ -24,6 +24,12 @@ set xact_abort on;
 
 declare @since datetime2(0) = dateadd(month, -6, sysutcdatetime());
 declare @sinceLogin datetime2(0) = dateadd(month, -12, sysutcdatetime());   -- окно входа пользователей шире окна активности компаний
+
+-- активные компании — одна временная таблица на весь скрипт (второй select into #active в том же batch не компилируется)
+if object_id('tempdb..#active') is not null drop table #active;
+create table #active (Id uniqueidentifier not null primary key);
+insert into #active (Id)
+select distinct e.CompanyId from autocall.dbo.d_Event e where e.CreatedDate >= @since;
 declare @systemUserId uniqueidentifier = '00000000-0000-0000-0000-000000001000';
 
 begin tran;
@@ -33,12 +39,6 @@ delete from dbo.UserSetting       where UserId in (select Id from autocall.dbo.U
 delete from dbo.IdentityUserRoles where UserId in (select Id from autocall.dbo.Users);
 delete from dbo.IdentityUsers     where Id     in (select Id from autocall.dbo.Users);
 delete from dbo.Company           where Id     in (select EntityId from autocall.dbo.Company);
-
--------- 0.1 активные компании --------
-select distinct e.CompanyId as Id
-into #active
-from autocall.dbo.d_Event e
-where e.CreatedDate >= @since;
 
 -------- 0.2 пользователи с ролями AutoDispatch --------
 -- имена ролей V1 в таблице Roles совпадают с RoleName без пробелов ("Gps Support" -> GpsSupport);
@@ -128,14 +128,12 @@ commit tran;
 -- Ключи Guid и int identity сохраняются. FK на время заливки отключаются (блоки идут не в порядке зависимостей:
 -- HistoryId объектов ссылается на HistoryObject из блока 3) и включаются с проверкой в блоке 6.
 -- Блоки 1–2 — одной транзакцией каждый, повторный запуск перезаливает блок; блоки 3–4 — пакетами, возобновляемы с max(Id).
--- Отбор активных компаний (#active) — тот же, что в блоке 0; если сессия новая, таблица создаётся заново.
+-- Отбор активных компаний (#active) создаётся в шапке скрипта; блоки 1–6 без неё не запускаются (проверка ниже).
 -- ======================================================================================================================
 
 if object_id('tempdb..#active') is null begin
-    select distinct e.CompanyId as Id
-    into #active
-    from autocall.dbo.d_Event e
-    where e.CreatedDate >= dateadd(month, -6, sysutcdatetime());
+    raiserror ('#active отсутствует: выполните шапку скрипта (declare + create table #active) в этой же сессии', 16, 1);
+    return;
 end;
 
 exec sp_MSforeachtable 'alter table ? nocheck constraint all';
