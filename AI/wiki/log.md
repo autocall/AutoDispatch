@@ -89,3 +89,54 @@ OpenAI), `Utils` (PDF, письма), хелперы, общий контрак�
 новые ключи `Secrets` в примерах конфигов. `AdUser.Signature` добавлена (миграция — пользователь). Тест `08_DispatchLogic` (8) проходит, решение собирается.
 Не реализовано: `ReportService.RtfToPdf` (Telerik, открыто). Новая страница [[web-logic]], [[plan]] — статус этапа 3 и строки «Решить»
 (ReportSimilarLoads, iTextSharp LGPL, AdUser.Signature, PDF для OpenAI, кэш геокодинга, Telerik, Quartz).
+
+## [2026-11-16] decision | RTF→PDF и iTextSharp по образцу Safer
+RTF→PDF: Telerik Document Processing .NET Standard (`Telerik.Documents.Flow` + `Flow.FormatProviders.Pdf` 2022.1.217, локальный NuGet-источник
+как в `D:\Develop\Safer\Source\Libraries\Telerik`) — установленные WPF DLL R1 2022 ссылаются на `PresentationCore`, на Linux не годятся; пакеты Flow
+на машине отсутствуют, ждём от пользователя. iTextSharp: `iTextSharp.LGPLv2.Core` как в Safer, оставлена последняя бесплатная 3.8.7. [[plan]], [[web-logic]].
+
+## [2026-11-16] code | RTF→PDF на Telerik Document Processing .NET Standard
+Пакеты Flow + Flow.FormatProviders.Pdf 2022.1.217 (аккаунт Telerik, UI for WPF 2022.1.222) и Core/Fixed/Zip из Safer — в `Sources/Web/Libraries/Telerik`,
+`Sources/Web/nuget.config`. `TelerikPdfHelper` (Logic): шрифты из `Resources/Fonts` (скопированы из Windows: Calibri ×4, Arial, Courier New, Symbol,
+Wingdings; Brush Script MT уже был), PNG → JPEG через ImageSharp. Тест `Test09_RtfToPdf` на 3 шаблонах проходит на Windows; в Linux-контейнере не проверен.
+Уточнено: в Safer RTF→PDF нет (Razor → DinkToPdf), оттуда взят только локальный источник пакетов. Найдено: Release-сборка Logic падает без лицензии
+ImageSharp 4.x (проверка в `SixLabors.ImageSharp.targets`, в Debug пропускается) — publish не пройдёт. [[plan]], [[web-logic]].
+
+## [2026-11-16] code | ImageSharp → SkiaSharp, шрифты Microsoft заменены на OFL
+Проверена реализация `TelerikPdfHelper` (RTF→PDF): по PDF через PdfPig шаблоны setup packet реально используют Calibri (regular/bold/italic),
+маркеры списков Arial «•», Courier New «o», Wingdings «▪», Symbol «•» и Brush Script MT — карта шрифтов верна, Times New Roman/Cambria не запрашиваются.
+ImageSharp 4.x (ключ при Release) заменён на SkiaSharp 4.154.0 (как в Safer, уже был транзитивно) — `ImageHelper`, `JpegImageConverter`;
+Release-сборка решения проходит. Шрифты Microsoft убраны из `Resources/Fonts`, вместо них Carlito ×4, Liberation Sans/Mono (+ `OFL-*.txt`);
+Wingdings — `AppSettings.HostFontsPath` = `/files/_fonts` на хосте, иначе пустой маркер 3-го уровня. `Test09_RtfToPdf` ждёт Carlito, 11 тестов проходят.
+[[plan]] (строки «ImageSharp», «Шрифты в репозитории», «Telerik Documents»), [[web-logic]], [[deploy]].
+
+## [2026-11-16] code | шрифт подписи — DancingScript-Bold из Safer
+`BRUSHSCI.TTF` (Brush Script MT, Monotype) заменён на `DancingScript-Bold.ttf` (OFL), которым подписывает документы Safer: W9 (`ReportService`),
+confirmation (`DispatchPdfGenerator`), «Brush Script MT» в RTF-шаблонах (`TelerikPdfHelper`). В `Resources/Fonts` теперь только OFL-шрифты. [[plan]], [[web-logic]].
+
+## [2026-11-16] verify | PDF в Linux-контейнере
+`AutoDispatch.Web.Test` опубликован под linux-x64 и прогнан в `mcr.microsoft.com/dotnet/sdk:10.0` на `ububuilder` (одноразовый контейнер, удалён).
+Найдено и исправлено: (1) параллельные `RtfToPdf` рушат статический `FontsRepository` Telerik — экспорт под `lock`; (2) managed SkiaSharp 4.154.0
+не принимал `libSkiaSharp.so` 4.150.1 от PDFtoImage — явный `SkiaSharp.NativeAssets.Linux.NoDependencies` 4.154.0 (как пин в Safer).
+После этого 12/12 тестов (RTF→PDF трёх шаблонов, PDF→PNG через pdfium, превью SkiaSharp) проходят; PNG страницы визуально верный (Carlito, маркеры).
+`ldd` на `aspnet:10.0` — зависимостей не хватает нет. [[plan]], [[web-logic]].
+
+## [2026-11-16] decision | CacheLoadIndex не переносится
+Скан строковых колонок `d_*` в `autocall` (не-ASCII и переполнение в байтах UTF-8): переполнение только в `d_CacheLoadIndex.Company`/`City` (61 строка) из-за
+`SUBSTRING(…,1,16)`; в остальных 40 колонках не-ASCII (тире, апострофы, `Ö`, кириллица в именах файлов) влезает. Таблица была кэшем автокомплита
+`SearchLoads`, читал её только он. Убраны сущность, `DispatchMap`, тест (27 типов), `LoadIndexCacheService`, вызовы в `DispatchService.Save`,
+`HistoryCleanupBackgroundService`, блок 2 скрипта. `SearchLoads` на этапе 4 — прямой запрос по `Load`. Рекомендация по collation пересмотрена: оставить UTF-8. [[plan]], [[data-model]], [[data-migration]], [[web-logic]].
+
+## [2026-11-17] implement | Этап 4: Api/Dispatch Request/Response
+`ApiDispatchController` (Request, Response, RequestZip, ResponseZip), `DispatchRequestHandlers` (таблица `Name → handler` из `IDispatchService`,
+Expression-делегаты, роли по `MinAccess`), `DispatchPollRegistry` (отмена предыдущего long-polling пользователя), whitelist `$type` в `MscorlibBinder`,
+проверка `IsDeleted` на каждом запросе. Тест `09_DispatchApi` (3 теста) проходит против локального сервера с миграциями `Init/Dispatch/Alter_Dispatch`.
+Открыто и вынесено в «Решить»: маршруты остальных эндпоинтов App (старые URL V1 vs маршруты V3 — противоречие плана и критерия этапа),
+состав ответа логина (`roles`/`hasBnsfRailway`/`customStatuses` из OAuth V1 против `SessionDto`). Мёртвые вызовы клиента V1 без сервера: `api/DatCompany/SendSetupPocket`, `Api/Account/Check`. [[plan]], [[protocol]].
+
+## [2026-11-17] implement | Этап 4: остальные эндпоинты App, SessionDto
+Решения пользователя: маршруты V3 (App адаптируется на этапе 6), `SessionDto` расширен (`HasBnsfRailway`, `CustomStatuses`). Сделано:
+`ApiDispatchHelpersController` (SearchLoads, SearchCustomers, PlaceAutocomplete, PlaceDetails, Distance, ExtractLoadFromPdf/2), `ApiDatCompanyController`,
+`ApiActualCompanyController`, `ApiCensusController`, `ApiSetupPacketController`, `DispatchService.SearchLoadsAsync` (без `CacheLoadIndex`, компания через
+`ShipperReceiverCompany`), статика `/Temp`. Найдено: camelCase `JsonExtension` переписывает ключи словарей — `Api/DatCompany/Search` сериализуется без него.
+`09_DispatchApi` — 4 теста проходят (Distance локально 400: нет `GoogleMap:Api`). Таблица эндпоинтов — [[protocol]]; статус этапа — [[plan]].

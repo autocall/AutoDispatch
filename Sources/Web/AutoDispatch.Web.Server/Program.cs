@@ -26,6 +26,7 @@ using AutoDispatch.Web.Data.Identity;
 using AutoDispatch.Web.Logic;
 using AutoDispatch.Web.Logic.Mapping;
 using AutoDispatch.Web.Logic.Monitoring;
+using AutoDispatch.Web.Logic.Services.Dispatch;
 using AutoDispatch.Web.Server.BackgroundServices;
 using AutoDispatch.Web.Server.Identity;
 using AutoDispatch.Web.Server.Infrastructure;
@@ -119,6 +120,7 @@ public class Program {
         services.AddSingleton<OnlineTracker>();
         services.AddSingleton<ClientLogQuota>();
         services.AddSingleton(new MetricCollector());
+        services.AddSingleton<DispatchPollRegistry>();
         services.AddHostedService<ActivityFlushService>();
         services.AddHostedService<RetentionService>();
         services.AddHostedService<MetricBackgroundService>();
@@ -159,6 +161,11 @@ public class Program {
         app.UseStaticFiles(new StaticFileOptions {
             FileProvider = new PhysicalFileProvider(AppSettings.DownloadPath),
             RequestPath = AppSettings.DownloadRequestPath
+        });
+        // PNG страниц rate confirmation для OpenAI (V1 Web/Temp): имена — Guid, без авторизации, OpenAI забирает по URL
+        app.UseStaticFiles(new StaticFileOptions {
+            FileProvider = new PhysicalFileProvider(AppSettings.TempPath),
+            RequestPath = AppSettings.TempRequestPath
         });
         app.UseAuthentication();
         app.UseMiddleware<RequestContextMiddleware>();

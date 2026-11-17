@@ -51,7 +51,7 @@
 `ConnectionStrings: Default, Log`; `Secrets: Jwt:PrivateKey, System:Password/AllowedIps, Mailgun, GoogleMap (Api + JsKey),
 Map:Key, Metric:Token` — как в V3; dispatch-специфичные: `CarrierView`, `Sms` (Voxbone, Bandwidth), `OpenAI`, `SaferFmcsa`,
 `Bnsf`, `DatRate`, `Keeppingin`, `GmailSmtp` (если письма компаний идут через Gmail, а не Mailgun — **уточнить**),
-`SetupPacketVersion`, `FilesPath: /files`. `AllowedHosts` = `dispatch.myautocall.net`.
+`SetupPacketVersion`, `FilesPath: /files` (подкаталоги `_recycle`, `_temp`, `_fonts` — последний для `wingding.ttf`, которого нет в репозитории, см. [[plan]] «Шрифты в репозитории»). `AllowedHosts` = `dispatch.myautocall.net`.
 
 ## Что меняется в `Program.cs` относительно V3
 

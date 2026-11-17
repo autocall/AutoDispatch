@@ -130,6 +130,12 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
         #endregion [ customizes ]
     }
 
+    /// <summary>
+    ///     OAuth V1 hasBnsfRailway: у компании есть ActualCompany с логином BNSF </summary>
+    public Task<bool> HasBnsfRailwayAsync(Guid companyId) {
+        return Alive<DispatchCompany>().AnyAsync(e => e.CompanyId == companyId && e.BnsfLogin != null);
+    }
+
     public async Task<DateTime?> GetLastDoneAsync() {
         var company = await Alive<DispatchCompany>().Where(e => e.BnsfLastDone != null).OrderByDescending(e => e.BnsfLastDone).FirstOrDefaultAsync();
         return company?.BnsfLastDone;

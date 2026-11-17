@@ -82,7 +82,10 @@ public class UserService : BaseService {
             UserName = user.UserName,
             Email = user.Email,
             TimeZoneId = user.TimeZoneId,
-            Roles = roles.ToList()
+            Roles = roles.ToList(),
+            // как OAuth V1 (ApplicationOAuthProvider): App читает их при входе (решено 2026-11-17)
+            HasBnsfRailway = await Host.GetService<Dispatch.DispatchCompanyService>().HasBnsfRailwayAsync(user.CompanyId),
+            CustomStatuses = await Host.GetService<Dispatch.CustomStatusService>().GetStatusesAsync(user.Id)
         };
     }
 

@@ -62,7 +62,8 @@ select
     u.Id, u.CompanyId,
     coalesce(nullif(ltrim(rtrim(u.Name)), ''), u.Email) as UserName,
     u.Email, u.PasswordHash, u.SecurityStamp, u.PhoneNumber, u.LockoutEnabled, u.LockoutEndDateUtc,
-    u.CreatedDate, u.LastModifiedDate
+    u.CreatedDate, u.LastModifiedDate,
+    left(nullif(ltrim(rtrim(u.Signature)), ''), 64) as Signature -- подпись агента в confirmed-письме (AdUser.Signature varchar(64); в V1 nvarchar(max), заполнено у 10, max 13 символов)
 into #user
 from autocall.dbo.Users u
 where u.IsDeleted = 0
@@ -91,10 +92,10 @@ from #company;
 -------- 0.4 IdentityUsers + роли --------
 insert into dbo.IdentityUsers (Id, CompanyId, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp,
     ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount, TimeZoneId,
-    CreatedDateTime, ModifiedDateTime, CreatedId, ModifiedId, IsDeleted)
+    CreatedDateTime, ModifiedDateTime, CreatedId, ModifiedId, IsDeleted, Signature)
 select u.Id, u.CompanyId, u.UserName, upper(u.UserName), u.Email, upper(u.Email), 1, u.PasswordHash, u.SecurityStamp,
     lower(convert(varchar(36), newid())), u.PhoneNumber, 0, 0, u.LockoutEndDateUtc, u.LockoutEnabled, 0, 'UTC',
-    u.CreatedDate, u.LastModifiedDate, @systemUserId, @systemUserId, 0
+    u.CreatedDate, u.LastModifiedDate, @systemUserId, @systemUserId, 0, u.Signature
 from #user u;
 
 insert into dbo.IdentityUserRoles (UserId, RoleId)
@@ -290,21 +291,13 @@ begin tran;
 
 delete from dbo.HistoryLocationLoad;        delete from dbo.HistoryLocationDriver;      delete from dbo.HistoryLocationTruck;
 delete from dbo.HistoryLocationTrailer;     delete from dbo.HistoryLocationDatDriver;
-delete from dbo.CacheLoadIndex;             delete from dbo.Load;
+delete from dbo.Load;
 
 -- d_Load -> Load
 insert into dbo.Load ([EntityId], [Index], [IndexExtra], [IndexPrefix], [DispatchCompanyId], [TrackerId], [CarrierViewPhone], [CarrierViewLink], [CarrierViewLastUpdatedDate], [CarrierViewStatus], [CarrierViewStatusesJson], [CarrierViewLate], [CarrierViewPickupId], [CarrierViewDeliveryId], [CarrierViewPickupComment], [CarrierViewDeliveryComment], [RecordId], [BOLNumber], [DestinationWarehouseId], [WarehouseId], [TrailerId], [DatCompanyId], [DatDriverId], [HistoryDriverId], [HistoryTruckId], [HistoryTrailerId], [HistoryAssignedTrailerId], [HistoryWarehouseId], [HistoryDatCompanyId], [HistoryDatDriverId], [OriginCity], [DestinationCity], [CurrentOriginUtcOffset], [CurrentDestinationUtcOffset], [OriginAddress], [DestinationAddress], [OriginLatitude], [OriginLongitude], [DestinationLatitude], [DestinationLongitude], [Distance], [Comments], [Comments2], [Consolidation], [Equipment], [PalletType], [Weight], [Length], [Pallets], [Spots], [WeightType], [Commodity], [PickupFrom], [PickupTo], [DeliveryFrom], [DeliveryTo], [ReceiverId], [ShipperId], [PickupNumber], [DeliveryNumber], [BookedDate], [BoardChanged], [CarrierViewTracking], [LineHaul], [DatRate], [Expenses], [Gains], [Currency], [QuikPay], [LoadType], [ShowPickupAddress], [Background], [Foreground], [DivideType], [ContainerType], [ParentId], [ShipmentId], [HistoryShipmentId], [TrailerType], [Temperature], [Layout], [BindDate], [AssignedTrailerDate], [Status], [CustomStatusId], [LastStatusChangedDate], [LastRateChanged], [WasAtPickup], [WasAtDelivery], [PickupOrder], [DeliveryOrder], [Board], [DatBrokerId], [CustomerId], [BOLFile], [BOLDate], [PODFile], [PODDate], [LumperFile], [LumperDate], [PaperworkFile], [PaperworkDate], [InvoiceNumber], [InvoiceFile], [InvoiceDate], [EmailInvoiceSentDate], [EmailInvoiceSent], [CheckNumber], [CheckFile], [CheckDate], [OldOrderId], [ConfirmationDate], [ConfirmationFile], [EmailConfirmationSentDate], [ConfirmedDate], [ConfirmedFile], [TrailerSchemeDate], [TrailerSchemeFile], [TrailerSchemeId], [EmailConfirmationSent], [PhotoFile], [Payout], [NewScheduledAppointment], [Submited], [SendSms], [DeliveredDate], [CreatedDate], [CreatedById], [LastModifiedDate], [LastModifiedById], [IsDeleted], [HistoryId], [CompanyId], [CurrentLatitude], [CurrentLongitude])
 select s.[EntityId], s.[Index], s.[IndexExtra], s.[IndexPrefix], s.[ActualCompanyId], s.[TrackerId], s.[CarrierViewPhone], s.[CarrierViewLink], s.[CarrierViewLastUpdatedDate], s.[CarrierViewStatus], s.[CarrierViewStatusesJson], s.[CarrierViewLate], s.[CarrierViewPickupId], s.[CarrierViewDeliveryId], s.[CarrierViewPickupComment], s.[CarrierViewDeliveryComment], s.[RecordId], s.[BOLNumber], s.[DestinationWarehouseId], s.[WarehouseId], s.[TrailerId], s.[DatCompanyId], s.[DatDriverId], s.[HistoryDriverId], s.[HistoryTruckId], s.[HistoryTrailerId], s.[HistoryAssignedTrailerId], s.[HistoryWarehouseId], s.[HistoryDatCompanyId], s.[HistoryDatDriverId], s.[OriginCity], s.[DestinationCity], s.[CurrentOriginUtcOffset], s.[CurrentDestinationUtcOffset], s.[OriginAddress], s.[DestinationAddress], s.OriginLocation.Lat, s.OriginLocation.Long, s.DestinationLocation.Lat, s.DestinationLocation.Long, s.[Distance], s.[Comments], s.[Comments2], s.[Consolidation], s.[Equipment], s.[PalletType], s.[Weight], s.[Length], s.[Pallets], s.[Spots], s.[WeightType], s.[Commodity], s.[PickupFrom], s.[PickupTo], s.[DeliveryFrom], s.[DeliveryTo], s.[ReceiverId], s.[ShipperId], s.[PickupNumber], s.[DeliveryNumber], s.[BookedDate], s.[BoardChanged], s.[CarrierViewTracking], s.[LineHaul], s.[DatRate], s.[Expenses], s.[Gains], s.[Currency], s.[QuikPay], s.[LoadType], s.[ShowPickupAddress], s.[Background], s.[Foreground], s.[DivideType], s.[ContainerType], s.[ParentId], s.[ShipmentId], s.[HistoryShipmentId], s.[TrailerType], s.[Temperature], s.[Layout], s.[BindDate], s.[AssignedTrailerDate], s.[Status], s.[CustomStatusId], s.[LastStatusChangedDate], s.[LastRateChanged], s.[WasAtPickup], s.[WasAtDelivery], s.[PickupOrder], s.[DeliveryOrder], s.[Board], s.[DatBrokerId], s.[CustomerId], s.[BOLFile], s.[BOLDate], s.[PODFile], s.[PODDate], s.[LumperFile], s.[LumperDate], s.[PaperworkFile], s.[PaperworkDate], s.[InvoiceNumber], s.[InvoiceFile], s.[InvoiceDate], s.[EmailInvoiceSentDate], s.[EmailInvoiceSent], s.[CheckNumber], s.[CheckFile], s.[CheckDate], s.[OldOrderId], s.[ConfirmationDate], s.[ConfirmationFile], s.[EmailConfirmationSentDate], s.[ConfirmedDate], s.[ConfirmedFile], s.[TrailerSchemeDate], s.[TrailerSchemeFile], s.[TrailerSchemeId], s.[EmailConfirmationSent], s.[PhotoFile], s.[Payout], s.[NewScheduledAppointment], s.[Submited], s.[SendSms], s.[DeliveredDate], s.[CreatedDate], s.[CreatedById], s.[LastModifiedDate], s.[LastModifiedById], s.[IsDeleted], s.[HistoryId], s.[CompanyId], s.CurrentLocation.Lat, s.CurrentLocation.Long
 from autocall.dbo.d_Load s
 where s.CompanyId in (select Id from #active);
-
--- d_CacheLoadIndex -> CacheLoadIndex
-set identity_insert dbo.CacheLoadIndex on;
-insert into dbo.CacheLoadIndex ([Id], [CreatedDate], [CompanyId], [LoadId], [City], [Company], [Type])
-select s.[Id], s.[CreatedDate], s.[CompanyId], s.[LoadId], s.[City], s.[Company], s.[Type]
-from autocall.dbo.d_CacheLoadIndex s
-where s.CompanyId in (select Id from #active);
-set identity_insert dbo.CacheLoadIndex off;
 
 -- d_HistoryLocationTrailer -> HistoryLocationTrailer
 set identity_insert dbo.HistoryLocationTrailer on;
@@ -346,7 +339,6 @@ from autocall.dbo.d_HistoryLocationLoad s
 where s.LoadId in (select EntityId from autocall.dbo.d_Load where CompanyId in (select Id from #active));
 set identity_insert dbo.HistoryLocationLoad off;
 
-dbcc checkident ('dbo.CacheLoadIndex', reseed);
 dbcc checkident ('dbo.HistoryLocationLoad', reseed);
 dbcc checkident ('dbo.HistoryLocationTruck', reseed);
 dbcc checkident ('dbo.HistoryLocationTrailer', reseed);
@@ -358,8 +350,7 @@ union all select 'HistoryLocationLoad', count(*) from dbo.HistoryLocationLoad
 union all select 'HistoryLocationTruck', count(*) from dbo.HistoryLocationTruck
 union all select 'HistoryLocationTrailer', count(*) from dbo.HistoryLocationTrailer
 union all select 'HistoryLocationDriver', count(*) from dbo.HistoryLocationDriver
-union all select 'HistoryLocationDatDriver', count(*) from dbo.HistoryLocationDatDriver
-union all select 'CacheLoadIndex', count(*) from dbo.CacheLoadIndex;
+union all select 'HistoryLocationDatDriver', count(*) from dbo.HistoryLocationDatDriver;
 
 commit tran;
 
@@ -382,10 +373,10 @@ if object_id('dbo._MigrateHistoryKeep') is null begin
         union select HistoryId from autocall.dbo.d_DatCompany d join #active c on c.Id = d.CompanyId
         union select HistoryId from autocall.dbo.d_DatDriver d join #active c on c.Id = d.CompanyId
         union select HistoryId from autocall.dbo.d_SetupPacket d join #active c on c.Id = d.CompanyId
-        union select HistoryId from autocall.dbo.d_HistoryLocationTruck hl join autocall.dbo.d_Truck d on d.EntityId = hl.TruckId join #active c on c.Id = d.CompanyId
-        union select HistoryId from autocall.dbo.d_HistoryLocationTrailer hl join autocall.dbo.d_Trailer d on d.EntityId = hl.TrailerId join #active c on c.Id = d.CompanyId
-        union select HistoryId from autocall.dbo.d_HistoryLocationDriver hl join autocall.dbo.d_Driver d on d.EntityId = hl.DriverId join #active c on c.Id = d.CompanyId
-        union select HistoryId from autocall.dbo.d_HistoryLocationDatDriver hl join autocall.dbo.d_DatDriver d on d.EntityId = hl.DatDriverId join #active c on c.Id = d.CompanyId)
+        union select hl.HistoryId from autocall.dbo.d_HistoryLocationTruck hl join autocall.dbo.d_Truck d on d.EntityId = hl.TruckId join #active c on c.Id = d.CompanyId
+        union select hl.HistoryId from autocall.dbo.d_HistoryLocationTrailer hl join autocall.dbo.d_Trailer d on d.EntityId = hl.TrailerId join #active c on c.Id = d.CompanyId
+        union select hl.HistoryId from autocall.dbo.d_HistoryLocationDriver hl join autocall.dbo.d_Driver d on d.EntityId = hl.DriverId join #active c on c.Id = d.CompanyId
+        union select hl.HistoryId from autocall.dbo.d_HistoryLocationDatDriver hl join autocall.dbo.d_DatDriver d on d.EntityId = hl.DatDriverId join #active c on c.Id = d.CompanyId)
     insert into dbo._MigrateHistoryKeep (Id)
     select Id from autocall.dbo.d_HistoryObject where Id in (select Id from refs)
     union

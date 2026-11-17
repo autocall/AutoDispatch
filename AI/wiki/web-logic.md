@@ -13,18 +13,18 @@
 | `Services/Dispatch/Base` | `DispatchBaseService` (`Db`, `Table<T>`, `Alive<T>`, `GetByIdAsync`, Insert/Update/Delete целиком по PK, кэш user→company), `DispatchCrudService<TDto,TEntity>` | `HostService`, `EntityCrudService`, `EntityRepository` |
 | `Services/Dispatch/DispatchService*.cs` | 9 partial-файлов: ядро и события компании, `Location`, `Load` (поиск истории, `LoadHistory2` сырой SQL с гаверсинусом, статистика), `Save` (все Save*/Delete*, история и снимки), `Files` (дефекты, файлы, страховка), `Emails` (SMTP компании, setup packet, инвойсы, confirmation, SMS), `Undo`, `Trackers` (CarrierView, BNSF, Waiting), `Events` (long-polling `EventNotificationAsync`) | `DispatchService.cs` 4651 строка |
 | `Services/Dispatch/IDispatchService.cs` | 74 метода с `[MinAccess]` — таблица `Name → handler` для `Api/Dispatch/Request` (этап 4) | `IDispatchService` |
-| `Services/Dispatch/*Service.cs` | `DatCompanyService`, `DispatchCompanyService` (=ActualCompany), `CensusService`, `SetupPacketService`, `ConfirmationService`, `CustomStatusService`, `CustomerCompanyService`, `ShipperReceiverCompanyService`, `FactoringCompanyService`, `HistoryCleanupService` + `LoadIndexCacheService`, `GeocodeService`, `FixLocationLoadsService`, `ReportService`, `OpenAIService` | те же имена |
+| `Services/Dispatch/*Service.cs` | `DatCompanyService`, `DispatchCompanyService` (=ActualCompany), `CensusService`, `SetupPacketService`, `ConfirmationService`, `CustomStatusService`, `CustomerCompanyService`, `ShipperReceiverCompanyService`, `FactoringCompanyService`, `HistoryCleanupService`, `GeocodeService`, `FixLocationLoadsService`, `ReportService`, `OpenAIService` | те же имена |
 | `Mapping/Dispatch/*`, `DispatchMappingProfile` | конвертеры `ITypeConverter` (регистрация по namespace через reflection) и простые `ReverseMap`; профиль добавлен в `Program.cs` | `Converters/Dispatch/**`, `BllMappingProfile` |
 | `WebServices/` | `CarrierView`, `Bnsf` (HttpClient + cookies на запрос), `Safer` (FMCSA + `BrokersnapshotWebService.CompanyAsync/DownloadCertificateAsync`), `SmsWebService` (Bandwidth), `OpenAI` | `DataServices/*` |
-| `Helpers/Dispatch/` | `StateHelper` (статика State/Country/Zone, снята с боевой БД 2026-11-13), `DispatchHelper` (номера грузов и инвойсов, rate), `DispatchFileHelper` (пути `FilesPath/{EntityId}`), `LoadCompanyNames`, `UserNameCache`, `SetupPacketBinaryHelper`, `DatCompanyContactHelper`, `LocationHelper`, `ImageHelper` (ImageSharp), `CompareEntities`, `ExpressionHelper` | `Helpers/*` |
+| `Helpers/Dispatch/` | `StateHelper` (статика State/Country/Zone, снята с боевой БД 2026-11-13), `DispatchHelper` (номера грузов и инвойсов, rate), `DispatchFileHelper` (пути `FilesPath/{EntityId}`), `LoadCompanyNames`, `UserNameCache`, `SetupPacketBinaryHelper`, `DatCompanyContactHelper`, `LocationHelper`, `ImageHelper` (SkiaSharp), `CompareEntities`, `ExpressionHelper` | `Helpers/*` |
 | `Utils/` | `DispatchPdfGenerator` (iTextSharp: подпись confirmation, merge, схема), `DispatchEmailGenerator` (шаблоны `Resources/Emails`) | `PdfGenerator`, `EmailGenerator` |
 | `Email/` | `Email*`, `EmailUtils.SendEmailAsync` (System.Net.Mail по SMTP компании) | `AutoCall.Common.Email` |
 | `Common/Extensions` | `DispatchJson` (+`MscorlibBinder`), `ZipExtension`, `BinaryHelper`, `DispatchStringExtension`, `StringBuilderExtension`, `CollectionExtension`; `Helpers/MathHelper`, `DistanceHelper`; `AccessDeniedException` | `AutoCall.Common` |
 | `Server/BackgroundServices` | `HistoryCleanupBackgroundService` (24 ч: чистка истории + индекс грузов за сутки), `LoadWaitingBackgroundService` (5 мин), `LoadSendSmsBackgroundService` (5 мин), `BnsfRefreshBackgroundService` (30 мин, выключен флагом) | Quartz `JobScheduler.cs` |
-| `Server/Resources` | `Emails/*.html`, `Documents/*.rtf` + `fw9.pdf`, `Fonts/BRUSHSCI.TTF` — копируются в выход, `AppSettings.ResourcesPath` | `Web/Emails`, `Web/Documents`, `Content/fonts` |
+| `Server/Resources` | `Emails/*.html`, `Documents/*.rtf` + `fw9.pdf`, `Fonts/*.ttf` (OFL: Carlito, Liberation, DancingScript — подпись как в Safer) — копируются в выход, `AppSettings.ResourcesPath` | `Web/Emails`, `Web/Documents`, `Content/fonts` |
 | `AppSettings` | `#region Dispatch` в General (интервалы джобов, `HistoryExpiresDays`, `SetupPacketVersion`, OpenAI model/url, пути `Resources`, `TempPath`, `OpenAiLogsPath`), Secrets: `Sms:Bandwidth:*`, `OpenAI:ApiKey`, `Keeppingin:ApiKey`, `GoogleMap:Api`; `RecyclePath = FilesPath/_recycle` | `Web/AppSettings.cs`, `web.config` |
 
-Пакеты Logic: AutoMapper 13, HtmlAgilityPack, iTextSharp.LGPLv2.Core (API iTextSharp 4.x), SixLabors.ImageSharp, PdfPig, PDFtoImage (pdfium).
+Пакеты Logic: AutoMapper 13, HtmlAgilityPack, iTextSharp.LGPLv2.Core 3.8.7 (как в Safer, там 3.7.12; API iTextSharp 4.x), SkiaSharp (ImageSharp 4.x требует ключ Six Labors), PdfPig, PDFtoImage (pdfium), Telerik.Documents.Flow + Flow.FormatProviders.Pdf 2022.1.217 (локальный источник `Sources/Web/Libraries/Telerik`).
 
 ## Как перенесено
 
@@ -42,10 +42,11 @@
   геокодинг/автокомплит — Brokersnapshot (как V3). Кэши `GeocodeService` в памяти процесса — таблицы `Cache` нет.
 - **Справочники** `State/Country/Zone` — `StateHelper` (статика). `GetStatistics` без `StateBorders`: штат берётся из `DestinationCity`.
 - **Джобы.** Список снят с `Web/App_Start/JobScheduler.cs` V1 (не с прод-конфига): QuartzJob 01:00 будни → чистка истории,
-  CacheLoadJob 00:10 → индекс грузов, LoadWaitingJob и LoadSendSmsJob по 5 мин, BnsfRailwayJob 30 мин (в V1 выключен системным флагом,
+  CacheLoadJob 00:10 → не переносится (таблицы `CacheLoadIndex` нет, [[plan]] 2026-11-16), LoadWaitingJob и LoadSendSmsJob по 5 мин, BnsfRailwayJob 30 мин (в V1 выключен системным флагом,
   ни у одной из 3 компаний с BnsfLogin нет `BnsfLastDone` за 30 дней → `AppSettings.BnsfRefreshEnabled = false`). `ClearExpiredCacheJob` — таблицы нет.
 - **PDF.** W9 — AcroForm `fw9.pdf` через iTextSharp (LGPL-порт, тот же API 4.x). Подпись confirmation/merge — тот же iTextSharp.
-  **RTF→PDF (`ReportService.RtfToPdf`) не реализован** — V1 Telerik Documents; бросает `NotImplementedException`, пока не решено ([[plan]]).
+  RTF→PDF (`ReportService.RtfToPdf`) — `Helpers/Dispatch/TelerikPdfHelper`: Telerik Document Processing .NET Standard 2022.1.217 (Flow Rtf → Pdf),
+  шрифты через `FontsProviderBase` из `Resources/Fonts` — OFL-замены шрифтов Microsoft (Carlito, Liberation; Wingdings — с хоста `/files/_fonts`), PNG → JPEG через SkiaSharp ([[plan]]).
   Текст PDF для OpenAI — PdfPig с разделителями `----------- PageN -----------` (формат Telerik, на него завязан разбор страниц),
   PNG — PDFtoImage.
 
@@ -65,8 +66,8 @@
 
 ## Открыто
 
-1. RTF→PDF на Linux (Telerik Documents или QuestPDF с переписыванием шаблонов) — `ReportService.RtfToPdf`.
-2. iTextSharp: выбран `iTextSharp.LGPLv2.Core` (LGPL, тот же API) вместо itext7 (AGPL) — подтвердить.
-3. Миграция `AdUser.Signature` + перенос значения в скрипт ([[data-migration]]).
+1. RTF→PDF на Linux — решено 2026-11-16: Telerik Document Processing .NET Standard (`Telerik.Documents.Flow` + `Flow.FormatProviders.Pdf` 2022.1.217, локальный источник как в Safer); сделано (`TelerikPdfHelper`), проверено в Linux-контейнере 2026-11-16 ([[plan]]).
+2. iTextSharp — решено 2026-11-16: `iTextSharp.LGPLv2.Core`, как в Safer, последняя бесплатная версия 3.8.7.
+3. Миграция `AdUser.Signature` — сделана 2026-11-17 (`Alter_Dispatch`, вместе с удалением `CacheLoadIndex`); перенос `Users.Signature` добавлен в блок 0.2/0.4 скрипта ([[data-migration]]).
 4. Секреты на хосте: `Sms:Bandwidth:*`, `OpenAI:ApiKey`, `Keeppingin:ApiKey`, `GoogleMap:Api` (значения — из V1 `Web/AppSettings.cs`, в репозиторий не попадают).
 5. Проверка против БД после миграции и переноса: тесты по методам `IDispatchService` (этап 4 даёт `Api/Dispatch/Request`).
