@@ -2,6 +2,7 @@ using System.Reflection;
 using AutoMapper;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Logic.Dtos.Dispatch;
 using AutoDispatch.Web.Logic.Mapping.Dispatch;
 using AutoDispatch.Web.Logic.WebServices.Safer;
 
@@ -27,6 +28,23 @@ public class DispatchMappingProfile : Profile {
         CreateMap<SetupPacketReference, SetupPacketReferenceDto>().ReverseMap();
         CreateMap<SetupPacketInsuranceAgency, SetupPacketInsuranceAgencyDto>().ReverseMap();
         CreateMap<SaferCompanyModel, CensusCompanyDto>().ConvertUsing<SaferCompany_ModelToDto>();
+
+        // шаги CarrierRegistration (V1 BllMappingProfile): модель шага ↔ SetupPacketDto (у шага 13 — только Step, файлы сохраняет контроллер)
+        CreateMap<SetupPacketStep00Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep01Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep02Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep03Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep04Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep05Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep06Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep07Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep08Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep09Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep10Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep11Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep12Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep13Model, SetupPacketDto>().ReverseMap();
+        CreateMap<SetupPacketStep14Model, SetupPacketDto>().ReverseMap();
 
         var converterInterface = typeof(ITypeConverter<,>);
         var ns = typeof(TypeConverter<,>).Namespace;

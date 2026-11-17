@@ -1,0 +1,29 @@
+@model SetupPacketViewModel
+@{
+    // печать договора (V1 Print/SetupPacket/Agreement?version=2): без навигации, кнопка Print скрыта при печати
+    Layout = "_PublicLayout";
+    ViewData["Title"] = "Agreement";
+    ViewData["Company"] = Model.Company;
+}
+<div class="mb-4 text-right print:hidden">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Print</button>
+</div>
+<div class="card bg-base-100 shadow-sm print:shadow-none print:border-0">
+    <div class="card-body">
+        <partial name="~/Views/CarrierRegistration/_Agreement02Part.cshtml" model="Model" />
+        <div class="mt-6 grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr_auto_1fr] text-sm">
+            <span class="opacity-60 text-right">Carrier Name:</span>
+            <span>@Model.SetupPacket.LegalName</span>
+            <span class="opacity-60 text-right">MC Number:</span>
+            <span>@Model.Carrier.McNumber</span>
+            <span class="opacity-60 text-right">Address:</span>
+            <span>@Model.SetupPacket.PhysicalAddress, @Model.SetupPacket.PhysicalCity, @Model.StateCode(Model.SetupPacket.PhysicalStateId) @Model.SetupPacket.PhysicalZipCode</span>
+            <span class="opacity-60 text-right">DOT Number:</span>
+            <span>@Model.Carrier.DotNumber</span>
+            <span class="opacity-60 text-right">Signature:</span>
+            <span class="signature">@Model.SetupPacket.Agreement_02Signature</span>
+            <span class="opacity-60 text-right">Date:</span>
+            <span>@Model.SetupPacket.Agreement_02SignatureDate?.ToShortDateString()</span>
+        </div>
+    </div>
+</div>

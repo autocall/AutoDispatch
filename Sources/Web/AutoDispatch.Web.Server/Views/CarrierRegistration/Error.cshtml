@@ -1,0 +1,12 @@
+@model SetupPacketViewModel
+@{
+    // карриер, компания или setup packet не найдены — подробности в логе (V1 Views/Shared/Error)
+    Layout = "_PublicLayout";
+    ViewData["Title"] = "Carrier Registration";
+    ViewData["Company"] = Model.Company;
+}
+<div class="card bg-base-100 shadow-sm">
+    <div class="card-body items-center">
+        <span class="text-error">Something went wrong...</span>
+    </div>
+</div>

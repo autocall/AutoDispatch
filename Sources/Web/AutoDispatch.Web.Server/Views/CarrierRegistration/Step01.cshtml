@@ -1,0 +1,37 @@
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+}
+<partial name="_StepHeaderPart" model="Model" />
+<p class="mt-4">Thank you for your interest in becoming an approved carrier for @Model.Company.LegalName. Below are some of our key requirements in order for your company to qualify as an approved carrier. All elements identified as 'required' must be completed in order for the qualification process to be completed. If your company is not compliant to one or several of the qualification criteria, you may return at another time to register once the non-compliant items are corrected.</p>
+<p class="mt-4 font-semibold">To become an Approved carrier you must provide and meet the following criteria:</p>
+<ul class="mt-2 list-disc pl-6 space-y-1">
+    <li>Provide your MC/MX or DOT to Begin Registration. Canadian Carriers should always begin with their MC or DOT when applicable. Intra Canadian Carriers may provide their CVOR / NIR or NSC. (You will be asked to upload a copy of your permit for verification). Intrastate US Carriers without a DOT # may provide an applicable State registration #.</li>
+    <li>Please contact your insurance agent and request that @Model.Company.LegalName is added as certificate holder to your policy</li>
+    <li>U.S. carriers must submit an electronic W9.</li>
+    <li>Complete the Carrier Profile.</li>
+    <li>Read and ACCEPT the 'Broker-Carrier Transportation Agreement'.</li>
+    <li>Carrier contact must be authorized to enter into and bind your company into the Broker-Carrier Transportation Agreement.</li>
+    <li>
+        Provide a Certificate of Insurance that meets the insurance minimum requirements below. Certificates must be submitted from your insurance producer (agent);
+        <ul class="list-disc pl-6">
+            <li>$100,000 Cargo Coverage</li>
+            <li>$1,000,000 Auto Coverage</li>
+            <li>$1,000,000 General Liability Coverage</li>
+            <li>Statutory Limit for Workers Compensation Coverage</li>
+        </ul>
+    </li>
+    <li>
+        U.S. carriers will be required to meet the following Carrier Compliance Requirements:
+        <ul class="list-disc pl-6">
+            <li>Safety Rating must be Satisfactory or None</li>
+            <li>(Carriers with Conditional Safety Ratings will be required to submit a Corrective Action Plan)</li>
+            <li>90 days minimum Common or Contract Authority</li>
+            <li>Valid Operating Status</li>
+            <li>Financially stable</li>
+        </ul>
+    </li>
+</ul>
+<form method="post" action="/CarrierRegistration/Step01?CarrierId=@Model.DatCompanyId">
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

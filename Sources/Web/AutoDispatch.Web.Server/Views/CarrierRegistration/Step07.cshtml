@@ -1,0 +1,212 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+    var step = Model.Model<SetupPacketStep07Model>();
+    var packet = Model.SetupPacket;
+    // тип компании 6 (LLC) открывает классификацию, 7 (Other) — свою; 2 (C Corp) закрывает SSN (V1 inputW9CompanyType_SelectChanged)
+}
+<p class="font-semibold">@Model.StepDisplay(Model.Step) complete. Your data will not be saved until you reach the end of the registration.</p>
+
+<form method="post" action="/CarrierRegistration/Step07?CarrierId=@Model.DatCompanyId" data-controller="w9">
+    <div class="mt-4 grid gap-4 sm:grid-cols-[1fr_2fr] items-start">
+        <div>
+            Form <span class="text-3xl font-bold">W-9</span><br />
+            <b>(Rev. November 2017)</b><br />
+            Department of The Treasury Internal Revenue System
+        </div>
+        <div class="text-center">
+            <h2 class="text-xl font-bold">Request for Taxpayer<br />Identification Number and Certification</h2>
+            <b>Go to www.irs.gov/FormW9 for instructions and the latest information.</b>
+        </div>
+    </div>
+    <div class="divider"></div>
+
+    <label class="form-control">
+        <span class="label-text"><b>1.</b> Name: (as shown on your income tax return). Name is required on this line; do not leave this line blank.</span>
+        <input type="text" class="input input-bordered w-full" name="W9Name" value="@step.W9Name" placeholder="Name" maxlength="64" required />
+        @Html.ValidationMessage("W9Name", "", new { @class = "text-error text-xs" })
+    </label>
+    <label class="form-control mt-2">
+        <span class="label-text"><b>2.</b> Business name/disregarded entity name, if different from above:</span>
+        <input type="text" class="input input-bordered w-full" name="W9BusinessName" value="@step.W9BusinessName" placeholder="Business Name" maxlength="64" required />
+        @Html.ValidationMessage("W9BusinessName", "", new { @class = "text-error text-xs" })
+    </label>
+
+    <div class="mt-2 grid gap-4 md:grid-cols-[3fr_2fr]">
+        <div>
+            <label class="form-control">
+                <span class="label-text"><b>3.</b> Check appropriate box for federal tax classification of the person whose name is entered on line 1</span>
+                <select class="select select-bordered w-full" name="W9CompanyType" data-w9-target="companyType" data-action="change->w9#update">
+                    <option value="">Select Company Type...</option>
+                    <option value="1" selected="@(step.W9CompanyType == 1)">Individual/Sole Proprietor or single-member LLC</option>
+                    <option value="2" selected="@(step.W9CompanyType == 2)">C Corporation</option>
+                    <option value="3" selected="@(step.W9CompanyType == 3)">S Corporation</option>
+                    <option value="4" selected="@(step.W9CompanyType == 4)">Partnership</option>
+                    <option value="5" selected="@(step.W9CompanyType == 5)">Trust/Estate</option>
+                    <option value="6" selected="@(step.W9CompanyType == 6)">Limited Liability Company</option>
+                    <option value="7" selected="@(step.W9CompanyType == 7)">Other</option>
+                </select>
+            </label>
+            <p class="mt-1 text-xs opacity-70"><b>Note:</b> Check the appropriate box in the above for the tax classification of the single-member owner, Do Not Check LLC is classified as a single-member LLC that is disregarded from the owner unless the owner of the LLC is another LLC that is not disregarded from the owner for U.S. federal tax purposes. Otherwise, a single-member LLC that is disregarded from the owner should check the appropriate box for the tax classification of its owner.</p>
+            <label class="form-control mt-2 hidden" data-w9-target="taxClassification">
+                <span class="label-text">Tax Classification:</span>
+                <select class="select select-bordered w-full max-w-xs" name="W9TaxClassification">
+                    <option value="">Tax Classification...</option>
+                    <option value="1" selected="@(step.W9TaxClassification == 1)">C Corporation</option>
+                    <option value="2" selected="@(step.W9TaxClassification == 2)">S Corporation</option>
+                    <option value="3" selected="@(step.W9TaxClassification == 3)">Partnership</option>
+                </select>
+                @Html.ValidationMessage("W9TaxClassification", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control mt-2 hidden" data-w9-target="otherClassification">
+                <span class="label-text">Tax Classification:</span>
+                <input type="text" class="input input-bordered w-full" name="W9OtherTaxClassification" value="@step.W9OtherTaxClassification" placeholder="Other Tax Classification" maxlength="64" />
+            </label>
+            <label class="form-control mt-2">
+                <span class="label-text"><b>5.</b> Address (number, street, and apt. or suite no.) See instructions.</span>
+                <input type="text" class="input input-bordered w-full" name="W9Address" value="@step.W9Address" placeholder="Address" maxlength="64" required />
+                @Html.ValidationMessage("W9Address", "", new { @class = "text-error text-xs" })
+            </label>
+            <div class="mt-2">
+                <span class="label-text"><b>6.</b> City, state, and ZIP code</span>
+                <div class="grid gap-2 sm:grid-cols-[2fr_1fr_1fr]">
+                    <label class="form-control">
+                        <input type="text" class="input input-bordered w-full" name="W9City" value="@step.W9City" placeholder="City" maxlength="32" required />
+                        @Html.ValidationMessage("W9City", "", new { @class = "text-error text-xs" })
+                    </label>
+                    <label class="form-control">
+                        <select class="select select-bordered w-full" name="W9StateId" required>
+                            <option value="">Select State...</option>
+                            @foreach (var state in Model.States) {
+                                <option value="@state.EntityId" selected="@(state.EntityId == step.W9StateId)">@state.Code</option>
+                            }
+                        </select>
+                        @Html.ValidationMessage("W9StateId", "", new { @class = "text-error text-xs" })
+                    </label>
+                    <label class="form-control">
+                        <input type="text" class="input input-bordered w-full" name="W9ZipCode" value="@step.W9ZipCode" placeholder="ZIP" maxlength="16" required />
+                        @Html.ValidationMessage("W9ZipCode", "", new { @class = "text-error text-xs" })
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div>
+            <span class="label-text"><b>4.</b> Exemptions (codes apply only to certain entities, not individuals; see instructions on page 3):</span>
+            <label class="form-control mt-2">
+                <span class="label-text">Exempt payee code (if any)</span>
+                <select class="select select-bordered w-24" name="W9ExemptPayeeCode">
+                    <option value=""></option>
+                    @for (byte i = 1; i <= 13; i++) {
+                        <option value="@i" selected="@(step.W9ExemptPayeeCode == i)">@i</option>
+                    }
+                </select>
+            </label>
+            <label class="form-control mt-2">
+                <span class="label-text">Exemption from FATCA reporting code (if any)</span>
+                <select class="select select-bordered w-24" name="W9FATCACode">
+                    <option value=""></option>
+                    @foreach (var code in "ABCDEFGHIJKLM") {
+                        <option value="@code" selected="@(step.W9FATCACode == code)">@code</option>
+                    }
+                </select>
+            </label>
+            <label class="form-control mt-2">
+                <span class="label-text">Requester's name and address (optional)</span>
+                <textarea class="textarea textarea-bordered w-full" name="W9NamePerson" rows="3" placeholder="Requester Name">@step.W9NamePerson</textarea>
+            </label>
+        </div>
+    </div>
+    <label class="form-control mt-2">
+        <span class="label-text"><b>7.</b> List account number(s) here (optional)</span>
+        <input type="text" class="input input-bordered w-full" name="W9AccountNumber" value="@step.W9AccountNumber" placeholder="Number(s)" maxlength="64" />
+    </label>
+
+    <div class="divider"></div>
+    <h3 class="text-lg font-bold"><span class="bg-neutral text-neutral-content px-1">Part I</span> Tax Payer Identification Number (TIN)</h3>
+    <div class="mt-2 grid gap-4 md:grid-cols-[3fr_2fr]">
+        <div class="text-sm">
+            <p>Enter your TIN in the appropriate box. The TIN provided must match the name given on line 1 to avoid backup withholding. For individuals, this is generally your social security number (SSN). However, for a resident alien, sole proprietor, or disregarded entity, see instructions for Part I, later. For other entities, it is your employer identification number (EIN). If you do not have a number, see How to get a TIN, later.</p>
+            <p class="mt-2"><b>Note.</b> If the account is in more than one name, see the instructions for line 1. Also see <i>What Name</i> and <i>Number To Give the Requestor</i> for guidelines on whose number to enter.</p>
+        </div>
+        <div>
+            <label class="form-control">
+                <span class="label-text font-semibold">Social security number</span>
+                <input type="text" class="input input-bordered w-full" name="W9SocialSecurityNumber" value="@step.W9SocialSecurityNumber" placeholder="###-##-####"
+                       data-w9-target="ssn" data-controller="mask" data-mask-pattern-value="999-99-9999" data-action="input->mask#format" />
+                @Html.ValidationMessage("W9SocialSecurityNumber", "", new { @class = "text-error text-xs" })
+            </label>
+            <div class="my-1 font-semibold">or</div>
+            <label class="form-control">
+                <span class="label-text font-semibold">Employer identification number</span>
+                <input type="text" class="input input-bordered w-full" name="W9EmployerIdentificationNumber" value="@step.W9EmployerIdentificationNumber" placeholder="##-#######"
+                       data-controller="mask" data-mask-pattern-value="99-9999999" data-action="input->mask#format" />
+                @Html.ValidationMessage("W9EmployerIdentificationNumber", "", new { @class = "text-error text-xs" })
+            </label>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+    <h3 class="text-lg font-bold"><span class="bg-neutral text-neutral-content px-1">Part II</span> Certification</h3>
+    <p class="mt-2 text-sm">Under penalties of perjury, I certify that:</p>
+    <ol class="list-decimal pl-6 text-sm space-y-1">
+        <li>The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me); and</li>
+        <li>I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding; and</li>
+        <li>I am a U.S. citizen or other U.S. person (defined below); and</li>
+        <li>The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.</li>
+    </ol>
+    <p class="mt-2 text-sm"><b>Certification instructions.</b> You must cross out item 2 above if you have been notified by the IRS that you are currently subject to backup withholding because you have failed to report all interest and dividends on your tax return. For real estate transactions, item 2 does not apply. For mortgage interest paid, acquisition or abandonment of secured property, cancellation of debt, contributions to an individual retirement arrangement (IRA), and generally, payments other than interest and dividends, you are not required to sign the certification, but you must provide your correct TIN. See the instructions for Part II, later.</p>
+    <div class="divider"></div>
+    <label class="flex items-start gap-2 cursor-pointer">
+        <input type="checkbox" class="checkbox checkbox-sm mt-1" name="W9Agree" value="true" @(step.W9Agree ? "checked" : "") required />
+        <b class="text-sm">Your entry into the @Model.Company.LegalName system (with your MC, DOT, or Intrastate Permit number) is considered your "electronic signature" and will serve as your confirmation of the accuracy of the W-9 information being submitted. When you click the box below "go to next page," you are certifying that under penalties of perjury:</b>
+    </label>
+    <input type="hidden" name="W9Agree" value="false" />
+    @Html.ValidationMessage("W9Agree", "", new { @class = "text-error text-xs" })
+    <div class="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-[3fr_2fr]">
+        <label class="form-control">
+            <span class="label-text italic">Signature of U.S. person</span>
+            <input type="text" class="input input-bordered w-full signature" name="W9Signature" value="@step.W9Signature" placeholder="Signature" maxlength="64" required />
+            @Html.ValidationMessage("W9Signature", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text italic">Date</span>
+            <input type="text" class="input input-bordered w-full" value="@packet.W9AgreeDate?.ToShortDateString()" readonly />
+            <input type="hidden" name="W9AgreeDate" value="@packet.W9AgreeDate?.ToString("o")" />
+        </label>
+    </div>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-2 text-sm">
+        <div>
+            <h2 class="text-xl font-semibold">General Instructions</h2>
+            <p>Section references are to the Internal Revenue Code unless otherwise noted.</p>
+            <p class="mt-1"><b>Future developments.</b> Information about developments affecting Form W-9 (such as legislation enacted after we release it) is at www.irs.gov/fw9.</p>
+            <h3 class="mt-2 font-semibold">Purpose of Form</h3>
+            <p>An individual or entity (Form W-9 requester) who is required to file an information return with the IRS must obtain your correct taxpayer identification number (TIN) which may be your social security number (SSN), individual taxpayer identification number (ITIN), adoption taxpayer identification number (ATIN), or employer identification number (EIN), to report on an information return the amount paid to you, or other amount reportable on an information return. Examples of information returns include, but are not limited to, the following:</p>
+            <ul class="list-disc pl-6">
+                <li>Form 1099-INT (interest earned or paid)</li>
+                <li>Form 1099-DIV (dividends, including those from stocks or mutual funds)</li>
+                <li>Form 1099-MISC (various types of income, prizes, awards, or gross proceeds)</li>
+                <li>Form 1099-B (stock or mutual fund sales and certain other transactions by brokers)</li>
+                <li>Form 1099-S (proceeds from real estate transactions)</li>
+                <li>Form 1099-K (merchant card and third party network transactions)</li>
+            </ul>
+        </div>
+        <div>
+            <ul class="list-disc pl-6">
+                <li>Form 1098 (home mortgage interest), 1098-E (student loan interest), 1098-T (tuition)</li>
+                <li>Form 1099-C (canceled debt)</li>
+                <li>Form 1099-A (acquisition or abandonment of secured property)</li>
+            </ul>
+            <p class="mt-2">Use Form W-9 only if you are a U.S. person (including a resident alien), to provide your correct TIN.</p>
+            <p class="italic">you do not return Form W-9 to the requester with a TIN, you might be subject to backup withholding. See What is backup withholding, later.</p>
+        </div>
+    </div>
+    <div class="mt-4 grid grid-cols-3 text-sm">
+        <span></span>
+        <span class="text-center">Cat. No. 10231X</span>
+        <span class="text-right">Form <b>W-9</b> (Rev. 11-2017)</span>
+    </div>
+    <p class="mt-2 text-sm">IRS Instructions</p>
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

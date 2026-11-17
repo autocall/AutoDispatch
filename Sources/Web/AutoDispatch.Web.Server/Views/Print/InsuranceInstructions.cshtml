@@ -1,0 +1,15 @@
+@model SetupPacketViewModel
+@{
+    // печать insurance instructions (V1 Print/SetupPacket/InsuranceInstructions)
+    Layout = "_PublicLayout";
+    ViewData["Title"] = "Insurance Instructions";
+    ViewData["Company"] = Model.Company;
+}
+<div class="mb-4 text-right print:hidden">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Print</button>
+</div>
+<div class="card bg-base-100 shadow-sm print:shadow-none print:border-0">
+    <div class="card-body">
+        <partial name="~/Views/CarrierRegistration/_InsuranceInstructionsPart.cshtml" model="Model" />
+    </div>
+</div>

@@ -1,0 +1,69 @@
+@model SetupPacketContactPartModel
+@{
+    // Контакт (V1 SetupPacketContactModel): имя, должность, телефоны, факс, email; Optional — чекбокс HasContact прячет блок (toggle);
+    // SameAs — select копирует поля другого контакта (copy-fields на форме)
+    var p = Model.Prefix;
+    var c = Model.Contact ?? new AutoDispatch.Dtos.Dtos.SetupPacketContactDto { EntityId = Guid.NewGuid() };
+}
+<div class="mt-4" data-controller="toggle">
+    <input type="hidden" name="@(p).EntityId" value="@c.EntityId" />
+    @if (Model.Optional) {
+        <label class="flex items-center gap-2 cursor-pointer font-semibold">
+            <input type="checkbox" class="checkbox checkbox-sm" name="@(p).HasContact" value="true" @(c.HasContact ? "checked" : "")
+                   data-toggle-target="switch" data-action="toggle#update" />
+            @Model.Title
+        </label>
+        <input type="hidden" name="@(p).HasContact" value="false" />
+    } else {
+        <input type="hidden" name="@(p).HasContact" value="true" />
+        <div class="font-semibold">@Model.Title</div>
+        @if (Model.Description != null) {
+            <div class="text-sm opacity-70">@Model.Description</div>
+        }
+    }
+    <div class="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2" data-toggle-target="content">
+        @if (Model.SameAsName != null) {
+            <label class="form-control sm:col-span-2">
+                <span class="label-text">same as</span>
+                <select class="select select-bordered select-sm w-full max-w-xs" name="@Model.SameAsName"
+                        data-action="change->copy-fields#copy" data-copy-fields-target-param="@p" data-copy-fields-suffix-param="Contact"
+                        data-copy-fields-fields-param="Contact,Title,Cell,Phone,Email,Fax">
+                    <option value=""></option>
+                    @foreach (var (value, text) in Model.SameAsOptions) {
+                        <option value="@value" selected="@(value == Model.SameAsValue)">@text</option>
+                    }
+                </select>
+            </label>
+        }
+        <label class="form-control">
+            <span class="label-text">First &amp; Last Name:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Contact" value="@c.Contact" placeholder="Contact" maxlength="32" />
+            @Html.ValidationMessage($"{p}.Contact", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Title:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Title" value="@c.Title" placeholder="Title" maxlength="32" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Phone:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Phone" value="@c.Phone" placeholder="Phone" maxlength="32"
+                   data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+            @Html.ValidationMessage($"{p}.Phone", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Cell:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Cell" value="@c.Cell" placeholder="Cell" maxlength="32"
+                   data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Fax:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Fax" value="@c.Fax" placeholder="Fax" maxlength="32"
+                   data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Email:</span>
+            <input type="email" class="input input-bordered w-full" name="@(p).Email" value="@c.Email" placeholder="Email" maxlength="64" />
+            @Html.ValidationMessage($"{p}.Email", "", new { @class = "text-error text-xs" })
+        </label>
+    </div>
+</div>

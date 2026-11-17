@@ -1,0 +1,160 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+    var step = Model.Model<SetupPacketStep02Model>();
+    var corporate = new SetupPacketContactPartModel {
+        Prefix = nameof(step.CorporateContact), Contact = step.CorporateContact, Title = "Corporate Contact",
+        Description = $"This person has legal authority to accept the terms of the {Model.Company.LegalName} Agreement." };
+    var sales = new SetupPacketContactPartModel {
+        Prefix = nameof(step.SalesContact), Contact = step.SalesContact, Title = "Sales Contact Information", Optional = true,
+        SameAsName = nameof(step.SalesSameAs), SameAsValue = step.SalesSameAs,
+        SameAsOptions = new[] { ("Corporate", "Corporate Contact") } };
+    var dispatch = new SetupPacketContactPartModel {
+        Prefix = nameof(step.DispatchContact), Contact = step.DispatchContact, Title = "Dispatch Contact Information", Optional = true,
+        SameAsName = nameof(step.DispatchSameAs), SameAsValue = step.DispatchSameAs,
+        SameAsOptions = new[] { ("Corporate", "Corporate Contact"), ("Sales", "Sales Contact") } };
+    var afterHour = new SetupPacketContactPartModel {
+        Prefix = nameof(step.AfterHourContact), Contact = step.AfterHourContact, Title = "No Accounting Contact Information", Optional = true,
+        SameAsName = nameof(step.AfterHourSameAs), SameAsValue = step.AfterHourSameAs,
+        SameAsOptions = new[] { ("Corporate", "Corporate Contact"), ("Sales", "Sales Contact"), ("Dispatch", "Dispatch Contact") } };
+}
+<partial name="_StepHeaderPart" model="Model" />
+<p class="mt-4">Please complete the following information about your company.</p>
+<p class="mt-2">You must complete the fields listed below.<br />If you have any problems completing this form, please contact an @Model.Company.LegalName representative at @Model.Company.WorkPhone.</p>
+<p class="mt-2">Please update the Pay To and Contact information. The main business information is locked. Please contact @Model.Company.LegalName for assistance if this is incorrect.</p>
+
+<form method="post" action="/CarrierRegistration/Step02?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
+    @* основной адрес *@
+    <div class="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+        <label class="form-control sm:col-span-2">
+            <span class="label-text">Company Name:</span>
+            <input type="text" class="input input-bordered w-full" name="LegalName" value="@step.LegalName" placeholder="Legal Name" maxlength="64" required />
+            @Html.ValidationMessage("LegalName", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control sm:col-span-2">
+            <span class="label-text">Address:</span>
+            <input type="text" class="input input-bordered w-full" name="PhysicalAddress" value="@step.PhysicalAddress" placeholder="Address" maxlength="64" required />
+            @Html.ValidationMessage("PhysicalAddress", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">City:</span>
+            <input type="text" class="input input-bordered w-full" name="PhysicalCity" value="@step.PhysicalCity" placeholder="City" maxlength="32" required />
+            @Html.ValidationMessage("PhysicalCity", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">State/Province:</span>
+            <select class="select select-bordered w-full" name="PhysicalStateId" required>
+                <option value="">Select State...</option>
+                @foreach (var state in Model.States) {
+                    <option value="@state.EntityId" selected="@(state.EntityId == step.PhysicalStateId)">@state.Code</option>
+                }
+            </select>
+            @Html.ValidationMessage("PhysicalStateId", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Zip/Postal Code:</span>
+            <input type="text" class="input input-bordered w-full" name="PhysicalZipCode" value="@step.PhysicalZipCode" placeholder="Zip Code" maxlength="16" required />
+            @Html.ValidationMessage("PhysicalZipCode", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Country:</span>
+            <select class="select select-bordered w-full" name="PhysicalCountryId" required>
+                <option value="">Select Country...</option>
+                @foreach (var country in Model.Countries) {
+                    <option value="@country.EntityId" selected="@(country.EntityId == step.PhysicalCountryId)">@country.Name</option>
+                }
+            </select>
+            @Html.ValidationMessage("PhysicalCountryId", "", new { @class = "text-error text-xs" })
+        </label>
+    </div>
+
+    @* Pay To: факторинговая компания заполняет поля из справочника, «same as main» — из основного адреса *@
+    <div class="mt-4" data-controller="toggle">
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-sm" name="UseFactoringCompany" value="true" @(step.UseFactoringCompany ? "checked" : "")
+                   data-toggle-target="switch" data-action="toggle#update" />
+            The Pay To is a Factoring Company:
+        </label>
+        <input type="hidden" name="UseFactoringCompany" value="false" />
+        <label class="mt-2 flex items-center gap-2 cursor-pointer" data-toggle-target="hidden">
+            <input type="checkbox" class="checkbox checkbox-sm" name="MailingAsPhysical" value="true"
+                   data-action="change->copy-fields#mirror"
+                   data-copy-fields-map-param="MailingCompanyLegalName=LegalName,MailingAddress=PhysicalAddress,MailingCity=PhysicalCity,MailingStateId=PhysicalStateId,MailingZipCode=PhysicalZipCode,MailingCountryId=PhysicalCountryId" />
+            Check here if the Pay To Address is the same as the Main Address:
+        </label>
+        <label class="form-control mt-2" data-toggle-target="content">
+            <span class="label-text">Factoring Companies:</span>
+            <select class="select select-bordered w-full" name="FactoringCompanyId"
+                    data-action="change->copy-fields#fill"
+                    data-copy-fields-map-param="MailingCompanyLegalName=name,MailingAddress=address,MailingCity=city,MailingStateId=stateId,MailingZipCode=zipCode,MailingCountryId=countryId,MailingEmail=email">
+                <option value="">Select Factoring Company...</option>
+                @foreach (var f in Model.FactoringCompanies) {
+                    <option value="@f.EntityId" selected="@(f.EntityId == step.FactoringCompanyId)"
+                            data-name="@f.Name" data-address="@f.Address" data-city="@f.City" data-state-id="@f.StateId" data-zip-code="@f.ZipCode"
+                            data-country-id="@f.CountryId" data-email="@f.Email">@f.Name</option>
+                }
+            </select>
+        </label>
+
+        <div class="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+            <label class="form-control sm:col-span-2">
+                <span class="label-text">Pay To Company Name:</span>
+                <input type="text" class="input input-bordered w-full" name="MailingCompanyLegalName" value="@step.MailingCompanyLegalName" placeholder="Company Name" maxlength="64" required data-toggle-target="lock" />
+                @Html.ValidationMessage("MailingCompanyLegalName", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control sm:col-span-2">
+                <span class="label-text">Pay To Address:</span>
+                <input type="text" class="input input-bordered w-full" name="MailingAddress" value="@step.MailingAddress" placeholder="Address" maxlength="64" required data-toggle-target="lock" />
+                @Html.ValidationMessage("MailingAddress", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control">
+                <span class="label-text">Pay To City:</span>
+                <input type="text" class="input input-bordered w-full" name="MailingCity" value="@step.MailingCity" placeholder="City" maxlength="32" required data-toggle-target="lock" />
+                @Html.ValidationMessage("MailingCity", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control">
+                <span class="label-text">Pay To State:</span>
+                <select class="select select-bordered w-full" name="MailingStateId" required>
+                    <option value="">Select State...</option>
+                    @foreach (var state in Model.States) {
+                        <option value="@state.EntityId" selected="@(state.EntityId == step.MailingStateId)">@state.Code</option>
+                    }
+                </select>
+                @Html.ValidationMessage("MailingStateId", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control">
+                <span class="label-text">Pay To Zip:</span>
+                <input type="text" class="input input-bordered w-full" name="MailingZipCode" value="@step.MailingZipCode" placeholder="Zip Code" maxlength="16" required data-toggle-target="lock" />
+                @Html.ValidationMessage("MailingZipCode", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control">
+                <span class="label-text">Pay To Country:</span>
+                <select class="select select-bordered w-full" name="MailingCountryId" required>
+                    <option value="">Select Country...</option>
+                    @foreach (var country in Model.Countries) {
+                        <option value="@country.EntityId" selected="@(country.EntityId == step.MailingCountryId)">@country.Name</option>
+                    }
+                </select>
+                @Html.ValidationMessage("MailingCountryId", "", new { @class = "text-error text-xs" })
+            </label>
+            <label class="form-control sm:col-span-2">
+                <span class="label-text">Pay To Email:</span>
+                <input type="email" class="input input-bordered w-full" name="MailingEmail" value="@step.MailingEmail" placeholder="Email" maxlength="64" />
+            </label>
+        </div>
+    </div>
+
+    @* контакты *@
+    <h3 class="mt-6 text-xl font-semibold">Contact Information</h3>
+    <input type="hidden" name="CorporateContactId" value="@step.CorporateContact?.EntityId" />
+    <input type="hidden" name="SalesContactId" value="@step.SalesContact?.EntityId" />
+    <input type="hidden" name="DispatchContactId" value="@step.DispatchContact?.EntityId" />
+    <input type="hidden" name="AfterHourContactId" value="@step.AfterHourContact?.EntityId" />
+    <partial name="_ContactPart" model="corporate" />
+    <partial name="_ContactPart" model="sales" />
+    <partial name="_ContactPart" model="dispatch" />
+    <partial name="_ContactPart" model="afterHour" />
+
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

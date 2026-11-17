@@ -1,0 +1,63 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    // Мастер setup packet (V1 Views/SetupPacket/_Layout): карриер (User) — только карточка шага; агент (View/Edit) — шире,
+    // слева шаги с текущим шагом карриера, сверху карточка карриера. View — все поля выключены (fieldset disabled)
+    Layout = "_PublicLayout";
+    ViewData["Company"] = Model.Company;
+    ViewData["Title"] = "Carrier Registration";
+    ViewData["Wide"] = Model.Mode != PageModeEnum.User;
+    var agent = Model.Mode != PageModeEnum.User && Model.Carrier != null && Model.SetupPacket != null;
+}
+@if (agent) {
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div class="flex flex-col gap-4 min-w-0 flex-1">
+            <div class="card bg-base-100 shadow-sm">
+                <div class="card-body p-4 grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr_auto_1fr] text-sm">
+                    <span class="opacity-60 text-right">Legal Name</span>
+                    <span>@Model.Carrier.Name</span>
+                    <span class="opacity-60 text-right">MC#</span>
+                    <span>@Model.Carrier.McNumber</span>
+                    <span class="opacity-60 text-right">Status</span>
+                    <span>@(Model.Carrier.SetupPacketCompleted ? "Registered" : Model.Title(Model.SetupPacket.Step))</span>
+                    <span class="opacity-60 text-right">DOT#</span>
+                    <span>@Model.Carrier.DotNumber</span>
+                </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+                <div class="card-body">
+                    @if (Model.Mode == PageModeEnum.View) {
+                        <fieldset disabled class="contents">
+                            @RenderBody()
+                        </fieldset>
+                    } else {
+                        @RenderBody()
+                    }
+                </div>
+            </div>
+        </div>
+        <ul class="menu bg-base-100 rounded-box shadow-sm w-full lg:w-64 shrink-0">
+            @foreach (var i in SetupPacketViewModel.EnabledSteps.Where(s => s < 14)) {
+                <li>
+                    <a href="/CarrierRegistration/@(Model.Mode == PageModeEnum.View ? "View" : "Edit")?CarrierId=@Model.Carrier.EntityId&step=@i"
+                       class="@(i == Model.Step ? "menu-active" : "")">
+                        @if (i == Model.SetupPacket.Step) {
+                            @* текущий шаг карриера *@
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4 0-8 2-8 5v3h16v-3c0-3-4-5-8-5z" /></svg>
+                        }
+                        @Model.Title(i)
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+} else {
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            @RenderBody()
+        </div>
+    </div>
+}
+@if (Model.SetupPacket != null) {
+    <div class="mt-2 text-right text-xs opacity-50">v.@Model.SetupPacket.Version</div>
+}

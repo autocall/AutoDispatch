@@ -1,0 +1,32 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+    ViewData["StepTitle"] = "Upload your documents here:";
+    ViewData["NextText"] = "Finish";
+    // карриеру после FMCSA-сертификата MC нужен только COI (V1); агенту и без сертификата — оба файла
+    var onlyCoi = Model.Mode == PageModeEnum.User && Model.SetupPacket.FileMC != null && Model.SetupPacket.FileCOI == null;
+}
+<partial name="_StepHeaderPart" model="Model" />
+<form method="post" enctype="multipart/form-data" action="/CarrierRegistration/Step13?CarrierId=@Model.DatCompanyId">
+    <p class="mt-4">@(onlyCoi ? "Please upload your Insurance Certificate" : "Please upload your MC and Insurance Certificate")</p>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        @if (onlyCoi == false) {
+            <label class="form-control">
+                <span class="label-text">File MC</span>
+                <input type="file" class="file-input file-input-bordered w-full" name="fileMC" />
+                @if (Model.SetupPacket.FileMC != null) {
+                    <a class="link text-sm" target="_blank" href="/CarrierRegistration/DownloadFileMC?CarrierId=@Model.DatCompanyId">@Model.SetupPacket.FileMC</a>
+                }
+            </label>
+        }
+        <label class="form-control">
+            <span class="label-text">File COI</span>
+            <input type="file" class="file-input file-input-bordered w-full" name="fileCOI" />
+            @if (Model.SetupPacket.FileCOI != null) {
+                <a class="link text-sm" target="_blank" href="/CarrierRegistration/DownloadFileCOI?CarrierId=@Model.DatCompanyId">@Model.SetupPacket.FileCOI</a>
+            }
+        </label>
+    </div>
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

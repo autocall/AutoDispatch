@@ -54,7 +54,7 @@
 ## Тестовые данные локально
 
 `autodispatch_local` пуст (миграции без данных). Для проверки страниц вставлены компания `D0000000-…0001` («Test Dispatch LLC»), карриер `C0000000-…0001`,
-трейлер `AA000000-…0001` и грузы `BB000000-…0001/0002` (AtPickUp, Board Carrier, порядок остановок, у первого Gains в формате V1 и `ConfirmationFile`);
+карриер привязан к компании (`DispatchCompanyId`), с 2026-11-17 у него реальный MC 27804 / DOT 3008501 (CARPATHIAN EAGLE INC) для Safer в тесте `11_SetupPacket`; трейлер `AA000000-…0001` и грузы `BB000000-…0001/0002` (AtPickUp, Board Carrier, порядок остановок, у первого Gains в формате V1 и `ConfirmationFile`);
 скрипт — в scratchpad сессии, повторяем (DELETE + INSERT, строки `HistoryObject` для FK). Подпись (POST) локально не проверялась: нужен PDF
 `ConfirmationFile` на диске и SMTP компании.
 

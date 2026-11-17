@@ -1,0 +1,67 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+    var step = Model.Model<SetupPacketStep04Model>();
+    var packet = Model.SetupPacket;
+    var contact = packet.ConfidantContact;
+    var signatureDate = (step.Agreement_02SignatureDate ?? packet.Agreement_02SignatureDate)?.ToShortDateString();
+}
+<p class="font-semibold">@Model.StepDisplay(Model.Step) complete. Your data will not be saved until you reach the end of the registration.</p>
+<div class="mt-4">
+    <partial name="_Agreement02Part" model="Model" />
+</div>
+<div class="mt-4 text-right">
+    <a class="btn btn-primary" href="/Print/SetupPacket/Agreement?CarrierId=@Model.DatCompanyId&version=2" target="_blank">Print Agreement</a>
+</div>
+
+<form method="post" action="/CarrierRegistration/Step04?CarrierId=@Model.DatCompanyId">
+    <div class="mt-4 grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr_auto_1fr] text-sm">
+        <span class="opacity-60 text-right">Carrier Name:</span>
+        <span>@packet.LegalName</span>
+        <span></span><span></span>
+        <span class="opacity-60 text-right">Address:</span>
+        <span>@packet.PhysicalAddress</span>
+        <span class="opacity-60 text-right">MC Number:</span>
+        <span>@Model.Carrier.McNumber</span>
+        <span class="opacity-60 text-right">City, State &amp; Zip:</span>
+        <span>@packet.PhysicalCity, @Model.StateCode(packet.PhysicalStateId) @packet.PhysicalZipCode</span>
+        <span class="opacity-60 text-right">DOT Number:</span>
+        <span>@Model.Carrier.DotNumber</span>
+        <span class="opacity-60 text-right">Contact:</span>
+        <span>@contact?.Contact</span>
+        <span class="opacity-60 text-right">Phone:</span>
+        <span>@contact?.Phone</span>
+    </div>
+    <div class="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+        <label class="form-control">
+            <span class="label-text">Signature:</span>
+            <input type="text" class="input input-bordered w-full signature" name="Agreement_02Signature" value="@step.Agreement_02Signature" placeholder="Signature" maxlength="64" required />
+            @Html.ValidationMessage("Agreement_02Signature", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Date:</span>
+            <input type="text" class="input input-bordered w-full" value="@signatureDate" placeholder="Signature Date" readonly />
+        </label>
+    </div>
+
+    <div class="mt-8 text-center font-semibold underline">ACKNOWLEDGEMENT OF POLICY PROHIBITING RE-BROKERING OF SHIPMENTS</div>
+    <div class="mt-4 space-y-2 text-sm">
+        <p>@Model.Company.LegalName explicitly prohibits carriers from re-brokering any of our shipments to another carrier (motor carrier or rail carrier) without our prior written consent.</p>
+        <p>Any shipments offered to you by @Model.Company.LegalName are being offered as a licensed property broker and you are accepting them as a licensed for-hire motor carrier. Shipments you accept from @Model.Company.LegalName must be transported under your operating authority on equipment owned by your company or under an Owner­ Operator lease contract executed prior to the date you accept the shipment from @Model.Company.LegalName.</p>
+        <p>If you fail to comply with this policy, you waive all charges owed to you and will be subject to damages as specified in our Broker-Carrier Agreement. Failure to sign this document does not amend our contract terms nor the enforceability of those terms.</p>
+        <p>I acknowledge and agree to comply with this policy at all times.</p>
+    </div>
+    <div class="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+        <label class="form-control">
+            <span class="label-text">Signature:</span>
+            <input type="text" class="input input-bordered w-full signature" name="Agreement2_02Signature" value="@step.Agreement2_02Signature" placeholder="Signature" maxlength="64" required />
+            @Html.ValidationMessage("Agreement2_02Signature", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Date:</span>
+            <input type="text" class="input input-bordered w-full" value="@signatureDate" placeholder="Signature Date" readonly />
+        </label>
+    </div>
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

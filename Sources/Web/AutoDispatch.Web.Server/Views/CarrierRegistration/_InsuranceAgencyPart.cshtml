@@ -1,0 +1,65 @@
+@model SetupPacketInsurancePartModel
+@{
+    // Страховое агентство (V1 SetupPacketInsuranceAgencyModel): название, телефон, факс, email, номер полиса;
+    // Checkbox — HasInsurance прячет блок (toggle); SameAs — копирует поля другого агентства (copy-fields на форме)
+    var p = Model.Prefix;
+    var a = Model.Agency ?? new AutoDispatch.Dtos.Dtos.SetupPacketInsuranceAgencyDto { EntityId = Guid.NewGuid() };
+}
+<div class="mt-6" data-controller="toggle">
+    <input type="hidden" name="@(p).EntityId" value="@a.EntityId" />
+    <div class="text-center font-semibold">@Model.Title</div>
+    @if (Model.Checkbox != null) {
+        <label class="mt-2 flex items-center justify-center gap-2 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-sm" name="@(p).HasInsurance" value="true" @(a.HasInsurance ? "checked" : "")
+                   data-toggle-target="switch" data-action="toggle#update" />
+            @Model.Checkbox
+        </label>
+        <input type="hidden" name="@(p).HasInsurance" value="false" />
+    } else {
+        <input type="hidden" name="@(p).HasInsurance" value="true" />
+    }
+    <div class="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2" data-toggle-target="content">
+        @if (Model.SameAsName != null) {
+            <label class="form-control sm:col-span-2">
+                <span class="label-text">same as</span>
+                <select class="select select-bordered select-sm w-full max-w-xs" name="@Model.SameAsName"
+                        data-action="change->copy-fields#copy" data-copy-fields-target-param="@p" data-copy-fields-suffix-param="InsuranceAgency"
+                        data-copy-fields-fields-param="CompanyName,Number,Phone,Email,Fax">
+                    <option value=""></option>
+                    @foreach (var (value, text) in Model.SameAsOptions) {
+                        <option value="@value" selected="@(value == Model.SameAsValue)">@text</option>
+                    }
+                </select>
+            </label>
+        }
+        <label class="form-control">
+            <span class="label-text">Insurance Agency Company Name:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).CompanyName" value="@a.CompanyName" placeholder="Company Name" maxlength="32" />
+            @Html.ValidationMessage($"{p}.CompanyName", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Insurance Agency Phone:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Phone" value="@a.Phone" placeholder="Phone" maxlength="32"
+                   data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+            @Html.ValidationMessage($"{p}.Phone", "", new { @class = "text-error text-xs" })
+        </label>
+        <label class="form-control">
+            <span class="label-text">Insurance Agency Fax:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Fax" value="@a.Fax" placeholder="Fax" maxlength="32"
+                   data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Insurance Agency Email:</span>
+            <input type="email" class="input input-bordered w-full" name="@(p).Email" value="@a.Email" placeholder="Email" maxlength="64" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Your Policy Number:</span>
+            <input type="text" class="input input-bordered w-full" name="@(p).Number" value="@a.Number" placeholder="Policy Number" maxlength="32" />
+        </label>
+    </div>
+    @if (Model.HiddenPartial != null) {
+        <div data-toggle-target="hidden">
+            <partial name="@Model.HiddenPartial" model="Model.Page" />
+        </div>
+    }
+</div>

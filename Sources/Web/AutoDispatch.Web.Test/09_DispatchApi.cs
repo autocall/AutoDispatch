@@ -118,8 +118,10 @@ public class DispatchApi_Test {
         _output.WriteLine($"Response(null) in {stopwatch.ElapsedMilliseconds} ms: EventId {first.EventId}, {first.ErrorMessage}");
         Assert.Equal(ResponseStatus.Success, first.Status);
         Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(5));
+        // EmptyEventDto.EventId — [JsonIgnore] по контракту V1: текущий id — в конверте (first.EventId), в событии всегда 0
         var events = ((EventNotificationResponseData)first.Data).Events;
-        var currentEventId = events.Single().EventId;
+        Assert.Single(events);
+        var currentEventId = first.EventId;
 
         // второй опрос того же пользователя отменяет первый: первый — Failed, второй досиживает EventWaitTimeout и отдаёт пустое событие
         stopwatch.Restart();

@@ -55,7 +55,15 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
             MailingCountryId = 0
         };
 
-        Dictionary<string, string> fields = await datCompanyService.GetFieldsAsync(carrier.DotNumber, carrier.McNumber);
+        // карточка FMCSA недоступна (Safer 502, карриер не найден) — packet без предзаполнения, карриер вводит данные на шаге 2 сам;
+        // в V1 исключение прерывало регистрацию (AI/wiki/public-site.md)
+        Dictionary<string, string> fields;
+        try {
+            fields = await datCompanyService.GetFieldsAsync(carrier.DotNumber, carrier.McNumber) ?? new Dictionary<string, string>();
+        } catch (Exception e) {
+            _l.w($"Create setup packet: FMCSA fields for {carrier.Name} (MC {carrier.McNumber}, DOT {carrier.DotNumber}) unavailable: {e.Message}");
+            fields = new Dictionary<string, string>();
+        }
 
         if (fields.ContainsKey("Legal Name:")) {
             setupPacket.W9Name = setupPacket.LegalName = fields["Legal Name:"];
@@ -222,6 +230,22 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
         if (modelId != null && (dto == null || dto.EntityId != modelId)) {
             await Table<SetupPacketInsuranceAgency>().Where(e => e.EntityId == modelId).DeleteAsync();
         }
+    }
+
+    /// <summary>
+    ///     Файл MC или COI шага 13 (V1 Step13_ViewModelToDto): в каталог карриера под именем MC_yyyy_MM_dd.ext / COI_…,
+    ///     занятое имя — с номером; старый файл с тем же именем удаляется. Возвращает имя для SetupPacketDto.FileMC/FileCOI </summary>
+    public async Task<string> SaveStepFileAsync(Guid carrierId, string prefix, string fileName, Stream content, string currentName) {
+        var directory = DispatchFileHelper.FileGetFullPath(carrierId);
+        Directory.CreateDirectory(directory);
+        var name = $"{prefix}_{DateTime.Now:yyyy_MM_dd}{Path.GetExtension(fileName)}";
+        if (name == currentName && File.Exists(Path.Combine(directory, name))) {
+            File.Delete(Path.Combine(directory, name));
+        }
+        var fullPath = DispatchFileHelper.UniqueFileFullPath(Path.Combine(directory, name));
+        await using var file = File.Create(fullPath);
+        await content.CopyToAsync(file);
+        return Path.GetFileName(fullPath);
     }
 
     /// <summary>

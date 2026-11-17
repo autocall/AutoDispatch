@@ -1,0 +1,4 @@
+@model SetupPacketViewModel
+@* «3/9 complete …» и заголовок шага (V1 — в каждом Step*.cshtml) *@
+<p class="font-semibold">@Model.StepDisplay(Model.Step) complete. Your data will not be saved until you reach the end of the registration.</p>
+<h2 class="mt-2 text-center text-2xl font-semibold">@(ViewData["StepTitle"] ?? Model.Title(Model.Step))</h2>

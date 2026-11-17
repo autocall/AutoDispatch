@@ -1,0 +1,14 @@
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+}
+<p class="font-semibold">@Model.StepDisplay(Model.Step) complete. Your data will not be saved until you reach the end of the registration.</p>
+<div class="mt-4 text-right">
+    <a class="btn btn-primary" href="/Print/SetupPacket/InsuranceInstructions?CarrierId=@Model.DatCompanyId" target="_blank">Print Insurance Instructions</a>
+</div>
+<div class="mt-4">
+    <partial name="_InsuranceInstructionsPart" model="Model" />
+</div>
+<form method="post" action="/CarrierRegistration/Step05?CarrierId=@Model.DatCompanyId">
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

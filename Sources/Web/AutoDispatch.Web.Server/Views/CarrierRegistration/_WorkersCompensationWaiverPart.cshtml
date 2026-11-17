@@ -1,0 +1,27 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    // отказ от страховки workers compensation с подписью — показывается, когда чекбокс Workers Compensation снят
+    var step = Model.Model<SetupPacketStep06Model>();
+    var packet = Model.SetupPacket;
+}
+<div class="mt-4 text-center font-semibold">WAIVER OF WORKERS COMPENSATION INSURANCE</div>
+<p class="mt-2">
+    <ins>@packet.LegalName</ins> hereby represents and warrants that, under the workers' compensation laws of the State of <ins>@packet.PhysicalState</ins>,
+    it does not have any employees subject to workers compensation insurance and is not required to purchase such insurance.
+    Carrier also represents and warrants that it has elected to not purchase workers compensation insurance.
+    If CARRIER becomes subject to compliance with Workers Compensation laws or elects to comply with said laws,
+    it shall immediately provide <ins>@Model.Company.LegalName</ins>. a Workers Compensation insurance certificate evidencing such compliance.
+</p>
+<div class="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+    <label class="form-control">
+        <span class="label-text">Signature of Officer</span>
+        <input type="text" class="input input-bordered w-full signature" name="WorkersCompensationSignature" value="@step.WorkersCompensationSignature" placeholder="Signature" maxlength="64" />
+        @Html.ValidationMessage("WorkersCompensationSignature", "", new { @class = "text-error text-xs" })
+    </label>
+    <label class="form-control">
+        <span class="label-text">Date</span>
+        <input type="text" class="input input-bordered w-full" value="@packet.WorkersCompensationSignatureDate?.ToShortDateString()" readonly />
+        <input type="hidden" name="WorkersCompensationSignatureDate" value="@packet.WorkersCompensationSignatureDate?.ToString("o")" />
+    </label>
+</div>

@@ -3,6 +3,8 @@
     // Публичные страницы для карриеров (Confirmation, на этапе 6 — CarrierRegistration): без навигации сайта, в шапке и подвале —
     // логотип и имя компании-заказчика (ViewData["Company"], V1 Views/Confirmation/_Layout и SetupPacket/_Layout); тема — как в _Layout
     var company = ViewData["Company"] as ActualCompanyDto;
+    // Wide — страницы агента с навигацией по шагам setup packet
+    var width = ViewData["Wide"] as bool? == true ? "max-w-6xl" : "max-w-3xl";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -36,7 +38,7 @@
         </div>
         <partial name="_ThemeTogglePart" />
     </div>
-    <main class="container mx-auto w-full max-w-3xl flex-1 p-4">
+    <main class="container mx-auto w-full @width flex-1 p-4">
         @RenderBody()
     </main>
     @if (company != null) {

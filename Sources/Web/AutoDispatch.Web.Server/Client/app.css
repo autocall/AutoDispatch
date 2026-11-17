@@ -63,3 +63,15 @@
 @source "../Views/**/*.cshtml";
 /* классы цветов метрик собраны в модели страницы (MetricsIndexViewModel) */
 @source "../Models/**/*.cs";
+/* подпись в setup packet (V1 Brush Script MT) — тот же шрифт, что в PDF (Resources/Fonts, OFL) */
+@font-face {
+  font-family: "Dancing Script";
+  src: url("/fonts/DancingScript-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+@layer utilities {
+  .signature {
+    font-family: "Dancing Script", cursive;
+    font-size: 1.5rem;
+  }
+}

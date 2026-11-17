@@ -1,0 +1,40 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    Layout = "_Layout";
+    var step = Model.Model<SetupPacketStep06Model>();
+    var packet = Model.SetupPacket;
+    var general = new SetupPacketInsurancePartModel {
+        Prefix = nameof(step.GeneralLiabilityInsuranceAgency), Agency = step.GeneralLiabilityInsuranceAgency,
+        Title = "GENERAL LIABILITY INSURANCE AGENCY", Checkbox = "General Producer" };
+    var auto = new SetupPacketInsurancePartModel {
+        Prefix = nameof(step.AutoInsuranceAgency), Agency = step.AutoInsuranceAgency, Title = "AUTO INSURANCE AGENCY",
+        SameAsName = nameof(step.AutoSameAs), SameAsValue = step.AutoSameAs,
+        SameAsOptions = new[] { ("GeneralLiability", "General Liability Insurance Agency") } };
+    var cargo = new SetupPacketInsurancePartModel {
+        Prefix = nameof(step.CargoInsuranceAgency), Agency = step.CargoInsuranceAgency, Title = "CARGO INSURANCE AGENCY",
+        SameAsName = nameof(step.CargoSameAs), SameAsValue = step.CargoSameAs,
+        SameAsOptions = new[] { ("GeneralLiability", "General Liability Insurance Agency"), ("Auto", "Auto Liability Insurance Agency") } };
+    // без страховки workers compensation — отказ с подписью (HiddenPartial внутри toggle партиала)
+    var workers = new SetupPacketInsurancePartModel {
+        Prefix = nameof(step.WorkersCompensationInsuranceAgency), Agency = step.WorkersCompensationInsuranceAgency,
+        Title = "WORKERS COMPENSATION INSURANCE AGENCY", Checkbox = "Workers Compensation",
+        SameAsName = nameof(step.WorkersCompensationSameAs), SameAsValue = step.WorkersCompensationSameAs,
+        SameAsOptions = new[] { ("GeneralLiability", "General Liability Insurance Agency"), ("Auto", "Auto Liability Insurance Agency"), ("Cargo", "Cargo Liability Insurance Agency") },
+        HiddenPartial = "_WorkersCompensationWaiverPart", Page = Model };
+}
+<partial name="_StepHeaderPart" model="Model" />
+<p class="mt-4">We show you have not yet provided proof of the following insurance coverages. Please enter the information about your insurance agent (producer) below. We will contact your insurance producer and request your certificate with the appropriate coverage and limits.</p>
+
+<form method="post" action="/CarrierRegistration/Step06?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
+    <input type="hidden" name="GeneralLiabilityInsuranceAgencyId" value="@step.GeneralLiabilityInsuranceAgency?.EntityId" />
+    <input type="hidden" name="AutoInsuranceAgencyId" value="@step.AutoInsuranceAgency?.EntityId" />
+    <input type="hidden" name="CargoInsuranceAgencyId" value="@step.CargoInsuranceAgency?.EntityId" />
+    <input type="hidden" name="WorkersCompensationInsuranceAgencyId" value="@step.WorkersCompensationInsuranceAgency?.EntityId" />
+
+    <partial name="_InsuranceAgencyPart" model="general" />
+    <partial name="_InsuranceAgencyPart" model="auto" />
+    <partial name="_InsuranceAgencyPart" model="cargo" />
+    <partial name="_InsuranceAgencyPart" model="workers" />
+    <partial name="_StepButtonsPart" model="Model" />
+</form>

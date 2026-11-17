@@ -1,0 +1,22 @@
+@model SetupPacketViewModel
+@* Insurance Instructions (V1 Views/SetupPacket/InsuranceInstructions): шаг 5 и страница печати *@
+<h2 class="text-center text-2xl font-semibold">Insurance Instructions</h2>
+<p class="mt-4">Please note a carrier will not be certified until a valid certificate is received. The insurance requirements are shown below. Certificates can be sent:</p>
+<p class="mt-4 underline">The Certificate MUST show the following:</p>
+<ul class="mt-2 list-disc pl-6 space-y-2">
+    <li>
+        <strong>Certificate Holder</strong> must be shown as:
+        <p class="mt-1">
+            @Model.Company.LegalName<br />
+            <span class="whitespace-pre-line">@Model.Company.PhysicalAddress</span>
+        </p>
+    </li>
+    <li>
+        <strong>Coverages:</strong> Certificate must include:
+        <ul class="list-disc pl-6">
+            <li>Cargo<ul class="list-disc pl-6"><li>Minimum Cargo Limit: $100,000</li></ul></li>
+            <li>Commercial Automobile Liability<ul class="list-disc pl-6"><li>Minimum Combined Single Limit: $1,000,000</li></ul></li>
+            <li>Commercial General Liability<ul class="list-disc pl-6"><li>Each Occurrence: $1,000,000</li></ul></li>
+        </ul>
+    </li>
+</ul>

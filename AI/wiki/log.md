@@ -156,3 +156,13 @@ EO.WebBrowser → WebView2 на этапе 7), публичные URL как в 
 `Api/Maps/SelectLocationLink|OrderStopsLink`; `select_location_controller.ts`, `order_stops_controller.ts`, `map_common.ts`). Найдено: `Expenses_DtoToVm`
 терял Gains/Expenses после whitelist `$type` этапа 4 — исправлено, тест `08.Test10`. Тесты `10_PublicSite` (3) проходят против локального сервера с тестовыми
 данными (компания, карриер, трейлер, 2 груза). [[public-site]], [[plan]], [[protocol]].
+
+## [2026-11-17] implement | Этап 6: SetupPacket (CarrierRegistration) на daisyUI + Stimulus
+`CarrierRegistrationController` (Index/View/Edit, Step00–14, Prev01–14, DownloadFileMC/COI), `PrintController`, модели шагов в Logic + маппинг,
+`SetupPacketService.SaveStepFileAsync`, views 9 включённых шагов и партиалы, Stimulus `copy_fields`/`toggle`/`mask`/`w9`, шрифт подписи.
+Отступления: выключенные шаги 3, 8–12 и views версии 1 не перенесены (вынесены в «Решить»), packet без карточки FMCSA создаётся без
+предзаполнения. Тесты `11_SetupPacket` (2) проходят; попутно `09.Test03` — id события из конверта. Safer в этот день отдавал 502
+(`02_Places`, `09.Test04` падали по внешней причине). [[setup-packet]], [[plan]].
+
+## [2026-11-17] decision | Отступления этапа 6 приняты
+Пользователь: выключенные шаги 3, 8–12 и views версии 1 не переносить; packet без карточки FMCSA создаётся без предзаполнения — оставить. [[plan]], [[setup-packet]].

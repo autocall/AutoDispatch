@@ -1,0 +1,28 @@
+@using AutoDispatch.Web.Logic.Dtos.Dispatch
+@model SetupPacketViewModel
+@{
+    // Внутри формы шага: скрытые Step/Mode, antiforgery, ошибка сохранения, кнопки. Next — submit формы (StepNN),
+    // «previous step» — та же форма на PrevNN (formaction, без HTML5-валидации), в Edit — только Save (V1), в View кнопок нет
+    var next = ViewData["NextText"] as string ?? "Go to next step";
+    var prevStep = Model.Step > 0 && Model.Mode == PageModeEnum.User;
+}
+@Html.AntiForgeryToken()
+<input type="hidden" name="Step" value="@Model.Step" />
+<input type="hidden" name="Mode" value="@((int)Model.Mode)" />
+@if (Model.Error != null) {
+    <div role="alert" class="alert alert-error text-sm mt-4">@Model.Error</div>
+}
+@if (Model.Mode != PageModeEnum.View) {
+    <div class="mt-6 grid grid-cols-3 items-center">
+        <span></span>
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">@(Model.Mode == PageModeEnum.Edit ? "Save" : next)</button>
+        </div>
+        <div class="text-right">
+            @if (prevStep) {
+                <button type="submit" class="btn btn-link" formnovalidate
+                        formaction="/CarrierRegistration/Prev@(Model.Step.ToString("00"))?CarrierId=@Model.DatCompanyId">previous step</button>
+            }
+        </div>
+    </div>
+}
