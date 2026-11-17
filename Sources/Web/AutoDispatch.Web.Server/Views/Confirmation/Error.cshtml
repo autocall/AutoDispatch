@@ -1,0 +1,13 @@
+@model ConfirmationViewModel
+@{
+    // груз не найден, удалён или без карриера/компании — подробности только в логе, как в V1
+    Layout = "_PublicLayout";
+    ViewData["Title"] = "Confirmation";
+    ViewData["Company"] = Model.Company;
+}
+
+<div class="card bg-base-100 shadow-sm">
+    <div class="card-body items-center">
+        <span class="text-error">Something went wrong...</span>
+    </div>
+</div>

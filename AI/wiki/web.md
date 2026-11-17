@@ -34,7 +34,7 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
   `UserSettingService` — только `GetMapAsync/SetMapAsync`.
 - **`RoleEnum`** = роли V1 с модулем AutoDispatch: Agent 1, Warehouse 2, Dispatcher 3, Sales 4, Accounting 5, Owner 6, Admin 7
   (решение этапа 0). Seed создаёт их все; форма пользователя по умолчанию Dispatcher. Права по ролям — этапы 3–6.
-- **Метрики**: остались Web CPU, DB CPU, Geocoding, Online, App exceptions; показатели dispatch — этап 8.
+- **Метрики**: остались Web CPU, DB CPU, Geocoding, Online, App exceptions; показатели dispatch — этап 9.
 - **Окружение**: `ApplicationName` `AutoDispatch.Web`, cookie `AutoDispatch.Auth`, `Website` `https://dispatch.myautocall.net`,
   БД `autodispatch`/`autodispatch_log` (локально `autodispatch_local`/`autodispatch_log_local`, SQL Express, collation UTF8),
   `FilesPath` (`/files/`, локально `D:\Develop\AutoDispatch\Data\files\`), локальные порты 7092/7082 (V3 занимает 7091/7081),

@@ -59,6 +59,11 @@ public partial class AppSettings {
     ///     Срока действия у ссылки нет </summary>
     public const string MapPath = "/Map";
     /// <summary>
+    ///     Выбор места на карте для App (V1 Dispatch/SelectLocation) и остановки трейлера (V1 Dispatch/OrderStops) — те же
+    ///     правила: ссылка из Api/Maps/SelectLocationLink и Api/Maps/OrderStopsLink, пропуск — r </summary>
+    public const string MapSelectLocationPath = "/Map/SelectLocation";
+    public const string MapOrderStopsPath = "/Map/OrderStops";
+    /// <summary>
     ///     Остановок, добавляемых кликом по карте — лимит waypoints Google Directions в Safer </summary>
     public const int MapMaxStops = 25;
 

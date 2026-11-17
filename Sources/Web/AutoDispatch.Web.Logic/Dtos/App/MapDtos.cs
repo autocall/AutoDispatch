@@ -11,7 +11,11 @@ public enum MapPointKindEnum {
     /// <summary>
     ///     Остановка, поставленная кликом на карте: страница перевыпускает ссылку с ними (Map/Link),
     ///     чтобы скопированная ссылка открывала карту уже с остановками </summary>
-    Stop = 3
+    Stop = 3,
+    /// <summary>
+    ///     Начальная точка страницы Map/SelectLocation (V1 Dispatch/SelectLocation?latlng=): место груза, склада или ярда
+    ///     из App; без неё — пустая карта. На /Map не встречается </summary>
+    Location = 4
 }
 
 /// <summary>
@@ -45,6 +49,48 @@ public class MapSegmentDto {
 
 public class MapRouteDto {
     public List<MapSegmentDto> Segments { get; set; }
+}
+
+/// <summary>
+///     Точка, выбранная на Map/SelectLocation: адрес (улица) и город «City, ST ZIP» раздельно, как возвращал
+///     GeocodeHelper.getCityAndAddress V1 — так их читает EditLocationDialog App </summary>
+public class MapLocationDto {
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+    public string FormattedAddress { get; set; }
+    public string Address { get; set; }
+    public string City { get; set; }
+}
+
+/// <summary>
+///     Содержимое ссылки r страницы Map/OrderStops: трейлер, грузы которого показываются; UserId — чья компания </summary>
+public class MapOrderStopsLinkDto {
+    public Guid UserId { get; set; }
+    public Guid TrailerId { get; set; }
+}
+
+/// <summary>
+///     Остановка трейлера на Map/OrderStops (V1 StopViewModel): pickup или delivery груза в статусе AtPickUp/InTransit </summary>
+public class MapStopDto {
+    public Guid LoadId { get; set; }
+    /// <summary>
+    ///     Номер груза для подписи маркера (LoadDto.IndexString) </summary>
+    public string Index { get; set; }
+    /// <summary>
+    ///     StopType: 0 — Pickup, 1 — Delivery </summary>
+    public byte Type { get; set; }
+    public byte Order { get; set; }
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+    public string Address { get; set; }
+    public string City { get; set; }
+    /// <summary>
+    ///     Дата и окно прибытия (V1 StopViewModel.Arrive) </summary>
+    public string Arrive { get; set; }
+    /// <summary>
+    ///     Цвета груза из LoadDto.Background/Foreground (ARGB) в #rrggbb </summary>
+    public string Background { get; set; }
+    public string Foreground { get; set; }
 }
 
 public enum MapTypeEnum {

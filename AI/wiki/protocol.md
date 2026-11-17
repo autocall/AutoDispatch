@@ -70,7 +70,7 @@ if (result is Task) { await task; result = task.GetType().GetProperty("Result").
   `ClaimTypes.Role` → `RoleEnum`, `HasAccess` = каждая роль пользователя ≥ `MinAccess.Role` по порядку `RoleEnum` (совпадает с `Display(order)` V1:
   Agent < Warehouse < Dispatcher < Sales < Accounting < Owner < Admin) или входит в `ExtraRoles`; без ролей — разрешено (как цикл V1).
 - `Logic/Services/Dispatch/DispatchPollRegistry.cs` — singleton (`Program.cs`): `Begin(userId, RequestAborted)` отменяет предыдущее ожидание
-  того же пользователя (V1 `CurrentTasks`), `End` снимает своё; отменённый запрос получает `Failed` с `EventId` = входящий, без записи в лог. `Count` — для метрик (этап 8).
+  того же пользователя (V1 `CurrentTasks`), `End` снимает своё; отменённый запрос получает `Failed` с `EventId` = входящий, без записи в лог. `Count` — для метрик (этап 9).
 - `DispatchJson.MscorlibBinder.BindToType` — `$type` только из сборок `AutoDispatch.Dtos`, `System.Private.CoreLib`, `System.Collections`
   (рекурсивно по generic-аргументам и массивам), иначе `JsonSerializationException`.
 - `[DisableRequestSizeLimit]` на `Request/RequestZip` (V1 `maxRequestLength` ≈ без ограничения, `FileSave` несёт файл в JSON); в nginx нужен `client_max_body_size`.
@@ -81,7 +81,7 @@ if (result is Task) { await task; result = task.GetType().GetProperty("Result").
 
 JWT Bearer, ответ — данные как есть через `JsonSuccess` (camelCase), ошибка — `ExceptionHandler` 400 `{error}`. App V1 ходил на старые MVC-адреса
 (`Dispatch/SearchLoads`, `ActualCompany/ActualCompaniesByUserId`, `Home/SearchCensusCompanies`, `CarrierRegistration/FactoringCompanies`, `api/DatCompany/Search`)
-с конвертами `{Success, Loads|Companies|ActualCompanies|CensusCompanies|Data|Fields, Message}` — `DataServices` клиента переписываются на `BaseApi` на этапе 6.
+с конвертами `{Success, Loads|Companies|ActualCompanies|CensusCompanies|Data|Fields, Message}` — `DataServices` клиента переписываются на `BaseApi` на этапе 7.
 
 | V3 | Метод и тело | Ответ | V1 |
 |---|---|---|---|
@@ -93,6 +93,8 @@ JWT Bearer, ответ — данные как есть через `JsonSuccess`
 | `Api/Dispatch/Helpers/ExtractLoadFromPdf?board=` | POST multipart `file` | `LoadDto` (OpenAI по PNG страниц из `/Temp`) | `Dispatch/ExtractLoadFromPdf` |
 | `Api/Dispatch/Helpers/ExtractLoadFromPdf2?loadId=&board=` | GET | `LoadDto` по сохранённому confirmation | `Dispatch/ExtractLoadFromPdf2` |
 | `Api/DatCompany/Search?dot=` или `?mc=` | GET | словарь полей FMCSA, ключи как есть (`Legal Name:`), без camelCase | `api/DatCompany/Search` |
+| `Api/Maps/SelectLocationLink` | POST `MapLatLngDto` или `null` | `{url}` страницы `Map/SelectLocation?r=` ([[public-site]]) | `Dispatch/SelectLocation?latlng=` в EO.WebBrowser с Bearer |
+| `Api/Maps/OrderStopsLink` | POST `{trailerId}` | `{url}` страницы `Map/OrderStops?r=` ([[public-site]]) | `Dispatch/OrderStops?TrailerId=` в EO.WebBrowser с Bearer |
 | `Api/ActualCompany` | GET | `ActualCompanyDto[]` компании из токена | `ActualCompany/ActualCompaniesByUserId` |
 | `Api/Census/Search` | POST `CensusCompanySearchDto` | `CensusCompanyDto[]` | `Home/SearchCensusCompanies` |
 | `Api/SetupPacket/FactoringCompanies` | GET | `SetupPacketFactoringCompanyDto[]` по имени | `CarrierRegistration/FactoringCompanies` |

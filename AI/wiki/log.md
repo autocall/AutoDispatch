@@ -140,3 +140,19 @@ Expression-делегаты, роли по `MinAccess`), `DispatchPollRegistry` 
 `ApiActualCompanyController`, `ApiCensusController`, `ApiSetupPacketController`, `DispatchService.SearchLoadsAsync` (без `CacheLoadIndex`, компания через
 `ShipperReceiverCompany`), статика `/Temp`. Найдено: camelCase `JsonExtension` переписывает ключи словарей — `Api/DatCompany/Search` сериализуется без него.
 `09_DispatchApi` — 4 теста проходят (Distance локально 400: нет `GoogleMap:Api`). Таблица эндпоинтов — [[protocol]]; статус этапа — [[plan]].
+
+## [2026-11-17] decision | Этап 5 разбит: публичный сайт без SetupPacket, SetupPacket — этап 6 на daisyUI + Stimulus
+Решение пользователя: старую knockout-реализацию SetupPacket не тянуть, переписать сразу на daisyUI + Stimulus отдельным этапом 6 (до App).
+Этапы 6–8 → 7–9 (`plan`, ссылки в `protocol`, `web`). Сверка этапа 5 с кодом V1 добавила в «Решить»: `Dispatch/Dispatcher` (веб-борд на карте,
+~4 800 строк knockout, ссылок нет — рекомендация не переносить), карты для App (Bearer + `?t=` V1 против `/Map?r=` V3, `SelectLocation` парсит HTML,
+EO.WebBrowser → WebView2 на этапе 7), публичные URL как в V1 + редирект с `myautocall.net` на этапе 8. [[plan]].
+
+## [2026-11-17] decision | Этап 5: `Dispatch/Dispatcher` не переносится, карты App — по схеме `/Map` V3
+`RouteLocation`/`RouteLocation2` заменяет готовый `/Map`; `SelectLocation` и `OrderStops` — новые страницы с токеном `r`, результат в App через `postMessage` WebView2 (этап 7). [[plan]].
+
+## [2026-11-17] implement | Этап 5: Confirmation и карты для App
+`ConfirmationController` (`/Confirmation/?LoadId=`, POST htmx, `Download/{id}`) + `Views/Shared/_PublicLayout`; `Map/SelectLocation` и `Map/OrderStops`
+(`MapService`: `CreateSelectLocationLink`, `CreateOrderStopsLink`/`ParseOrderStopsLink`, `GetLocationAsync`, `GetOrderStopsAsync`, `GetStopsRouteAsync`;
+`Api/Maps/SelectLocationLink|OrderStopsLink`; `select_location_controller.ts`, `order_stops_controller.ts`, `map_common.ts`). Найдено: `Expenses_DtoToVm`
+терял Gains/Expenses после whitelist `$type` этапа 4 — исправлено, тест `08.Test10`. Тесты `10_PublicSite` (3) проходят против локального сервера с тестовыми
+данными (компания, карриер, трейлер, 2 груза). [[public-site]], [[plan]], [[protocol]].

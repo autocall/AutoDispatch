@@ -1,0 +1,78 @@
+@model ConfirmationViewModel
+@{
+    Layout = "_PublicLayout";
+    ViewData["Title"] = "Confirmation";
+    ViewData["Company"] = Model.Company;
+}
+
+<div class="card bg-base-100 shadow-sm">
+    <div class="card-body gap-4">
+        <h3 class="text-center text-lg font-semibold">Please enter your first and last name</h3>
+        <partial name="_SignFormPart" model="Model" />
+
+        <div class="divider my-0"></div>
+
+        @* ставка: доплаты, CarrierView tracking и line haul показываются, только если итог отличается от line haul (V1) *@
+        <div class="text-center">
+            @if (Model.Load.LineHaul != null && Model.Rate != Model.Load.LineHaul) {
+                foreach (var gain in Model.Gains) {
+                    <h2 class="text-xl">@gain.TypeDescription(): @Model.Currency@gain.Cost.Value.ToString("N2")</h2>
+                }
+                if (Model.Load.CarrierViewTracking != null) {
+                    <h2 class="text-xl">CarrierView Tracking: @Model.Currency@Model.Load.CarrierViewTracking.Value.ToString("N2")</h2>
+                }
+                <h2 class="text-xl">Line Haul: @Model.Currency@Model.Load.LineHaul.Value.ToString("N2")</h2>
+            }
+            <h1 class="text-2xl font-bold">Total Carrier Pay: @Model.Currency@AutoDispatch.Web.Common.Extensions.DispatchStringExtension.NullableToString(Model.Rate, "N2")</h1>
+        </div>
+
+        <div class="divider my-0"></div>
+
+        <div class="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1">
+            <span class="font-semibold text-right">EFFECTIVE DATE:</span>
+            <span>@DateTime.Now.ToShortDateString()</span>
+            <span class="font-semibold text-right">EQUIPMENT:</span>
+            <span>@Model.Equipment</span>
+            <span class="font-semibold text-right">CARRIER:</span>
+            <span>@Model.Carrier.Name</span>
+            <span></span>
+            <span>MC: @Model.Carrier.McNumber</span>
+            @if (Model.CarrierPhone != null) {
+                <span></span>
+                <span>@Model.CarrierPhone</span>
+            }
+        </div>
+
+        <div class="divider my-0"></div>
+
+        <div class="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1">
+            <span class="font-semibold text-right">PICK-UP DATE:</span>
+            <span>@Model.PickupAppointment</span>
+            <span class="font-semibold text-right">COMPANY:</span>
+            <span>@Model.Load.ShipperCompany</span>
+            <span class="font-semibold text-right">ADDRESS:</span>
+            <span>@Model.Load.OriginAddress, @Model.Load.OriginCity</span>
+            <span class="font-semibold text-right">LENGTH:</span>
+            <span class="flex flex-wrap gap-x-6">
+                <span>@Model.Length</span>
+                <span><span class="font-semibold">WEIGHT:</span> @Model.Weight</span>
+                <span><span class="font-semibold">PALLETS:</span> @Model.Load.Pallets</span>
+            </span>
+        </div>
+
+        <div class="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1 mt-2">
+            <span class="font-semibold text-right">DELIVERY DATE:</span>
+            <span>@Model.DeliveryAppointment</span>
+            <span class="font-semibold text-right">COMPANY:</span>
+            <span>@Model.Load.ReceiverCompany</span>
+            <span class="font-semibold text-right">ADDRESS:</span>
+            <span>@Model.Load.DestinationAddress, @Model.Load.DestinationCity</span>
+            <span class="font-semibold text-right">LENGTH:</span>
+            <span class="flex flex-wrap gap-x-6">
+                <span>@Model.Length</span>
+                <span><span class="font-semibold">WEIGHT:</span> @Model.Weight</span>
+                <span><span class="font-semibold">PALLETS:</span> @Model.Load.Pallets</span>
+            </span>
+        </div>
+    </div>
+</div>

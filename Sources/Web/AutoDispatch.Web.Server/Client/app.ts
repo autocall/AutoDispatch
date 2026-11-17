@@ -6,6 +6,8 @@ import LocaltimeController from "./controllers/localtime_controller";
 import LoginController from "./controllers/login_controller";
 import MapController from "./controllers/map_controller";
 import ModalController from "./controllers/modal_controller";
+import OrderStopsController from "./controllers/order_stops_controller";
+import SelectLocationController from "./controllers/select_location_controller";
 import ThemeController from "./controllers/theme_controller";
 
 declare global {
@@ -24,5 +26,7 @@ application.register("localtime", LocaltimeController);
 application.register("login", LoginController);
 application.register("map", MapController);
 application.register("modal", ModalController);
+application.register("order-stops", OrderStopsController);
+application.register("select-location", SelectLocationController);
 application.register("theme", ThemeController);
 window.Stimulus = application;

@@ -27,3 +27,37 @@ public class MapRequest {
     public List<MapLatLngDto> Stops { get; set; }
     public MapSettingsDto Settings { get; set; }
 }
+
+/// <summary>
+///     Тело Api/Maps/OrderStopsLink </summary>
+public class MapOrderStopsLinkRequest {
+    public Guid TrailerId { get; set; }
+}
+
+/// <summary>
+///     Map/SelectLocation: начальная точка из ссылки (kind Location) или null — пустая карта </summary>
+public class MapSelectLocationViewModel {
+    public string Token { get; set; }
+    public MapLatLngDto Point { get; set; }
+    public MapSettingsDto Settings { get; set; }
+    public string GoogleMapJsKey { get; set; }
+    public bool Embedded { get; set; }
+}
+
+/// <summary>
+///     Map/OrderStops: остановки трейлера в порядке PickupOrder/DeliveryOrder </summary>
+public class MapOrderStopsViewModel {
+    public string Token { get; set; }
+    public List<MapStopDto> Stops { get; set; }
+    public MapSettingsDto Settings { get; set; }
+    public string GoogleMapJsKey { get; set; }
+    public int MaxStops { get; set; }
+    public bool Embedded { get; set; }
+}
+
+/// <summary>
+///     Тело Map/OrderStops/Route: токен ссылки и остановки в порядке, выставленном в App </summary>
+public class MapStopsRouteRequest {
+    public string R { get; set; }
+    public List<MapLatLngDto> Points { get; set; }
+}

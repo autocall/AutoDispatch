@@ -1,11 +1,11 @@
+using Newtonsoft.Json.Linq;
 using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Logic.Dtos.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 
-// Load.Expenses/Gains (JSON view-моделей клиента) → списки по всем типам (V1 Expenses_DtoToVm/Gains_DtoToVm).
-// $type клиента (AutoDispatch.Logic.Contracts) подменяется на серверные типы, как в V1
+// Load.Expenses/Gains (JSON view-моделей клиента) → списки по всем типам (V1 Expenses_DtoToVm/Gains_DtoToVm)
 
 public class Expenses_DtoToVm : TypeConverter<string, List<ExpenseViewModel>> {
     protected override List<ExpenseViewModel> ConvertCore(string json) {
@@ -14,14 +14,15 @@ public class Expenses_DtoToVm : TypeConverter<string, List<ExpenseViewModel>> {
             .Select(t => expenses.FirstOrDefault(e => e.Type == t) ?? new ExpenseViewModel() { Type = t }).ToList();
     }
 
+    // V1 App пишет массив с $type клиента (GainViewModel[], AutoDispatch.Logic.Contracts, TypeNameHandling.All): $type не разрешается,
+    // а пропускается — элементы берутся из $values по именам полей. Подмена имён сборок на серверные (как в V1) после этапа 4
+    // не проходит whitelist MscorlibBinder (AutoDispatch.Web.Logic в $type запрещён) — найдено на /Confirmation 2026-11-17
     internal static T[] Deserialize<T>(string json, string name) {
         if (String.IsNullOrEmpty(json)) return new T[0];
         try {
-            var serverType = typeof(T);
-            json = json
-                .Replace($"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.{serverType.Name}, AutoDispatch.Logic.Contracts", $"{serverType.FullName}, {serverType.Assembly.GetName().Name}")
-                .Replace(", AutoDispatch.Logic.Contracts", $", {serverType.Assembly.GetName().Name}");
-            return DispatchJson.Deserialize<T[]>(json) ?? new T[0];
+            var token = JToken.Parse(json);
+            var values = token is JObject obj ? obj["$values"] : token;
+            return values?.ToObject<T[]>() ?? new T[0];
         } catch (Exception e) {
             _l.e($"Deserialize {name}", e);
             return new T[0];

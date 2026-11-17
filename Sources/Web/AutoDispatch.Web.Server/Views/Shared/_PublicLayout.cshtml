@@ -1,0 +1,53 @@
+@using AutoDispatch.Dtos.Dtos
+@{
+    // Публичные страницы для карриеров (Confirmation, на этапе 6 — CarrierRegistration): без навигации сайта, в шапке и подвале —
+    // логотип и имя компании-заказчика (ViewData["Company"], V1 Views/Confirmation/_Layout и SetupPacket/_Layout); тема — как в _Layout
+    var company = ViewData["Company"] as ActualCompanyDto;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(company != null ? $"{company.LegalName} - {ViewData["Title"]}" : $"{ViewData["Title"]} - AutoDispatch")</title>
+    <script>
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem("theme"); } catch (e) { }
+            if (!theme) { theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "business" : "corporate"; }
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    @if (company?.LogoSmall != null) {
+        <link rel="icon" href="data:image/x-icon;@company.LogoSmall" />
+    } else {
+        <link rel="icon" href="~/favicon.ico" asp-append-version="true" />
+    }
+    <link rel="stylesheet" href="~/build/app.css" asp-append-version="true" />
+    <script src="~/build/app.js" asp-append-version="true" defer></script>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div class="navbar flex-wrap border-b shadow-sm">
+        <div class="flex min-w-0 flex-1 items-center gap-3">
+            @if (company?.LogoBig != null) {
+                <img class="max-h-12" src="@company.LogoBig" alt="" />
+            }
+            <span class="truncate text-lg font-semibold">@company?.LegalName</span>
+        </div>
+        <partial name="_ThemeTogglePart" />
+    </div>
+    <main class="container mx-auto w-full max-w-3xl flex-1 p-4">
+        @RenderBody()
+    </main>
+    @if (company != null) {
+        <footer class="navbar flex-wrap justify-center gap-1 border-t shadow-sm">
+            <div class="flex items-center gap-2 opacity-70">
+                @if (company.LogoSmall != null) {
+                    <img class="h-4 w-4" src="data:image/x-icon;@company.LogoSmall" alt="" />
+                }
+                <span>@company.LegalName</span>
+            </div>
+        </footer>
+    }
+</body>
+</html>

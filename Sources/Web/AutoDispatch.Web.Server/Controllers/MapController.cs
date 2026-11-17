@@ -124,6 +124,79 @@ public class MapController : BaseController {
         return dto == null ? JsonFail(HttpStatusCode.NotFound, "Place not found") : JsonSuccess(dto);
     }
 
+    #region [ SelectLocation ]
+
+    /// <summary>
+    ///     Выбор места для App (V1 Dispatch/SelectLocation): клик по карте или поиск → адрес, результат уходит в WebView2 postMessage </summary>
+    [HttpGet("SelectLocation")]
+    public async Task<ActionResult> SelectLocation(string r, bool embedded = false) {
+        var link = Service.ParseLink(r);
+        if (link == null) {
+            return Forbidden(r);
+        }
+        var point = link.Points.Where(p => p.Kind == MapPointKindEnum.Location)
+            .Select(p => new MapLatLngDto { Latitude = p.Latitude, Longitude = p.Longitude }).FirstOrDefault();
+        if (embedded == false) {
+            _l.i($"Select location opened in browser: user {link.UserId}, {Request.GetIp()}, {Request.GetUserAgent()}");
+        }
+        return View(new MapSelectLocationViewModel {
+            Token = r,
+            Point = point,
+            Settings = await Settings.GetMapAsync(link.UserId),
+            GoogleMapJsKey = AppSettings.GoogleMapJsKey,
+            Embedded = embedded
+        });
+    }
+
+    /// <summary>
+    ///     Адрес точки с разбивкой на улицу и город для EditLocationDialog App; 404 — не найден </summary>
+    [HttpGet("Location")]
+    public async Task<ActionResult> Location(string r, decimal lat, decimal lng) {
+        if (Service.ParseLink(r) == null) {
+            return Forbidden(r);
+        }
+        var dto = await Service.GetLocationAsync(lat, lng);
+        return dto == null ? JsonFail(HttpStatusCode.NotFound, "Address not found") : JsonSuccess(dto);
+    }
+
+    #endregion [ SelectLocation ]
+
+    #region [ OrderStops ]
+
+    /// <summary>
+    ///     Остановки трейлера для EditStopsDialog App (V1 Dispatch/OrderStops?TrailerId=); порядок меняет App — window.reorder(stops) </summary>
+    [HttpGet("OrderStops")]
+    public async Task<ActionResult> OrderStops(string r, bool embedded = false) {
+        var link = Service.ParseOrderStopsLink(r);
+        if (link == null) {
+            return Forbidden(r);
+        }
+        if (embedded == false) {
+            _l.i($"Order stops opened in browser: user {link.UserId}, trailer {link.TrailerId}, {Request.GetIp()}, {Request.GetUserAgent()}");
+        }
+        return View(new MapOrderStopsViewModel {
+            Token = r,
+            Stops = await Service.GetOrderStopsAsync(link),
+            Settings = await Settings.GetMapAsync(link.UserId),
+            GoogleMapJsKey = AppSettings.GoogleMapJsKey,
+            MaxStops = AppSettings.MapMaxStops,
+            Embedded = embedded
+        });
+    }
+
+    /// <summary>
+    ///     Маршрут по остановкам в порядке, заданном в App </summary>
+    [HttpPost("OrderStops/Route")]
+    public async Task<ActionResult> OrderStopsRoute([FromBody] MapStopsRouteRequest model) {
+        var link = Service.ParseOrderStopsLink(model?.R);
+        if (link == null) {
+            return Forbidden(model?.R);
+        }
+        return JsonSuccess(await Service.GetStopsRouteAsync(link.UserId, model.Points));
+    }
+
+    #endregion [ OrderStops ]
+
     /// <summary>
     ///     Подделка, обрезанная ссылка или ссылка, выданная до смены Secrets:Map:Key </summary>
     private ActionResult Forbidden(string r) {

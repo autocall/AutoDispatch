@@ -5,6 +5,7 @@ using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
+using AutoDispatch.Web.Logic.Dtos.Dispatch;
 using AutoDispatch.Web.Logic.Mapping;
 
 namespace AutoDispatch.Web.Test;
@@ -134,5 +135,33 @@ public class DispatchLogic_Test {
         var fonts = document.GetPages().SelectMany(p => p.Letters).Select(l => l.FontName).Distinct().ToList();
         Assert.Contains(fonts, f => f.EndsWith("Carlito")); // Calibri → Carlito (OFL), шрифты Microsoft в репозитории нет
         Assert.DoesNotContain(fonts, f => f.Contains("Helvetica"));
+    }
+
+    /// <summary>
+    ///     Gains/Expenses из БД — массив с $type клиента (TypeNameHandling.All, AutoDispatch.Logic.Contracts): читается без разрешения
+    ///     типов, иначе whitelist MscorlibBinder (этап 4) отбивал бы серверные типы и доплаты терялись (найдено на /Confirmation) </summary>
+    [Fact]
+    public void Test10_GainsFromV1Json() {
+        var config = new MapperConfiguration(conf => {
+            conf.AddProfile(new DispatchMappingProfile());
+            conf.AllowNullCollections = true;
+        });
+        var mapper = config.CreateMapper();
+        const string json = "{\"$type\":\"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.GainViewModel[], AutoDispatch.Logic.Contracts\"," +
+            "\"$values\":[{\"$type\":\"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.GainViewModel, AutoDispatch.Logic.Contracts\"," +
+            "\"Cost\":150.0,\"Comment\":null,\"Paid\":false,\"PaidDate\":null,\"Type\":1}," +
+            "{\"$type\":\"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.GainViewModel, AutoDispatch.Logic.Contracts\"," +
+            "\"Cost\":20.5,\"Comment\":\"Tolls\",\"Paid\":true,\"PaidDate\":null,\"Type\":6}]}";
+        var gains = mapper.Map<List<GainViewModel>>(json);
+        Assert.Equal(Enum.GetValues(typeof(GainType)).Length, gains.Count);
+        var lumper = gains.Single(g => g.Type == GainType.Lumper);
+        Assert.Equal(150m, lumper.Cost);
+        Assert.Equal("Lumper", lumper.TypeDescription());
+        var other = gains.Single(g => g.Type == GainType.Other1);
+        Assert.Equal(20.5m, other.Cost);
+        Assert.Equal("Tolls", other.TypeDescription());
+        // null и мусор — без доплат (null-источник AutoMapper отдаёт как null)
+        Assert.True((mapper.Map<List<GainViewModel>>((string)null) ?? new()).All(g => g.Cost == null));
+        Assert.True(mapper.Map<List<GainViewModel>>("not json").All(g => g.Cost == null));
     }
 }

@@ -1,0 +1,15 @@
+@model ConfirmationViewModel
+@{
+    Layout = "_PublicLayout";
+    ViewData["Title"] = "Confirmation";
+    ViewData["Company"] = Model.Company;
+}
+
+<div class="card bg-base-100 shadow-sm">
+    <div class="card-body items-center gap-4">
+        <h3 class="text-lg font-semibold">Rate Confirmation #@Model.Load.IndexString was signed. Please check your email</h3>
+        @if (Model.Load.ConfirmedFile != null) {
+            <a class="btn btn-primary" href="/Confirmation/Download/@Model.Load.EntityId">Download signed confirmation</a>
+        }
+    </div>
+</div>
