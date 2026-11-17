@@ -5,13 +5,13 @@ using AutoDispatch.Web.Data.Entities.Dispatch;
 namespace AutoDispatch.Web.Data.Mappings.Dispatch;
 
 /// <summary>
-///     Маппинг 28 сущностей dispatch (V1 Mappings/Dispatch/*Map.cs, без Message): таблицы без префикса d_ — своя БД,
+///     Маппинг 27 сущностей dispatch (V1 Mappings/Dispatch/*Map.cs, без Message и CacheLoadIndex): таблицы без префикса d_ — своя БД,
 ///     имя таблицы = имя класса. Связи и индексы — атрибутами в сущностях ([ForeignKey], [InverseProperty], [Index]),
 ///     здесь — то, что атрибутами не задаётся </summary>
 public static class DispatchMap {
 
     public static readonly Type[] EntityTypes = [
-        typeof(DispatchCompany), typeof(DispatchCompanyCustom), typeof(CacheLoadIndex), typeof(CompanyCustomStatus),
+        typeof(DispatchCompany), typeof(DispatchCompanyCustom), typeof(CompanyCustomStatus),
         typeof(CustomerCompany), typeof(ShipperReceiverCompany), typeof(DatCompany), typeof(DatDriver), typeof(Driver),
         typeof(Defect), typeof(DefectRepair), typeof(Event), typeof(HistoryObject),
         typeof(HistoryLocationDatDriver), typeof(HistoryLocationDriver), typeof(HistoryLocationLoad),
@@ -62,10 +62,6 @@ public static class DispatchMap {
             s.HasOne(e => e.CargoInsuranceAgency).WithMany().HasForeignKey(e => e.CargoInsuranceAgencyId);
             s.HasOne(e => e.WorkersCompensationInsuranceAgency).WithMany().HasForeignKey(e => e.WorkersCompensationInsuranceAgencyId);
         });
-
-        // V1: DatabaseGenerated(Computed) + default getdate() в БД
-        modelBuilder.Entity<CacheLoadIndex>().Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
-
         // строки — varchar: в данных только латиница, БД autodispatch в UTF-8 collation (решено 2026-11-13, AI/wiki/plan.md)
         foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(e => EntityTypes.Contains(e.ClrType))) {
             foreach (var property in entityType.GetProperties().Where(p => p.ClrType == typeof(string))) {
@@ -85,8 +81,6 @@ public static class DispatchMap {
     public static void LinqToDbConfigure(FluentMappingBuilder builder) {
         builder.Entity<DispatchCompany>().HasTableName("DispatchCompany").HasPrimaryKey(e => e.EntityId);
         builder.Entity<DispatchCompanyCustom>().HasTableName("DispatchCompanyCustom").HasPrimaryKey(e => e.EntityId);
-        builder.Entity<CacheLoadIndex>().HasTableName("CacheLoadIndex").HasIdentity(e => e.Id).HasPrimaryKey(e => e.Id)
-            .Property(e => e.CreatedDate).HasSkipOnInsert();
         builder.Entity<CompanyCustomStatus>().HasTableName("CompanyCustomStatus").HasPrimaryKey(e => e.EntityId);
         builder.Entity<CustomerCompany>().HasTableName("CustomerCompany").HasPrimaryKey(e => e.EntityId);
         builder.Entity<ShipperReceiverCompany>().HasTableName("ShipperReceiverCompany").HasPrimaryKey(e => e.EntityId);

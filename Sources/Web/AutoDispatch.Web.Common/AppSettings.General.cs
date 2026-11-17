@@ -177,6 +177,8 @@ public partial class AppSettings {
     public static string DocumentsPath => Path.Combine(ResourcesPath, "Documents");
     public static string EmailsPath => Path.Combine(ResourcesPath, "Emails");
     public static string FontsPath => Path.Combine(ResourcesPath, "Fonts");
+    /// <summary> Шрифты, которых нет в репозитории (Wingdings — лицензия Microsoft): кладутся на хост в volume /files, TelerikPdfHelper </summary>
+    public static string HostFontsPath => Path.Combine(FilesPath, "_fonts");
     /// <summary>
     ///     Логи разбора PDF через OpenAI (V1 logs/openai) </summary>
     public static string OpenAiLogsPath => Path.Combine(LogsPath, "openai");

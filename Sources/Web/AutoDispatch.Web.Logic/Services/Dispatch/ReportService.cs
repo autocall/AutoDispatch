@@ -11,8 +11,8 @@ namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
 /// <summary>
 ///     PDF-документы setup packet (V1 ReportService): поля для шаблонов, W9 (AcroForm fw9.pdf), Setup Packet и Insurance Instructions
-///     (RTF-шаблоны Resources/Documents → PDF). State/Country — StateHelper вместо таблиц; шрифт подписи — Resources/Fonts/BRUSHSCI.TTF.
-///     RTF→PDF: в V1 Telerik Documents (Windows-only лицензия) — решение не принято (AI/wiki/plan.md), RtfToPdf бросает NotImplementedException </summary>
+///     (RTF-шаблоны Resources/Documents → PDF). State/Country — StateHelper вместо таблиц; шрифт подписи — Resources/Fonts/DancingScript-Bold.ttf (как в Safer, вместо Brush Script MT из V1).
+///     RTF→PDF: Telerik Document Processing .NET Standard (TelerikPdfHelper) вместо WPF-версии V1 — AI/wiki/plan.md </summary>
 public class ReportService : BaseService {
 
     private static readonly Dictionary<byte, string> CountryServiceTypeDictionary = new() {
@@ -342,9 +342,10 @@ public class ReportService : BaseService {
     }
 
     /// <summary>
-    ///     V1: Telerik RtfFormatProvider.Import → PdfFormatProvider.Export (deflate 9). Замена для Linux не выбрана — AI/wiki/plan.md «Решить» </summary>
+    ///     V1: Telerik RtfFormatProvider.Import → PdfFormatProvider.Export (deflate 9) на WPF RadDocument; здесь та же пара провайдеров
+    ///     Telerik Document Processing .NET Standard (уровня сжатия в настройках экспорта нет) — TelerikPdfHelper </summary>
     private static byte[] RtfToPdf(string rtf) {
-        throw new NotImplementedException("RTF→PDF (Telerik Documents в V1): решение не принято, см. AI/wiki/plan.md");
+        return TelerikPdfHelper.RtfToPdf(rtf);
     }
 
     public byte[] GenerateW9Pdf(string path, SetupPacketDto setupPacket, Dictionary<string, string> fields) {
@@ -414,7 +415,7 @@ public class ReportService : BaseService {
         {
             PdfContentByte pdfContentByte = pdfStamper.GetOverContent(1);
             // signature
-            string fontPath = Path.Combine(AppSettings.FontsPath, "BRUSHSCI.TTF");
+            string fontPath = Path.Combine(AppSettings.FontsPath, "DancingScript-Bold.ttf");
             BaseFont font = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             pdfContentByte.SetColorFill(BaseColor.Black);
             pdfContentByte.SetFontAndSize(font, 20);

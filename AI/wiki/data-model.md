@@ -1,6 +1,6 @@
 # Модель данных AutoDispatch Web (этап 2)
 
-28 сущностей dispatch V1 (`Entities/Dispatch`, без `d_Message`) перенесены в `AutoDispatch.Web.Data/Entities/Dispatch` как есть:
+27 сущностей dispatch V1 (`Entities/Dispatch`, без `d_Message` и `d_CacheLoadIndex`) перенесены в `AutoDispatch.Web.Data/Entities/Dispatch` как есть:
 Guid `EntityId`, `CreatedDate/CreatedById/LastModifiedDate/LastModifiedById`, `IsDeleted`, int identity у журналов.
 Маппинг — `Mappings/Dispatch/DispatchMap.cs` (EF Core для миграций, LinqToDB для запросов), проверка без БД — тест `07_DispatchModel`.
 Решения — [[plan]] («Решить»), перенос данных — [[data-migration]], скелет — [[web]].
@@ -13,7 +13,7 @@ Guid `EntityId`, `CreatedDate/CreatedById/LastModifiedDate/LastModifiedById`, `I
 | Справочники компании | `CustomerCompany`, `ShipperReceiverCompany`, `CompanyCustomStatus`, `Defect`, `DefectRepair` | `BaseEntity` + `CompanyId` |
 | Карриеры | `DatCompany`, `DatDriver`, `SetupPacket`, `SetupPacketContact`, `SetupPacketInsuranceAgency`, `SetupPacketReference`, `SetupPacketFactoringCompany` (int `EntityId`) | `BaseObjectEntity` / `BaseDispatchEntity` / без базы |
 | Техника и люди | `Driver`, `Truck`, `Trailer`, `Warehouse`, `Yard` | `BaseDispatchEntity` / `BaseObjectEntity` |
-| Грузы | `Load` (self-reference `Parent/Children1`, `Shipment/Children2`), `CacheLoadIndex` (int identity, `CreatedDate` default `getdate()`) | `BaseDispatchEntity` |
+| Грузы | `Load` (self-reference `Parent/Children1`, `Shipment/Children2`) | `BaseDispatchEntity` |
 | История | `HistoryObject` (int identity, `Data varbinary`), `Event` (int identity), `HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` (int identity, `EventId` индекс) | `BaseHistoryLocationEntity` |
 
 Базовые классы — `Entities/Dispatch/Base`: `BaseEntity` → `BaseObjectEntity` (+ `HistoryId` → `HistoryObject`, `CompanyId` → `Company` V3)
@@ -41,9 +41,9 @@ Guid `EntityId`, `CreatedDate/CreatedById/LastModifiedDate/LastModifiedById`, `I
 - Связи и индексы — атрибутами в сущностях (`[ForeignKey]`, `[InverseProperty]`, `[Index]`); несколько ссылок на один тип
   (`Load` → `Warehouse` ×3, `Trailer` ×3, `DatCompany` ×3, `DatDriver` ×2, `ShipperReceiverCompany` ×2; `HistoryLocationLoad` → `HistoryObject` ×2;
   `SetupPacket` → `SetupPacketContact` ×5, `SetupPacketInsuranceAgency` ×4; `Driver.Load`) EF Core не разводит сам — заданы явно в `DispatchMap.Configure`.
-- `tmpLoad` (класс в `Load.cs` V1) и `Message` не перенесены.
+- `tmpLoad` (класс в `Load.cs` V1), `Message` и `CacheLoadIndex` (решено 2026-11-16, [[plan]]) не перенесены.
 
 ## LinqToDB
 
-`DispatchMap.LinqToDbConfigure`: имя таблицы, `HasPrimaryKey`, `HasIdentity` для int-журналов, `CreatedDate.HasSkipOnInsert()` у `CacheLoadIndex`.
+`DispatchMap.LinqToDbConfigure`: имя таблицы, `HasPrimaryKey`, `HasIdentity` для int-журналов.
 Навигационные свойства LinqToDB колонками не считает (проверено тестом `Test03_LinqToDbColumns`), отдельного `Ignore` не нужно.

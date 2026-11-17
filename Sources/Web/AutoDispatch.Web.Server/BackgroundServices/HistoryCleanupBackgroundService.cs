@@ -5,7 +5,7 @@ using AutoDispatch.Web.Logic.Services.Dispatch;
 namespace AutoDispatch.Web.Server.BackgroundServices;
 
 /// <summary>
-///     V1 QuartzJob (01:00 по будням) + CacheLoadJob (00:10): чистка HistoryObject/Event старше HistoryExpiresDays и индекс грузов за сутки </summary>
+///     V1 QuartzJob (01:00 по будням): чистка HistoryObject/Event старше HistoryExpiresDays (CacheLoadJob не перенесён — таблицы CacheLoadIndex нет, AI/wiki/plan.md) </summary>
 public class HistoryCleanupBackgroundService : BaseBackgroundService {
 
     protected override TimeSpan Interval => AppSettings.HistoryCleanupInterval;
@@ -15,6 +15,5 @@ public class HistoryCleanupBackgroundService : BaseBackgroundService {
 
     protected override async Task ExecuteIterationAsync(ServicesHost host, CancellationToken stoppingToken) {
         await host.GetService<HistoryCleanupService>().DoAsync();
-        await host.GetService<LoadIndexCacheService>().FixLoadIndexCacheAsync(1);
     }
 }

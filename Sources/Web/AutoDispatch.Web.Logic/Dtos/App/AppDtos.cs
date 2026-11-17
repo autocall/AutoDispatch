@@ -13,6 +13,10 @@ public class SessionDto {
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
     public List<string> Roles { get; set; }
+    /// <summary> Есть DispatchCompany с BnsfLogin (OAuth V1 hasBnsfRailway) </summary>
+    public bool HasBnsfRailway { get; set; }
+    /// <summary> Пользовательские статусы компании (OAuth V1 customStatuses, там — JSON словаря Id → Name) </summary>
+    public List<AutoDispatch.Dtos.Dtos.CompanyCustomStatusDto> CustomStatuses { get; set; }
 }
 
 public class ChangePasswordDto {

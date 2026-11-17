@@ -26,7 +26,7 @@ public class DispatchModel_Test {
             Assert.Equal(type.Name, entity.GetTableName());
             Assert.All(entity.GetForeignKeys(), fk => Assert.Equal(DeleteBehavior.NoAction, fk.DeleteBehavior));
         }
-        Assert.Equal(28, DispatchMap.EntityTypes.Length);
+        Assert.Equal(27, DispatchMap.EntityTypes.Length);
     }
 
     [Fact]

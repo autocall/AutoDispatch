@@ -214,7 +214,6 @@ public partial class DispatchService {
         Load entity = await BaseSaveAsync<LoadDto, Load>(request.UserId, load, groupId);
         await this._saveEventHistoryLoadAsync(EventTypeModel.BookedLoad, entity, null, LoadParentType.None, request.UserId);
         LoadDto dto = this.Mapper.Map<LoadDto>(entity);
-        await Host.GetService<LoadIndexCacheService>().SaveLoadIndexAsync(entity.CompanyId, LoadIndexSource.From(dto)); // Adds index
         if (dto.ParentId != null) {
             //changing status for container
             await SaveParentAsync(dto.ParentId.Value, request.UserId, groupId);
@@ -318,12 +317,6 @@ public partial class DispatchService {
 
                 if (dto.Status == LoadStatus.Unpaid || dto.Status == LoadStatus.Canceled2 || dto.Status == LoadStatus.Completed) {
                     await MoveToHistoryTrailersAsync(request.UserId, dto);
-                }
-            }
-            if (entities.Any()) {
-                var cache = Host.GetService<LoadIndexCacheService>();
-                foreach (var dto in dtos) {
-                    await cache.SaveLoadIndexAsync(entities.First().CompanyId, LoadIndexSource.From(dto)); // Adds indexes
                 }
             }
             return new SaveLoadsResponseData { Loads = result.Distinct().ToList() };

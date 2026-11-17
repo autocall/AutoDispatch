@@ -48,7 +48,7 @@ public static class DispatchPdfGenerator {
         Rectangle size = reader.GetPageSize(pageNumber);
         PdfContentByte pdfContentByte = stamper.GetOverContent(pageNumber);
 
-        string fontPath = Path.Combine(AppSettings.FontsPath, "BRUSHSCI.TTF");
+        string fontPath = Path.Combine(AppSettings.FontsPath, "DancingScript-Bold.ttf");
         BaseFont font = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
         pdfContentByte.SetColorFill(BaseColor.Black);
         pdfContentByte.SetFontAndSize(font, 16);

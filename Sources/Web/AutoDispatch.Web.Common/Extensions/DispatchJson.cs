@@ -69,6 +69,22 @@ public static class DispatchJson {
             }
         }
 
-        // mscorlib на .NET 10 — фасад с type forwarding, Type.GetType разрешает его сам: BindToType без изменений
+        // mscorlib на .NET 10 — фасад с type forwarding, Type.GetType разрешает его сам.
+        // TypeNameHandling.All позволяет клиенту назвать любой тип — на входе только контракт и core-коллекции (AI/wiki/protocol.md)
+        private static readonly HashSet<string> AllowedAssemblies = new() { "AutoDispatch.Dtos", CoreLib, "System.Collections" };
+
+        public override Type BindToType(string assemblyName, string typeName) {
+            var type = base.BindToType(assemblyName, typeName);
+            if (IsAllowed(type) == false) {
+                throw new JsonSerializationException($"Type is not allowed: {typeName}");
+            }
+            return type;
+        }
+
+        private static bool IsAllowed(Type type) {
+            if (type.IsArray) return IsAllowed(type.GetElementType());
+            if (AllowedAssemblies.Contains(type.Assembly.GetName().Name) == false) return false;
+            return type.IsGenericType == false || type.GetGenericArguments().All(IsAllowed);
+        }
     }
 }

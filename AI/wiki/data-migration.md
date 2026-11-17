@@ -32,7 +32,7 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 |---|---|---|
 | 0 | 7 компаний, их пользователи только с ролями AutoDispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin) и статусом allowed, другие роли V1 не переносятся | **написан 2026-11-12, переписан под Guid 2026-11-13** (см. ниже) |
 | 1 | 19 таблиц объектов и справочников компаний (`DispatchCompany*`, `DatCompany`, `DatDriver`, `Driver`, `Truck`, `Trailer`, `Warehouse`, `Yard`, `SetupPacket*`, `Customer/ShipperReceiverCompany`, `CompanyCustomStatus`, `Defect*`) | **написан 2026-11-13**: одна транзакция, `delete` + `insert … select … where CompanyId in (#active)`; setup-packet контакты/агентства/рекомендации — по `#sp` активных компаний |
-| 2 | `Load`, `CacheLoadIndex`, `HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | **написан 2026-11-13**: одна транзакция, `identity_insert` + reseed, история положений — по объектам активных компаний |
+| 2 | `Load`, `HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | **написан 2026-11-13**: одна транзакция, `identity_insert` + reseed, история положений — по объектам активных компаний |
 | 3 | `HistoryObject` | **написан 2026-11-13**: отбор в постоянную `dbo._MigrateHistoryKeep`, пакеты по 100 000 `Id` без общей транзакции, возобновляемо с `max(Id)`, reseed |
 | 4 | `Event` активных компаний с `HistoryId` среди перенесённых снимков (или null) | **написан 2026-11-13**: пакеты по 500 000 `Id`, возобновляемо, reseed |
 | 5 | файлы | **написан 2026-11-13**: запрос списка каталогов; копирование — см. ниже |
@@ -58,6 +58,8 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 [[protocol]]), `Admin` V1 остаётся `Admin` (в V3 Admin давался по списку email, остальные → Owner) — в [[web]] `GetRoleAsync`
 берёт первую роль, форма `/Admin/Users` при сохранении оставит одну; это принять или поправить на этапах 3–6. Ключи сохраняются:
 `Users.Id` → `IdentityUsers.Id`, `Company.EntityId` → `Company.Id`, Id ролей = `RoleEnum.ToRoleId()` (`00000000-0000-0000-0000-00000000000N`);
+`Users.Signature` → `IdentityUsers.Signature` (подпись агента в confirmed-письме, `varchar(64)`, миграция `Alter_Dispatch` 2026-11-17; в `autocall`
+nvarchar(max), заполнено у 10 пользователей, максимум 13 символов — `left(…, 64)`);
 повторный запуск удаляет из `autodispatch` всех, чьи Id есть в `autocall`, и заливает заново. `UserName` = `Users.Name` (отображаемое имя,
 пусто → email); `NormalizedUserName` уникален, поэтому к повторяющимся именам добавляется email. `TimeZoneId = 'UTC'`, как в V3.
 В конце скрипт выводит итоги и список пользователей активных компаний с ролью AutoDispatch, которые **не** попали в перенос — для контроля.
@@ -136,7 +138,7 @@ union select EntityId from autocall.dbo.d_SetupPacket where CompanyId in (select
   ссылающихся на `DatCompany`, `Shipper/Receiver` и `ActualCompany` неактивной компании `82C1221B…` — блок 6 обнуляет.
   `HistoryId` всех объектов и `HistoryLocation*` есть в `d_HistoryObject`; `Location`/`OriginLocation` не null; координаты влезают в `decimal(9,6)`.
 - **Замеры** (6 месяцев на 2026-11-13): `d_Load` 164 284 / 89 490 активных, `d_DatCompany` 53 973 / 24 502, `d_ShipperReceiverCompany` 65 067 / 36 054,
-  `d_CustomerCompany` 10 938 / 5 938, `d_SetupPacket` 12 882 / 4 531, `d_Trailer` 6 906 / 4 706, `d_DatDriver` 1 502 / 1 332, `d_CacheLoadIndex` 67 917 / 38 656,
+  `d_CustomerCompany` 10 938 / 5 938, `d_SetupPacket` 12 882 / 4 531, `d_Trailer` 6 906 / 4 706, `d_DatDriver` 1 502 / 1 332, `d_CacheLoadIndex` 67 917 / 38 656 (не переносится, 2026-11-16),
   `d_ActualCompany` 150 / 52, `d_Driver` 298 / 147, `d_Truck` 330 / 149, `d_Warehouse` 51 / 17, `d_Yard` 14 / 5, `d_SetupPacketFactoringCompany` 188 (все).
 - **Активность 7 компаний** (события за 6 мес / создано грузов): TORPEDO 517 979 / 2 701, Baltic 24 561 / 1 478, DDM 15 568 / 272, BEST SOURCE 120 / 10,
   LEVSKI 8 / 4, UA LOGISTICS 2 / 1, BEST AMERICAN 1 / 0. Две последние фактически неактивны, все их пользователи blocked/deleted — переносятся данные без пользователей.

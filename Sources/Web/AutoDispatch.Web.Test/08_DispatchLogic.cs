@@ -1,6 +1,7 @@
 using AutoMapper;
 using Newtonsoft.Json;
 using AutoDispatch.Dtos.Dtos;
+using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
@@ -116,5 +117,22 @@ public class DispatchLogic_Test {
         var sb = new System.Text.StringBuilder("abc MARKER1 def MARKER2");
         Assert.Equal(4, sb.IndexOf("MARKER1"));
         Assert.Equal(-1, sb.IndexOf("MARKER3"));
+    }
+
+    /// <summary>
+    ///     RTF→PDF шаблонов setup packet (Telerik .NET Standard): шрифты берутся из Resources/Fonts, а не подменяются стандартными PDF-шрифтами </summary>
+    [Theory]
+    [InlineData("000102040506071314.rtf")]
+    [InlineData("000102040506071314_02.rtf")]
+    [InlineData("05_02.rtf")]
+    public void Test09_RtfToPdf(string template) {
+        // логотип как в FillRtfTemplate: hex PNG вместо [logo] (1x1 прозрачный PNG — проверяет и конвертацию в JPEG)
+        var logo = Convert.ToHexString(Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="));
+        var rtf = File.ReadAllText(Path.Combine(AppSettings.DocumentsPath, template)).Replace("[logo]", logo);
+        var pdf = TelerikPdfHelper.RtfToPdf(rtf);
+        using var document = UglyToad.PdfPig.PdfDocument.Open(pdf);
+        var fonts = document.GetPages().SelectMany(p => p.Letters).Select(l => l.FontName).Distinct().ToList();
+        Assert.Contains(fonts, f => f.EndsWith("Carlito")); // Calibri → Carlito (OFL), шрифты Microsoft в репозитории нет
+        Assert.DoesNotContain(fonts, f => f.Contains("Helvetica"));
     }
 }

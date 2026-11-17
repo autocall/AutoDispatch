@@ -136,6 +136,9 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Signature")
+                        .HasColumnType("varchar(64)");
+
                     b.Property<string>("TimeZoneId")
                         .HasColumnType("varchar(64)");
 
@@ -266,53 +269,6 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Company", (string)null);
-                });
-
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.Dispatch.CacheLoadIndex", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(16)");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(16)");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("getdate()");
-
-                    b.Property<Guid>("LoadId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte>("Type")
-                        .HasColumnType("tinyint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("LoadId");
-
-                    b.HasIndex(new[] { "City" }, "IX_CacheLoadLink_City");
-
-                    b.HasIndex(new[] { "Company" }, "IX_CacheLoadLink_Company");
-
-                    b.ToTable("CacheLoadIndex", (string)null);
                 });
 
             modelBuilder.Entity("AutoDispatch.Web.Data.Entities.Dispatch.CompanyCustomStatus", b =>
@@ -3059,25 +3015,6 @@ namespace AutoDispatch.Web.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.Dispatch.CacheLoadIndex", b =>
-                {
-                    b.HasOne("AutoDispatch.Web.Data.Entities.Company", "Company1")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AutoDispatch.Web.Data.Entities.Dispatch.Load", "Load")
-                        .WithMany()
-                        .HasForeignKey("LoadId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Company1");
-
-                    b.Navigation("Load");
                 });
 
             modelBuilder.Entity("AutoDispatch.Web.Data.Entities.Dispatch.CompanyCustomStatus", b =>

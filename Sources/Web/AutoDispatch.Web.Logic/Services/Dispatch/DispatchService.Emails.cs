@@ -34,7 +34,7 @@ public partial class DispatchService {
 
     /// <summary>
     ///     Карриер принял setup packet: письма с Insurance Instructions и Setup Packet + W9 (PDF), файлы сохраняются в каталог карриера.
-    ///     RTF→PDF — ReportService.RtfToPdf (Telerik, решение не принято — AI/wiki/plan.md) </summary>
+    ///     RTF→PDF — ReportService.RtfToPdf (Telerik Document Processing .NET Standard) </summary>
     private async Task SendSetupPacketAceeptEmailAsync(DatCompanyDto carrier) {
         var actualCompanyService = Host.GetService<DispatchCompanyService>();
         var setupPacketService = Host.GetService<SetupPacketService>();
