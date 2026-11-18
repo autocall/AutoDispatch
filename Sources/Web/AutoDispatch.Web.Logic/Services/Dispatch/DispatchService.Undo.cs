@@ -7,6 +7,7 @@ using AutoDispatch.Dtos.Enums;
 using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -96,7 +97,7 @@ public partial class DispatchService {
     ///     Предыдущий снимок сущности; apply — откатить (снимки после него помечаются Undo) </summary>
     /// <returns>groupId — текущий</returns>
     private async Task<(bool result, TDto dto, TEntity entity, Guid? groupId)> GetHistoryEntityAsync<TEntity, TDto>(Guid entityId, Guid userId, bool apply)
-        where TEntity : BaseObjectEntity where TDto : BaseDto {
+        where TEntity : BaseObjectEntity where TDto : BaseObjectDto {
         var entity = await GetByIdAsync<TEntity>(entityId);
         var historyId = entity.HistoryId; // current history or last undo
         var current = await Table<HistoryObject>().FirstOrDefaultAsync(h => h.Id == historyId);
@@ -120,7 +121,7 @@ public partial class DispatchService {
             }
             if (apply) {
                 await Table<HistoryObject>().Where(h => h.ReferenceId == entityId && h.Id >= historyId).Set(h => h.Undo, true).UpdateAsync();
-                entity = Mapper.Map<TEntity>(dto);
+                entity = ObjectConverter.ToModel<TEntity>(dto);
                 entity.HistoryId = historyObject.Id; // save history
                 await UpdateAsync(entity);
             }
@@ -133,7 +134,7 @@ public partial class DispatchService {
     ///     Using for Undo </summary>
     /// <param name="groupId">текущий. этот group Id надо пропустить и возвратить предыдущий</param>
     private async Task<List<TEntity>> GetHistoryEntitiesAsync<TEntity, TDto>(Guid userId, Guid groupId)
-        where TEntity : BaseObjectEntity where TDto : BaseDto {
+        where TEntity : BaseObjectEntity where TDto : BaseObjectDto {
         var entities = new List<TEntity>();
 
         // вытаскиваем ReferenceIds в этом сейве
@@ -161,7 +162,7 @@ public partial class DispatchService {
                     dto.LastModifiedById = entity.LastModifiedById;
                     dto.LastModifiedDate = entity.LastModifiedDate;
                 }
-                entity = Mapper.Map<TEntity>(dto);
+                entity = ObjectConverter.ToModel<TEntity>(dto);
                 entity.HistoryId = historyObject.Id; // save history
                 await UpdateAsync(entity);
                 entities.Add(entity);

@@ -22,8 +22,9 @@
 
 1. `mkdir -p /home/autodispatch/{logs,keys,config,download,files}`, `chmod 600` на `config`.
 2. DNS A-запись `dispatch.myautocall.net` → `67.220.74.190`.
-3. `Deploy/nginx/dispatch.myautocall.net.conf`: `proxy_pass http://127.0.0.1:5005` с `X-Forwarded-*`, `client_max_body_size` под загрузку
-   документов (в V1 через App грузят PDF и сканы — размер **уточнить**, в V3 дефолт 1 МБ не подойдёт).
+3. `Deploy/nginx/dispatch.myautocall.net.conf`: `proxy_pass http://127.0.0.1:5005` с `X-Forwarded-*`, `client_max_body_size 100m` под загрузку
+   документов (проверено 2026-11-18: App V1 не пускает файл больше 20 МБ — `FileSizeHelper.Check20MBSize`; в конверте `Request` это ~27 МБ base64;
+   на сервере `Request`/`RequestZip`/`ExtractLoadFromPdf` с `DisableRequestSizeLimit`, так что предел задаёт nginx; в V3 дефолт 1 МБ не подойдёт).
 4. `certbot --nginx -d dispatch.myautocall.net`.
 5. `appsettings.Production.json` из `Deploy/AutoDispatch.Web/appsettings.Production.json.example`.
 6. `Scripts/publish-autodispatch-web.ps1`; проверка `curl /Test`, `docker logs`.

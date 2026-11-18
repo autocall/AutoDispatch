@@ -7,6 +7,7 @@ using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.Dtos.Dispatch;
 using AutoDispatch.Web.Logic.Mapping;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Test;
 
@@ -22,12 +23,12 @@ public class DispatchLogic_Test {
             conf.AllowNullCollections = true;
         });
         // AssertConfigurationIsValid не вызывается: как в V1 и V3, CreatedByName/Files заполняют конвертеры и сервисы, не профиль
-        var mapper = config.CreateMapper();
+        config.CreateMapper(); // профиль собирается
         var load = new Load { EntityId = Guid.NewGuid(), DispatchCompanyId = Guid.NewGuid(), OriginLatitude = 41.5m, OriginLongitude = -87.25m };
-        var dto = mapper.Map<LoadDto>(load);
+        var dto = LoadConverter.ToDto(load);
         Assert.Equal(load.DispatchCompanyId, dto.ActualCompanyId);
         Assert.Equal(41.5f, dto.OriginLocation?.Latitude);
-        var back = mapper.Map<Load>(dto);
+        var back = LoadConverter.ToModel(dto);
         Assert.Equal(load.DispatchCompanyId, back.DispatchCompanyId);
         Assert.Equal(-87.25m, back.OriginLongitude);
     }
@@ -142,17 +143,12 @@ public class DispatchLogic_Test {
     ///     типов, иначе whitelist MscorlibBinder (этап 4) отбивал бы серверные типы и доплаты терялись (найдено на /Confirmation) </summary>
     [Fact]
     public void Test10_GainsFromV1Json() {
-        var config = new MapperConfiguration(conf => {
-            conf.AddProfile(new DispatchMappingProfile());
-            conf.AllowNullCollections = true;
-        });
-        var mapper = config.CreateMapper();
         const string json = "{\"$type\":\"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.GainViewModel[], AutoDispatch.Logic.Contracts\"," +
             "\"$values\":[{\"$type\":\"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.GainViewModel, AutoDispatch.Logic.Contracts\"," +
             "\"Cost\":150.0,\"Comment\":null,\"Paid\":false,\"PaidDate\":null,\"Type\":1}," +
             "{\"$type\":\"AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses.GainViewModel, AutoDispatch.Logic.Contracts\"," +
             "\"Cost\":20.5,\"Comment\":\"Tolls\",\"Paid\":true,\"PaidDate\":null,\"Type\":6}]}";
-        var gains = mapper.Map<List<GainViewModel>>(json);
+        var gains = ExpensesConverter.ToGains(json);
         Assert.Equal(Enum.GetValues(typeof(GainType)).Length, gains.Count);
         var lumper = gains.Single(g => g.Type == GainType.Lumper);
         Assert.Equal(150m, lumper.Cost);
@@ -160,8 +156,30 @@ public class DispatchLogic_Test {
         var other = gains.Single(g => g.Type == GainType.Other1);
         Assert.Equal(20.5m, other.Cost);
         Assert.Equal("Tolls", other.TypeDescription());
-        // null и мусор — без доплат (null-источник AutoMapper отдаёт как null)
-        Assert.True((mapper.Map<List<GainViewModel>>((string)null) ?? new()).All(g => g.Cost == null));
-        Assert.True(mapper.Map<List<GainViewModel>>("not json").All(g => g.Cost == null));
+        // null и мусор — список всех типов без доплат, как в V1
+        Assert.True(ExpensesConverter.ToGains(null).All(g => g.Cost == null));
+        Assert.True(ExpensesConverter.ToGains("not json").All(g => g.Cost == null));
+    }
+
+    /// <summary>
+    ///     Обобщённые методы DispatchService (SaveWithHistoryAsync, BaseDeleteAsync, Undo) выбирают конвертер по типу объекта:
+    ///     каждый тип туда и обратно приходит своим XConverter, SetupPacket — с вложенными автоматическими маппингами </summary>
+    [Fact]
+    public void Test11_ObjectConverterByType() {
+        var mapper = new MapperConfiguration(conf => conf.AddProfile(new DispatchMappingProfile())).CreateMapper();
+        var entities = new BaseObjectEntity[] {
+            new Load(), new Driver(), new Truck(), new Trailer(), new DatCompany(), new DatDriver(), new Warehouse(), new Yard(), new SetupPacket()
+        };
+        foreach (var entity in entities) {
+            entity.EntityId = Guid.NewGuid();
+            entity.CompanyId = Guid.NewGuid();
+            var dto = ObjectConverter.ToDto<BaseObjectDto>(entity, mapper);
+            Assert.Equal(entity.GetType().Name + "Dto", dto.GetType().Name);
+            Assert.Equal(entity.CompanyId, dto.CompanyId);
+            var back = ObjectConverter.ToModel<BaseObjectEntity>(dto);
+            Assert.IsType(entity.GetType(), back);
+            Assert.Equal(entity.EntityId, back.EntityId);
+        }
+        Assert.Null(ObjectConverter.ToDto<LoadDto>(null, mapper));
     }
 }

@@ -14,6 +14,7 @@ using AutoDispatch.Web.Logic.Email;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.Utils;
 using AutoDispatch.Web.Logic.WebServices;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -125,8 +126,8 @@ public partial class DispatchService {
         }
         var company = await GetByIdAsync<DispatchCompany>(datCompany.DispatchCompanyId);
 
-        var datCompnayDto = Mapper.Map<DatCompanyDto>(datCompany);
-        var companyDto = Mapper.Map<ActualCompanyDto>(company);
+        var datCompnayDto = DatCompanyConverter.ToDto(datCompany);
+        var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
 
         var email = await DispatchEmailGenerator.GenerateSetupPacketAsync(datCompnayDto, companyDto, request.Emails);
         await EmailUtils.SendEmailAsync(Smtp(company), email);
@@ -173,8 +174,8 @@ public partial class DispatchService {
         }
         var company = await GetByIdAsync<DispatchCompany>(datCompany.DispatchCompanyId);
 
-        var datCompnayDto = Mapper.Map<DatCompanyDto>(datCompany);
-        var companyDto = Mapper.Map<ActualCompanyDto>(company);
+        var datCompnayDto = DatCompanyConverter.ToDto(datCompany);
+        var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
 
         var email = await DispatchEmailGenerator.GenerateEditSetupPacketAsync(datCompnayDto, companyDto, datCompnayDto.SetupPacketEmailSent);
         await EmailUtils.SendEmailAsync(Smtp(company), email);
@@ -297,7 +298,7 @@ public partial class DispatchService {
                     if (carrierLoad.ContainerType != (byte)ContainerType.Shipment) {
                         groupId = Guid.NewGuid();
                         carrierLoad.ContainerType = (byte)ContainerType.Shipment;
-                        var dto = Mapper.Map<LoadDto>(carrierLoad);
+                        var dto = LoadConverter.ToDto(carrierLoad);
                         Load entity = await this.BaseSaveAsync<LoadDto, Load>(request.UserId, dto, groupId);
                         await this._saveEventHistoryLoadAsync(EventTypeModel.BookedLoad, entity, entity.HistoryId, request.ParentType, request.UserId);
                     }
@@ -340,12 +341,12 @@ public partial class DispatchService {
             load.LastStatusChangedDate = DateTime.UtcNow;
         }
 
-        var dtos = Mapper.Map<List<LoadDto>>(loads);
+        var dtos = loads.Select(LoadConverter.ToDto).ToList();
         // Saves of datas
         List<Load> entities = await this.BaseSavesAsync<LoadDto, Load>(request.UserId, dtos, groupId);
         await this._saveEventHistoriesLoadsAsync(EventTypeModel.BookedLoad,
             entities.ToDictionary(e => e, e => historyId), request.ParentType, request.UserId);
-        return new BindLoadsResponseData() { Loads = this.Mapper.Map<List<LoadDto>>(entities) };
+        return new BindLoadsResponseData() { Loads = entities.Select(LoadConverter.ToDto).ToList() };
     }
 
     #endregion [ Bind Loads ]
@@ -371,10 +372,10 @@ public partial class DispatchService {
                 datCarrier = await GetByIdAsync<DatCompany>(load.DatBrokerId);
             }
 
-            var loadDto = Mapper.Map<LoadDto>(load);
+            var loadDto = LoadConverter.ToDto(load);
             await loadDto.IncludeCompaniesAsync(Db);
-            var companyDto = Mapper.Map<ActualCompanyDto>(company);
-            var datBrokerDto = Mapper.Map<DatCompanyDto>(datCarrier);
+            var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
+            var datBrokerDto = DatCompanyConverter.ToDto(datCarrier);
 
             // Creates letter
             var email = await DispatchEmailGenerator.GenerateInvoiceAsync(datBrokerDto, loadDto, companyDto, emails,
@@ -413,7 +414,7 @@ public partial class DispatchService {
     public async Task<InvoiceMergeResponseData> InvoiceMerge(InvoiceMergeRequestData request) {
         try {
             var load = await GetByIdAsync<Load>(request.LoadId);
-            var loadDto = Mapper.Map<LoadDto>(load);
+            var loadDto = LoadConverter.ToDto(load);
             var file = DispatchEmailGenerator.GenerateMergedInvoice(loadDto, request.SendInvoice, request.SendPOD, request.SendConfirmation, request.SendLumper);
             return new InvoiceMergeResponseData() { File = file };
         } catch (Exception e) {
@@ -441,17 +442,17 @@ public partial class DispatchService {
             }
             var carrier = await GetByIdAsync<DatCompany>(load.DatCompanyId);
 
-            var loadDto = Mapper.Map<LoadDto>(load);
-            var childrenDtos = Mapper.Map<List<LoadDto>>(children);
+            var loadDto = LoadConverter.ToDto(load);
+            var childrenDtos = children.Select(LoadConverter.ToDto).ToList();
             await loadDto.IncludeCompaniesAsync(Db);
             await childrenDtos.IncludeCompaniesAsync(Db);
-            var companyDto = Mapper.Map<ActualCompanyDto>(company);
-            var carrierDto = Mapper.Map<DatCompanyDto>(carrier);
+            var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
+            var carrierDto = DatCompanyConverter.ToDto(carrier);
 
             carrierDto.Fields = await DatCompanies.GetFieldsAsync(carrierDto.DotNumber, carrierDto.McNumber);
 
             // Creates letter
-            var email = await DispatchEmailGenerator.GenerateConfirmationAsync(Mapper, carrierDto, loadDto, childrenDtos, companyDto, request.Emails);
+            var email = await DispatchEmailGenerator.GenerateConfirmationAsync(carrierDto, loadDto, childrenDtos, companyDto, request.Emails);
             await EmailUtils.SendEmailAsync(Smtp(company), email);
 
             loadDto.EmailConfirmationSentDate = DateTime.UtcNow;
@@ -482,9 +483,9 @@ public partial class DispatchService {
         }
         var carrier = await GetByIdAsync<DatCompany>(load.DatCompanyId);
 
-        var loadDto = Mapper.Map<LoadDto>(load);
-        var companyDto = Mapper.Map<ActualCompanyDto>(company);
-        var carrierDto = Mapper.Map<DatCompanyDto>(carrier);
+        var loadDto = LoadConverter.ToDto(load);
+        var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
+        var carrierDto = DatCompanyConverter.ToDto(carrier);
 
         if (load.ConfirmationFile == null) {
             throw new InfoException("Confirmation doesn't exists");
@@ -538,7 +539,7 @@ public partial class DispatchService {
 
     public async Task<SendSchemeEmailResponseData> SendSchemeEmail(SendSchemeEmailRequestData request) {
         var company = await GetByIdAsync<DispatchCompany>(request.ActualCompanyId);
-        var companyDto = Mapper.Map<ActualCompanyDto>(company);
+        var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
         var emails = request.Emails.Split(',', '\n').Select(e => e.Trim()).Where(e => String.IsNullOrEmpty(e) == false).ToList();
         if (emails.Any() == false) throw new InfoException("email error");
         var smtpSettings = new SmtpSettings(company.SMTP_SchemeEmail, company.SMTP_SchemePassword, company.SMTP_SchemeHost, company.SMTP_SchemePort);

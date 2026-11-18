@@ -1,3 +1,4 @@
+using AutoMapper;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Dtos.Enums;
 using AutoDispatch.Web.Common;
@@ -6,11 +7,14 @@ using AutoDispatch.Web.Logic.Helpers.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 
-/// <summary>
-///     V1 ActualCompany_DtoToModel: ActualCompanyDto контракта ↔ DispatchCompany </summary>
-public class DispatchCompany_DtoToModel : Base_DtoToModel<ActualCompanyDto, DispatchCompany> {
-    protected override DispatchCompany ConvertCore(ActualCompanyDto source) {
-        var destination = base.ConvertCore(source);
+public static class DispatchCompanyConverter {
+
+    /// <summary>
+    ///     V1 ActualCompany_DtoToModel: ActualCompanyDto контракта ↔ DispatchCompany </summary>
+    public static DispatchCompany ToModel(ActualCompanyDto source) {
+        if (source == null) return null;
+        var destination = new DispatchCompany();
+        BaseConverter.FillModel(source, destination);
         destination.CompanyId = source.CompanyId;
         destination.BoardType = (byte)source.BoardType;
         destination.PhysicalAddress = source.PhysicalAddress;
@@ -60,14 +64,14 @@ public class DispatchCompany_DtoToModel : Base_DtoToModel<ActualCompanyDto, Disp
         destination.FactoringCompanyJson = source.FactoringCompanyJson;
         return destination;
     }
-}
 
-/// <summary>
-///     V1 ActualCompany_ModelToDto: пароли не отдаются; *Data — RTF шаблоны компании (свой файл или Documents/ по умолчанию);
-///     Customizes — из навигации, если загружена </summary>
-public class DispatchCompany_ModelToDto : Base_ModelToDto<DispatchCompany, ActualCompanyDto> {
-    protected override ActualCompanyDto ConvertCore(DispatchCompany source) {
-        var destination = base.ConvertCore(source);
+    /// <summary>
+    ///     V1 ActualCompany_ModelToDto: пароли не отдаются; *Data — RTF шаблоны компании (свой файл или Documents/ по умолчанию);
+    ///     Customizes — из навигации, если загружена </summary>
+    public static ActualCompanyDto ToDto(DispatchCompany source, IMapper mapper) {
+        if (source == null) return null;
+        var destination = new ActualCompanyDto();
+        BaseConverter.FillDto(source, destination);
         destination.CompanyId = source.CompanyId;
         destination.BoardType = (DispatchBoardType)source.BoardType;
         destination.PhysicalAddress = source.PhysicalAddress;
@@ -125,7 +129,7 @@ public class DispatchCompany_ModelToDto : Base_ModelToDto<DispatchCompany, Actua
 
         destination.FactoringCompanyJson = source.FactoringCompanyJson;
 
-        destination.Customizes = Context.Mapper.Map<List<ActualCompanyCustomDto>>(source.Customizes);
+        destination.Customizes = mapper.Map<List<ActualCompanyCustomDto>>(source.Customizes);
 
         return destination;
     }

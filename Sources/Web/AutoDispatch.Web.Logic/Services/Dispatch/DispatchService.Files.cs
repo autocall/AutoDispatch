@@ -8,6 +8,7 @@ using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -131,13 +132,13 @@ public partial class DispatchService {
     public async Task<LoadDefectsResponseData> LoadDefects(LoadDefectsRequestData request) {
         if (request.TruckId != null) {
             var entity = await GetByIdAsync<Truck>(request.TruckId.Value);
-            var dto = Mapper.Map<TruckDto>(entity);
+            var dto = TruckConverter.ToDto(entity);
             await loadDefectsAsync(new List<TruckDto>() { dto }, true);
             return new LoadDefectsResponseData() { Defects = dto.Defects };
         }
         if (request.TrailerId != null) {
             var entity = await GetByIdAsync<Trailer>(request.TrailerId.Value);
-            var dto = Mapper.Map<TrailerDto>(entity);
+            var dto = TrailerConverter.ToDto(entity);
             await loadDefectsAsync(new List<TrailerDto>() { dto }, true);
             return new LoadDefectsResponseData() { Defects = dto.Defects };
         }
@@ -154,13 +155,13 @@ public partial class DispatchService {
             }
             if (defect.TruckId != null) {
                 var truck = await GetByIdAsync<Truck>(defect.TruckId.Value);
-                var dto = Mapper.Map<TruckDto>(truck);
+                var dto = TruckConverter.ToDto(truck);
                 Truck entity = await BaseSaveAsync<TruckDto, Truck>(request.UserId, dto);
                 await this._saveEventHistoryTruckAsync(EventTypeModel.Truck, entity, null, request.UserId);
             }
             if (defect.TrailerId != null) {
                 var trailer = await GetByIdAsync<Trailer>(defect.TrailerId.Value);
-                var dto = Mapper.Map<TrailerDto>(trailer);
+                var dto = TrailerConverter.ToDto(trailer);
                 Trailer entity = await BaseSaveAsync<TrailerDto, Trailer>(request.UserId, dto);
                 await this._saveEventHistoryTrailerAsync(EventTypeModel.Trailer, entity, request.UserId);
             }
@@ -179,13 +180,13 @@ public partial class DispatchService {
                 await UpdateAsync(defect);
                 if (defect.TruckId != null) {
                     var truck = await GetByIdAsync<Truck>(defect.TruckId.Value);
-                    var dto = Mapper.Map<TruckDto>(truck);
+                    var dto = TruckConverter.ToDto(truck);
                     Truck entity = await BaseSaveAsync<TruckDto, Truck>(request.UserId, dto);
                     await this._saveEventHistoryTruckAsync(EventTypeModel.Truck, entity, null, request.UserId);
                 }
                 if (defect.TrailerId != null) {
                     var trailer = await GetByIdAsync<Trailer>(defect.TrailerId.Value);
-                    var dto = Mapper.Map<TrailerDto>(trailer);
+                    var dto = TrailerConverter.ToDto(trailer);
                     Trailer entity = await BaseSaveAsync<TrailerDto, Trailer>(request.UserId, dto);
                     await this._saveEventHistoryTrailerAsync(EventTypeModel.Trailer, entity, request.UserId);
                 }
@@ -296,7 +297,7 @@ public partial class DispatchService {
         var company = await GetByIdAsync<DatCompany>(request.EntityId);
         var fullPath = DispatchFileHelper.InsuranceGetFullPath(request.EntityId, company.InsuranceFile);
         if (File.Exists(fullPath)) {
-            var dto = this.Mapper.Map<DatCompanyDto>(company);
+            var dto = DatCompanyConverter.ToDto(company);
             dto.InsuranceFileData = await File.ReadAllBytesAsync(fullPath);
             return new InsuranceLoadResponseData() { DatCompany = dto };
         }

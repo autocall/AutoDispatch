@@ -4,6 +4,7 @@ using LinqToDB.Async;
 using AutoDispatch.Dtos.Data;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -13,6 +14,10 @@ namespace AutoDispatch.Web.Logic.Services.Dispatch;
 public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, DispatchCompany> {
 
     public DispatchCompanyService(ServicesHost host) : base(host) { }
+
+    protected override ActualCompanyDto ToDto(DispatchCompany model) => DispatchCompanyConverter.ToDto(model, Mapper);
+
+    protected override DispatchCompany ToModel(ActualCompanyDto dto) => DispatchCompanyConverter.ToModel(dto);
 
     // Data doesn't use in Web-Page in Grid
     private static ActualCompanyDto SetEmptyData(ActualCompanyDto dto) {
@@ -29,7 +34,7 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
         if (companyId != null) {
             query = query.Where(e => e.CompanyId == companyId);
         }
-        var dtos = Mapper.Map<List<ActualCompanyDto>>(await query.ToListAsync());
+        var dtos = (await query.ToListAsync()).Select(e => DispatchCompanyConverter.ToDto(e, Mapper)).ToList();
         foreach (var dto in dtos) {
             SetEmptyData(dto);
             dto.LogoBig = null;
@@ -47,14 +52,14 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
             return null;
         }
         store.Customizes = await Alive<DispatchCompanyCustom>().Where(e => e.DispatchCompanyId == id).ToListAsync();
-        return SetEmptyData(Mapper.Map<ActualCompanyDto>(store));
+        return SetEmptyData(DispatchCompanyConverter.ToDto(store, Mapper));
     }
 
     /// <summary>
     ///     Полная карточка с шаблонами (ConfirmationData/BOLData/InvoiceData) для писем и печати </summary>
     public async Task<ActualCompanyDto> GetWithDataAsync(Guid id) {
         var store = await GetByIdAsync<DispatchCompany>(id);
-        return store == null ? null : Mapper.Map<ActualCompanyDto>(store);
+        return store == null ? null : DispatchCompanyConverter.ToDto(store, Mapper);
     }
 
     public async Task<List<ActualCompanyDto>> SearchFor2Async(System.Linq.Expressions.Expression<Func<DispatchCompany, bool>> predicate) {
@@ -64,7 +69,7 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
         foreach (var store in stores) {
             store.Customizes = customizes.Where(e => e.DispatchCompanyId == store.EntityId).ToList();
         }
-        return Mapper.Map<List<ActualCompanyDto>>(stores);
+        return stores.Select(e => DispatchCompanyConverter.ToDto(e, Mapper)).ToList();
     }
 
     protected override void OnUpdate(DispatchCompany old, DispatchCompany @new) {

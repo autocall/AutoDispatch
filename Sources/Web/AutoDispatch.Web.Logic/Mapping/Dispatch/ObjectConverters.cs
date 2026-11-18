@@ -10,9 +10,12 @@ namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 #region [ Driver ]
 
-public class Driver_DtoToModel : BaseObject_DtoToModel<DriverDto, Driver> {
-    protected override Driver ConvertCore(DriverDto source) {
-        var destination = base.ConvertCore(source);
+public static class DriverConverter {
+
+    public static Driver ToModel(DriverDto source) {
+        if (source == null) return null;
+        var destination = new Driver();
+        BaseConverter.FillObjectModel(source, destination);
         destination.TruckId = source.TruckId;
         destination.Name = source.Name;
         destination.Email = source.Email;
@@ -41,11 +44,11 @@ public class Driver_DtoToModel : BaseObject_DtoToModel<DriverDto, Driver> {
         destination.W9_Expiration = source.W9_Expiration;
         return destination;
     }
-}
 
-public class Driver_ModelToDto : BaseObject_ModelToDto<Driver, DriverDto> {
-    protected override DriverDto ConvertCore(Driver source) {
-        var destination = base.ConvertCore(source);
+    public static DriverDto ToDto(Driver source) {
+        if (source == null) return null;
+        var destination = new DriverDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.TruckId = source.TruckId;
         destination.Name = source.Name;
         destination.Email = source.Email;
@@ -80,9 +83,12 @@ public class Driver_ModelToDto : BaseObject_ModelToDto<Driver, DriverDto> {
 
 #region [ Truck ]
 
-public class Truck_DtoToModel : BaseObject_DtoToModel<TruckDto, Truck> {
-    protected override Truck ConvertCore(TruckDto source) {
-        var destination = base.ConvertCore(source);
+public static class TruckConverter {
+
+    public static Truck ToModel(TruckDto source) {
+        if (source == null) return null;
+        var destination = new Truck();
+        BaseConverter.FillObjectModel(source, destination);
         destination.TrailerId = source.TrailerId;
         destination.Number = source.Number;
         LocationConverter.SetCurrent(destination, source.CurrentLocation);
@@ -92,11 +98,11 @@ public class Truck_DtoToModel : BaseObject_DtoToModel<TruckDto, Truck> {
         destination.Registration_Expiration = source.Registration_Expiration;
         return destination;
     }
-}
 
-public class Truck_ModelToDto : BaseObject_ModelToDto<Truck, TruckDto> {
-    protected override TruckDto ConvertCore(Truck source) {
-        var destination = base.ConvertCore(source);
+    public static TruckDto ToDto(Truck source) {
+        if (source == null) return null;
+        var destination = new TruckDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.TrailerId = source.TrailerId;
         destination.Number = source.Number;
         destination.CurrentLocation = LocationConverter.ToDto(source.CurrentLatitude, source.CurrentLongitude);
@@ -112,9 +118,12 @@ public class Truck_ModelToDto : BaseObject_ModelToDto<Truck, TruckDto> {
 
 #region [ Trailer ]
 
-public class Trailer_DtoToModel : BaseObject_DtoToModel<TrailerDto, Trailer> {
-    protected override Trailer ConvertCore(TrailerDto source) {
-        var destination = base.ConvertCore(source);
+public static class TrailerConverter {
+
+    public static Trailer ToModel(TrailerDto source) {
+        if (source == null) return null;
+        var destination = new Trailer();
+        BaseConverter.FillObjectModel(source, destination);
         destination.Number = source.Number;
         destination.Type = source.Type;
         LocationConverter.SetCurrent(destination, source.CurrentLocation);
@@ -160,11 +169,11 @@ public class Trailer_DtoToModel : BaseObject_DtoToModel<TrailerDto, Trailer> {
         destination.YardId = source.YardId;
         return destination;
     }
-}
 
-public class Trailer_ModelToDto : BaseObject_ModelToDto<Trailer, TrailerDto> {
-    protected override TrailerDto ConvertCore(Trailer source) {
-        var destination = base.ConvertCore(source);
+    public static TrailerDto ToDto(Trailer source) {
+        if (source == null) return null;
+        var destination = new TrailerDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.Number = source.Number;
         destination.Type = source.Type;
         destination.CurrentLocation = LocationConverter.ToDto(source.CurrentLatitude, source.CurrentLongitude);
@@ -216,9 +225,12 @@ public class Trailer_ModelToDto : BaseObject_ModelToDto<Trailer, TrailerDto> {
 
 #region [ DatCompany ]
 
-public class DatCompany_DtoToModel : BaseObject_DtoToModel<DatCompanyDto, DatCompany> {
-    protected override DatCompany ConvertCore(DatCompanyDto source) {
-        var destination = base.ConvertCore(source);
+public static class DatCompanyConverter {
+
+    public static DatCompany ToModel(DatCompanyDto source) {
+        if (source == null) return null;
+        var destination = new DatCompany();
+        BaseConverter.FillObjectModel(source, destination);
         destination.DispatchCompanyId = source.ActualCompanyId;
         destination.Name = source.Name;
         destination.Phy_UpsStore = source.Phy_UpsStore;
@@ -247,11 +259,11 @@ public class DatCompany_DtoToModel : BaseObject_DtoToModel<DatCompanyDto, DatCom
         destination.DoNotUse = source.DoNotUse;
         return destination;
     }
-}
 
-public class DatCompany_ModelToDto : BaseObject_ModelToDto<DatCompany, DatCompanyDto> {
-    protected override DatCompanyDto ConvertCore(DatCompany source) {
-        var destination = base.ConvertCore(source);
+    public static DatCompanyDto ToDto(DatCompany source) {
+        if (source == null) return null;
+        var destination = new DatCompanyDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.ActualCompanyId = source.DispatchCompanyId;
         destination.Name = source.Name;
         destination.Phy_UpsStore = source.Phy_UpsStore;
@@ -286,9 +298,12 @@ public class DatCompany_ModelToDto : BaseObject_ModelToDto<DatCompany, DatCompan
 
 #region [ DatDriver ]
 
-public class DatDriver_DtoToModel : BaseObject_DtoToModel<DatDriverDto, DatDriver> {
-    protected override DatDriver ConvertCore(DatDriverDto source) {
-        var destination = base.ConvertCore(source);
+public static class DatDriverConverter {
+
+    public static DatDriver ToModel(DatDriverDto source) {
+        if (source == null) return null;
+        var destination = new DatDriver();
+        BaseConverter.FillObjectModel(source, destination);
         LocationConverter.SetCurrent(destination, source.CurrentLocation);
         destination.Name = source.Name;
         destination.Comments = source.Comments;
@@ -308,11 +323,11 @@ public class DatDriver_DtoToModel : BaseObject_DtoToModel<DatDriverDto, DatDrive
         destination.CarrierViewDeliveryId = source.CarrierViewDeliveryId;
         return destination;
     }
-}
 
-public class DatDriver_ModelToDto : BaseObject_ModelToDto<DatDriver, DatDriverDto> {
-    protected override DatDriverDto ConvertCore(DatDriver source) {
-        var destination = base.ConvertCore(source);
+    public static DatDriverDto ToDto(DatDriver source) {
+        if (source == null) return null;
+        var destination = new DatDriverDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.Name = source.Name;
         destination.Comments = source.Comments;
         destination.TruckNumber = source.TruckNumber;
@@ -338,9 +353,12 @@ public class DatDriver_ModelToDto : BaseObject_ModelToDto<DatDriver, DatDriverDt
 
 #region [ Warehouse, Yard ]
 
-public class Warehouse_DtoToModel : BaseObject_DtoToModel<WarehouseDto, Warehouse> {
-    protected override Warehouse ConvertCore(WarehouseDto source) {
-        var destination = base.ConvertCore(source);
+public static class WarehouseConverter {
+
+    public static Warehouse ToModel(WarehouseDto source) {
+        if (source == null) return null;
+        var destination = new Warehouse();
+        BaseConverter.FillObjectModel(source, destination);
         destination.Name = source.Name;
         destination.City = source.City;
         destination.Address = source.Address;
@@ -348,11 +366,11 @@ public class Warehouse_DtoToModel : BaseObject_DtoToModel<WarehouseDto, Warehous
         destination.Longitude = (decimal)source.Location.Longitude;
         return destination;
     }
-}
 
-public class Warehouse_ModelToDto : BaseObject_ModelToDto<Warehouse, WarehouseDto> {
-    protected override WarehouseDto ConvertCore(Warehouse source) {
-        var destination = base.ConvertCore(source);
+    public static WarehouseDto ToDto(Warehouse source) {
+        if (source == null) return null;
+        var destination = new WarehouseDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.Name = source.Name;
         destination.City = source.City;
         destination.Address = source.Address;
@@ -361,9 +379,12 @@ public class Warehouse_ModelToDto : BaseObject_ModelToDto<Warehouse, WarehouseDt
     }
 }
 
-public class Yard_DtoToModel : BaseObject_DtoToModel<YardDto, Yard> {
-    protected override Yard ConvertCore(YardDto source) {
-        var destination = base.ConvertCore(source);
+public static class YardConverter {
+
+    public static Yard ToModel(YardDto source) {
+        if (source == null) return null;
+        var destination = new Yard();
+        BaseConverter.FillObjectModel(source, destination);
         destination.Name = source.Name;
         destination.City = source.City;
         destination.Address = source.Address;
@@ -371,11 +392,11 @@ public class Yard_DtoToModel : BaseObject_DtoToModel<YardDto, Yard> {
         destination.Longitude = (decimal)source.Location.Longitude;
         return destination;
     }
-}
 
-public class Yard_ModelToDto : BaseObject_ModelToDto<Yard, YardDto> {
-    protected override YardDto ConvertCore(Yard source) {
-        var destination = base.ConvertCore(source);
+    public static YardDto ToDto(Yard source) {
+        if (source == null) return null;
+        var destination = new YardDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.Name = source.Name;
         destination.City = source.City;
         destination.Address = source.Address;
@@ -388,8 +409,10 @@ public class Yard_ModelToDto : BaseObject_ModelToDto<Yard, YardDto> {
 
 #region [ HistoryLocation* ]
 
-public class HistoryLocationLoad_ModelToDto : TypeConverter<HistoryLocationLoad, HistoryLocationLoadDto> {
-    protected override HistoryLocationLoadDto ConvertCore(HistoryLocationLoad source) {
+public static class HistoryLocationLoadConverter {
+
+    public static HistoryLocationLoadDto ToDto(HistoryLocationLoad source) {
+        if (source == null) return null;
         return new HistoryLocationLoadDto {
             Id = source.Id,
             HistoryId = source.HistoryId,
@@ -403,8 +426,10 @@ public class HistoryLocationLoad_ModelToDto : TypeConverter<HistoryLocationLoad,
     }
 }
 
-public class HistoryLocationTruck_ModelToDto : TypeConverter<HistoryLocationTruck, HistoryLocationTruckDto> {
-    protected override HistoryLocationTruckDto ConvertCore(HistoryLocationTruck source) {
+public static class HistoryLocationTruckConverter {
+
+    public static HistoryLocationTruckDto ToDto(HistoryLocationTruck source) {
+        if (source == null) return null;
         return new HistoryLocationTruckDto {
             Id = source.Id,
             HistoryId = source.HistoryId,
@@ -417,8 +442,10 @@ public class HistoryLocationTruck_ModelToDto : TypeConverter<HistoryLocationTruc
     }
 }
 
-public class HistoryLocationTrailer_ModelToDto : TypeConverter<HistoryLocationTrailer, HistoryLocationTrailerDto> {
-    protected override HistoryLocationTrailerDto ConvertCore(HistoryLocationTrailer source) {
+public static class HistoryLocationTrailerConverter {
+
+    public static HistoryLocationTrailerDto ToDto(HistoryLocationTrailer source) {
+        if (source == null) return null;
         return new HistoryLocationTrailerDto {
             Id = source.Id,
             HistoryId = source.HistoryId,
@@ -431,8 +458,10 @@ public class HistoryLocationTrailer_ModelToDto : TypeConverter<HistoryLocationTr
     }
 }
 
-public class HistoryLocationDriver_ModelToDto : TypeConverter<HistoryLocationDriver, HistoryLocationDriverDto> {
-    protected override HistoryLocationDriverDto ConvertCore(HistoryLocationDriver source) {
+public static class HistoryLocationDriverConverter {
+
+    public static HistoryLocationDriverDto ToDto(HistoryLocationDriver source) {
+        if (source == null) return null;
         return new HistoryLocationDriverDto {
             Id = source.Id,
             HistoryId = source.HistoryId,
@@ -446,8 +475,10 @@ public class HistoryLocationDriver_ModelToDto : TypeConverter<HistoryLocationDri
     }
 }
 
-public class HistoryLocationDatDriver_ModelToDto : TypeConverter<HistoryLocationDatDriver, HistoryLocationDatDriverDto> {
-    protected override HistoryLocationDatDriverDto ConvertCore(HistoryLocationDatDriver source) {
+public static class HistoryLocationDatDriverConverter {
+
+    public static HistoryLocationDatDriverDto ToDto(HistoryLocationDatDriver source) {
+        if (source == null) return null;
         return new HistoryLocationDatDriverDto {
             Id = source.Id,
             HistoryId = source.HistoryId,

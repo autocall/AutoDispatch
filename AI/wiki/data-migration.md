@@ -15,6 +15,8 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 
 Не переносим: `d_Message` и `ChatService`, `RecyclePath`, данные неактивных компаний — остаются в V1 как архив.
 
+В скрипте окно зафиксировано датой **2026-05-18** (6 месяцев до первого переноса 2026-11-18), чтобы догон не менял набор компаний — см. «Догон».
+
 ## Замеры
 
 | Объект | Всего | Активные 7 компаний |
@@ -30,12 +32,12 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 
 | Блок | Что | Способ |
 |---|---|---|
-| 0 | 7 компаний, их пользователи только с ролями AutoDispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin) и статусом allowed, другие роли V1 не переносятся | **написан 2026-11-12, переписан под Guid 2026-11-13** (см. ниже) |
+| 0 | 7 компаний, их пользователи только с ролями AutoDispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin) и статусом allowed, другие роли V1 не переносятся; шаг 0.5 — настройки App по секциям `UserSetting`, только dispatch ([[user-settings]]) | **написан 2026-11-12, переписан под Guid 2026-11-13**, шаг 0.5 — 2026-11-17 (см. ниже) |
 | 1 | 19 таблиц объектов и справочников компаний (`DispatchCompany*`, `DatCompany`, `DatDriver`, `Driver`, `Truck`, `Trailer`, `Warehouse`, `Yard`, `SetupPacket*`, `Customer/ShipperReceiverCompany`, `CompanyCustomStatus`, `Defect*`) | **написан 2026-11-13**: одна транзакция, `delete` + `insert … select … where CompanyId in (#active)`; setup-packet контакты/агентства/рекомендации — по `#sp` активных компаний |
 | 2 | `Load`, `HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | **написан 2026-11-13**: одна транзакция, `identity_insert` + reseed, история положений — по объектам активных компаний |
-| 3 | `HistoryObject` | **написан 2026-11-13**: отбор в постоянную `dbo._MigrateHistoryKeep`, пакеты по 100 000 `Id` без общей транзакции, возобновляемо с `max(Id)`, reseed |
+| 3 | `HistoryObject` | **написан 2026-11-13**: отбор в постоянную `dbo._MigrateHistoryKeep` (с 2026-11-18 дополняется при каждом запуске — догон), пакеты по 100 000 `Id` без общей транзакции, возобновляемо с `max(Id)`, затем докачка пропущенных ниже `max(Id)`, reseed |
 | 4 | `Event` активных компаний с `HistoryId` среди перенесённых снимков (или null) | **написан 2026-11-13**: пакеты по 500 000 `Id`, возобновляемо, reseed |
-| 5 | файлы | **написан 2026-11-13**: запрос списка каталогов; копирование — см. ниже |
+| 5 | файлы | **написан 2026-11-13, исправлен 2026-11-18**: список каталогов по перенесённым строкам `autodispatch` (все сущности с файлами, Guid в нижнем регистре); копирование — `Scripts/sync-dispatch-files.ps1`, см. «Файлы» |
 | 6 | FK | на время блоков 1–5 `nocheck constraint all` (блоки идут не в порядке зависимостей: `HistoryId` → блок 3), в конце `dbcc checkconstraints` + `with check check constraint all` |
 
 `Id` в блоках 3–4 сохраняются: на `d_HistoryObject.Id` ссылаются `HistoryId` в `d_Load`, `d_HistoryLocation*`, справочниках;
@@ -47,7 +49,7 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 `Location` (`Warehouse`, `Yard`, `HistoryLocation*` → `Latitude/Longitude`), `CurrentLocation` → `CurrentLatitude/CurrentLongitude`.
 Поля `*StateId/*CountryId` и `CreatedById/LastModifiedById/UserId` копируются как есть (FK нет). Остальные колонки — один в один.
 
-### Блок 0 — компании и пользователи (написан 2026-11-12, переписан 2026-11-13, на боевой БД не прогонялся)
+### Блок 0 — компании и пользователи (написан 2026-11-12, переписан 2026-11-13, прогнан на хосте 2026-11-18 — см. «Пробный перенос на хосте»)
 
 Отбор: компании с `d_Event` за 6 месяцев → их пользователи `IsDeleted = 0`, `VerifyId = 2` (allowed; waiting и blocked не нужны — в V3
 статус один, `IsDeleted`, см. [[plan]]) с хотя бы одной ролью AutoDispatch (имена ролей
@@ -63,6 +65,9 @@ nvarchar(max), заполнено у 10 пользователей, максим
 повторный запуск удаляет из `autodispatch` всех, чьи Id есть в `autocall`, и заливает заново. `UserName` = `Users.Name` (отображаемое имя,
 пусто → email); `NormalizedUserName` уникален, поэтому к повторяющимся именам добавляется email. `TimeZoneId = 'UTC'`, как в V3.
 В конце скрипт выводит итоги и список пользователей активных компаний с ролью AutoDispatch, которые **не** попали в перенос — для контроля.
+`Company` — **все** компании `#active`, в том числе без переносимых пользователей (решено 2026-11-18): блоки 1–4 копируют данные по `#active`,
+и раньше, когда `Company` брались только по `#user`, у UA LOGISTICS (0 пользователей allowed) в блоке 6 падал `FK_Truck_Company_CompanyId`.
+Пользователей такой компании можно завести руками. При догоне `Company` не удаляется (на неё ссылаются FK данных) — добавляются только новые.
 
 ### Отбор `d_HistoryObject` — правило QuartzService наоборот
 
@@ -101,32 +106,65 @@ select count(*) as rows_keep, sum(datalength(h.Data)) / 1024 / 1024 as mb_keep
 
 Для старых Paid-грузов история теряется — её и сейчас чистит Quartz через 30 дней, для пользователей это не изменение.
 
+## Догон (решено 2026-11-18)
+
+Перед сверкой этапа 7 и в окно переключения этапа 8 перенос догоняется до текущего состояния V1 тем же скриптом — **целиком, в одной сессии под sa**
+(правки скрипта под догон от 2026-11-18 на боевой ещё не выполнялись — первый догон их и проверит):
+
+1. Шапка — `#active` по `d_Event` с **2026-05-18**: дата зафиксирована, со скользящим окном UA LOGISTICS (последнее событие 2026-06-08)
+   выпала бы 2026-12-08, а её снимки и события остались бы без `Company`.
+2. Блок 0 — пользователи, роли, настройки удаляются по Id из `autocall` и заливаются заново; `Company` — только новые.
+3. Шаг «записи нового сервера» — только если в `autodispatch` уже писал новый сервер (ниже).
+4. Блоки 1–2 перезаливаются целиком.
+5. Блок 3 — `_MigrateHistoryKeep` дополняется ссылками, появившимися после прошлого прогона; снимки копируются после `max(Id)`, затем докачиваются
+   пропущенные ниже `max(Id)` (Undo, груз вышел из Paid).
+6. Блок 4 — события после `max(Id)`. Старые события, чей снимок попал в отбор только сейчас, не докачиваются: полный проход по `d_Event`
+   слишком дорог, теряется только их история.
+7. Блок 5 → новый `dirs.txt` → `Scripts/sync-dispatch-files.ps1 -Mode Diff` («Файлы»).
+8. Блок 6 — FK с проверкой.
+9. Записать в таблицу прогонов `maxId` из итогов блоков 3 и 4.
+
+**Записи нового сервера.** Сервер нумерует `Event` и `HistoryObject` после `max(Id)` переноса — из того же диапазона, что новые записи V1.
+Если после догона App этапа 7 работал с `autodispatch`, перед следующим догоном его записи удаляются: в скрипте после `nocheck` раскомментировать
+`delete from dbo.Event where Id > …` и `delete from dbo.HistoryObject where Id > …` с `maxId` прошлого прогона. Всё остальное, что он записал
+(грузы, объекты, пользователи, настройки), перезальют блоки 0–2; его файлы в `/files` удалит `-Mode Diff -DeleteExtra`.
+Альтернатива — перенос заново в пустую БД (дольше: 7.9 ГБ снимков).
+
+**Порядок для этапа 7:** файлы `-Mode Full` (часы, можно заранее) → догон БД → `-Mode Diff` → записать `maxId` → сразу сверка бордов V1 и App
+под одним пользователем (V1 продолжает работать, данные расходятся с каждым часом) → проверка цикла груз → … → история в App.
+
+| Прогон | Снимок V1 | `HistoryObject` maxId | `Event` maxId |
+|---|---|---|---|
+| 2026-11-18, первый перенос | последнее событие 10:13 UTC | 6 578 853 | 17 587 102 |
+
 ## Файлы — 147.5 ГБ
 
-Каталог = `EntityId` груза, карриера или setup packet ([[v1-inventory]]), поэтому список для копирования берётся из БД:
+Каталог = `EntityId` сущности ([[v1-inventory]]): груз, карриер (`DatCompany`), setup packet, водитель, трак, трейлер, дефект и ремонт, шаблоны
+`DispatchCompany` (V1 `FileGetFullPath`, сервер `DispatchFileHelper`). Список — блок 5 скрипта: по перенесённым строкам `autodispatch`, `IsDeleted = 0`,
+Guid в нижнем регистре (сервер строит путь через `Guid.ToString()`, на Linux регистр важен). До 2026-11-18 список брал только грузы, карриеров и
+setup packet — замер 147.5 ГБ сделан по ним; водители (46 с файлами), траки, трейлеры, дефекты и шаблоны компаний добавляют немного.
+На 2026-11-18 в списке 120 832 сущности: Load 87 594, DatCompany 23 797, SetupPacket 4 532, Trailer 4 433, Truck 135, Driver 127, Defect 93,
+DefectRepair 73, DispatchCompany 48. **Файлы на 2026-11-18 не синхронизированы.**
 
-```sql
-declare @from datetime = dateadd(month, -6, getdate());
-with c as (select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= @from)
-select EntityId from autocall.dbo.d_Load        where CompanyId in (select CompanyId from c) and IsDeleted = 0
-union select EntityId from autocall.dbo.d_DatCompany where CompanyId in (select CompanyId from c) and IsDeleted = 0
-union select EntityId from autocall.dbo.d_SetupPacket where CompanyId in (select CompanyId from c) and IsDeleted = 0;
-```
+`Scripts/sync-dispatch-files.ps1` (написан 2026-11-18, ещё не запускался). rsync на Windows нет — приём из `AutoCallV3/Scripts/publish-autocall-app.ps1`:
+`tar | ssh` через cmd. Файлы после записи не меняются, поэтому синхронизируется список, а не содержимое. Запускать там, где виден `E:\Files`
+(сервер V1 или UNC-путь в `-Source`); нужны `tar.exe` и `ssh.exe` (Windows 10 1803+ / Server 2019+) и ключ SSH к `root@67.220.74.190`.
 
-На Windows rsync нет; приём из `AutoCallV3/Scripts/publish-autocall-app.ps1` — `tar | ssh … tar -xf`. Файлы после записи
-не меняются, поэтому синхронизируется список, а не содержимое:
-
-1. Первичная заливка за несколько дней до переключения, в рабочее время, по списку каталогов (`Scripts/sync-dispatch-files.ps1`):
-   `cmd /c "tar -C E:\Files -cf - -T dirs.txt | ssh root@67.220.74.190 ""tar -C /home/autodispatch/files -xf -"""`.
-   Время — по каналу Windows-сервера: 100 Мбит ≈ 4 ч, 20 Мбит ≈ сутки; замерить на одном каталоге ~1 ГБ, при слабом канале
-   бить по первому символу Guid с возобновлением.
-2. Досинк в окно переключения: списки файлов с обеих сторон (`Get-ChildItem -Recurse -File` / `find . -type f`), разница → тот же `tar -T`. Минуты.
-3. Замер размеров — `files-size.ps1` (HashSet по `ids.txt`, регистр Guid в нижний): так получены цифры выше.
+1. `dirs.txt` — результат блока 5 (`sqlcmd -S db.myautocall.net -d autodispatch -E -h -1 -W -i dirs.sql -o dirs.txt` или SSMS «Results to File»);
+   пересоздаётся после каждого догона БД.
+2. `-Mode Full` — первичная заливка пачками по 2 000 каталогов; залитые пачки пишутся в `sync-done.txt` рядом с `dirs.txt`, повторный запуск
+   продолжает с места обрыва. Время — по каналу Windows-сервера: 100 Мбит ≈ 4 ч, 20 Мбит ≈ сутки; скорость видна по первой пачке.
+3. `-Mode Diff` — досинк после догона: списки файлов с обеих сторон (`Get-ChildItem -Recurse` / `find -type f`), недостающие — одним `tar`.
+   Файлы на хосте, которых нет в V1 (удалены в V1 после заливки или созданы новым сервером при проверке), пишутся в `sync-extra.txt`,
+   с `-DeleteExtra` удаляются; служебные `_fonts`, `_temp`, `_recycle` не трогаются. Минуты.
+4. Не проверено: имена файлов не в ASCII через `tar -T` (bsdtar Windows) — если такие есть, после `-Mode Full` они останутся в «to copy» у `-Mode Diff`.
+5. Замер размеров — `files-size.ps1` (HashSet по `ids.txt`, регистр Guid в нижний): так получены цифры выше.
 
 ## Окно переключения
 
-Остановить запись в V1 → блоки 0–2 → хвосты блоков 3–4 с последнего `Id` → досинк файлов → reseed → ссылка ClickOnce
-нового App пользователям 7 компаний. Укладывается в один вечер; DNS не трогается, у нового сервера свой поддомен.
+Остановить запись в V1 → догон (весь скрипт, «Догон»; если App этапа 7 писал в `autodispatch` — сначала удалить его `Event`/`HistoryObject`)
+→ `sync-dispatch-files.ps1 -Mode Diff -DeleteExtra` → ссылка ClickOnce нового App пользователям 7 компаний → после проверки удалить
+`dbo._MigrateHistoryKeep`. Укладывается в один вечер; DNS не трогается, у нового сервера свой поддомен.
 
 ## Проверка на боевой БД — 2026-11-13 (MCP `db-readonly`, `sqlcmd`)
 
@@ -148,3 +186,22 @@ union select EntityId from autocall.dbo.d_SetupPacket where CompanyId in (select
   у всех кандидатов заполнен `AppVersion`) **или** `Session.LastActivity`. Кандидатов (`IsDeleted = 0`, `VerifyId = 2`, роль) 19, с входом за год 17:
   выпадают `Nina` DDM (2023) и один из TORPEDO; за 12 месяцев событий у 8 компаний против 7 за 6 — окно компаний не трогаем. Дублей отображаемых имён нет, пустых `Users.Name` нет.
 - Системный `Support` (Admin, компания вне активных) правит грузы всех компаний — в V3 его роль выполняет штатный Admin из Seed.
+
+## Пробный перенос на хосте — 2026-11-18 (проверено через MCP `db-readonly`)
+
+Пользователь создал `autodispatch` на `db.myautocall.net` (compat 150, `Latin1_General_100_CI_AI_SC_UTF8`), применил миграции
+`20261113085341_Init` и `20261118085359_Dispatch` и прогнал скрипт на данных 2026-11-18. Это база для проверки этапа 7 ([[plan]] «Решить»)
+и репетиция окна переключения. Логин `ClaudeReadonly` читает `autodispatch`, `autodispatch_log` — нет.
+
+- **Количество строк совпадает с `autocall` по компаниям `autodispatch.Company`**: `Load` 89 568, `DatCompany` 24 504, `ShipperReceiverCompany` 36 096,
+  `CustomerCompany` 5 938, `SetupPacket` 4 532, `Trailer` 4 706, `DatDriver` 1 332, `Driver` 147, `Truck` 149, `DispatchCompany` 52, `Warehouse` 17, `Yard` 5.
+  Остальное: `Event` 10 515 680, `HistoryObject` 3 938 126, `HistoryLocationLoad` 6 573 359, `HistoryLocationTrailer` 3 556 313,
+  `HistoryLocationDatDriver` 166 478, `SetupPacketContact` 20 342, `SetupPacketInsuranceAgency` 13 172, `UserSetting` 201.
+- **Компании и пользователи**: 8 компаний (7 активных + системная), 19 пользователей (17 перенесённых + System и Admin из Seed), у всех есть роли,
+  у всех 17 есть настройки. UA LOGISTICS — без пользователей (решение выше). Грузов: BEST AMERICAN 51 349 (последний 2025-08-27), TORPEDO 20 392,
+  Baltic 11 503, DDM 3 632, UA LOGISTICS 2 092, LEVSKI 590, BEST SOURCE 10.
+- **FK**: все включены и доверенные (`is_disabled = 0`, `is_not_trusted = 0`) — блок 6 прошёл.
+- **Снимок**: последнее событие 2026-11-18 10:13 UTC. V1 продолжает работать — через несколько часов в `autocall` уже 144 новых события
+  активных компаний и 8 изменённых грузов. Перед сверкой этапа 7 — догон (решено 2026-11-18, «Догон»).
+- Осталась служебная `dbo._MigrateHistoryKeep` (3 938 126 Id) — нужна для возобновления блоков 3–4; удалить после переключения (этап 8).
+- Файлы не синхронизированы — «Файлы».

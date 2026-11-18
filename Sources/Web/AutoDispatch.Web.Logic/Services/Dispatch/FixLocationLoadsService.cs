@@ -6,6 +6,7 @@ using AutoDispatch.Dtos.Enums;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Common.Helpers;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -31,7 +32,7 @@ public class FixLocationLoadsService : DispatchBaseService {
 
     private async Task<string> FixLocationAsync(Load load, CacheLoadIndexType dir, bool withoutAddress, Action<bool> onChanged) {
         var service = Host.GetService<GeocodeService>();
-        var dto = Mapper.Map<LoadDto>(load);
+        var dto = LoadConverter.ToDto(load);
         LocationDto locationDto = dir == CacheLoadIndexType.Origin ? dto.OriginLocation : dto.DestinationLocation;
         var city = dir == CacheLoadIndexType.Origin ? dto.OriginCity : dto.DestinationCity;
         var address = dir == CacheLoadIndexType.Origin ? dto.OriginAddress : dto.DestinationAddress;

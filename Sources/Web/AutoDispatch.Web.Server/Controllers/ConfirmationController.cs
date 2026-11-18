@@ -15,6 +15,7 @@ using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.Services.Dispatch;
 using AutoDispatch.Web.Server.Extensions;
 using AutoDispatch.Web.Server.Models;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Server.Controllers;
 
@@ -161,7 +162,7 @@ public class ConfirmationController : BaseController {
             CarrierPhone = carrier.Fields.TryGetValue("Phone:", out var phone) ? phone : null
         };
         if (load.LineHaul != null && rate != load.LineHaul) {
-            model.Gains = Mapper.Map<List<GainViewModel>>(load.Gains).Where(g => g.Cost != null).ToList();
+            model.Gains = ExpensesConverter.ToGains(load.Gains).Where(g => g.Cost != null).ToList();
         }
         return model;
     }

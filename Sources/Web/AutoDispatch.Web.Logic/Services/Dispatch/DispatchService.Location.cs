@@ -56,7 +56,7 @@ public partial class DispatchService {
             await _modifyLocationAsync(driver, request.Location, request.UserId);
             await this._saveEventHistoryDriverAsync(EventTypeModel.HistoryDriver, driver, historyLocationTruckId, request.UserId);
 
-            var dto = this.Mapper.Map<DriverDto>(driver);
+            var dto = DriverConverter.ToDto(driver);
             dto.CurrentLocation = request.Location;
             return new LocationDriverChangedResponseData() {
                 Driver = dto
@@ -90,7 +90,7 @@ public partial class DispatchService {
                 await _modifyLocationAsync(truck, request.Location, request.UserId);
                 await this._saveEventHistoryTruckAsync(EventTypeModel.HistoryTruck, truck, historyLocationTrailerId, request.UserId);
             }
-            var dto = this.Mapper.Map<TruckDto>(truck);
+            var dto = TruckConverter.ToDto(truck);
             dto.CurrentLocation = request.Location;
             return new LocationTruckChangedResponseData() {
                 Truck = dto
@@ -118,7 +118,7 @@ public partial class DispatchService {
                     }
                 }
             }
-            var dto = this.Mapper.Map<TrailerDto>(trailer);
+            var dto = TrailerConverter.ToDto(trailer);
             dto.CurrentLocation = request.Location;
             return new LocationTrailerChangedResponseData() {
                 Trailer = dto
@@ -141,7 +141,7 @@ public partial class DispatchService {
                     await this._saveEventHistoryLoadAsync(EventTypeModel.HistoryBookedLoad, load2, tmp1.historyLocationLoadId, LoadParentType.Shipment, request.UserId);
                 }
             }
-            var dto = this.Mapper.Map<LoadDto>(load);
+            var dto = LoadConverter.ToDto(load);
             dto.CurrentLocation = request.Location;
             return new LocationLoadChangedResponseData() {
                 Load = dto
@@ -166,7 +166,7 @@ public partial class DispatchService {
                 }
             }
 
-            var dto = this.Mapper.Map<DatDriverDto>(driver);
+            var dto = DatDriverConverter.ToDto(driver);
             dto.CurrentLocation = request.Location;
             return new LocationDatDriverChangedResponseData() {
                 DatDriver = dto
@@ -190,7 +190,7 @@ public partial class DispatchService {
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationDriver>().Where(p => p.DriverId == request.DriverId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
-        var history = this.Mapper.Map<List<HistoryLocationDriverDto>>(list);
+        var history = list.Select(HistoryLocationDriverConverter.ToDto).ToList();
         foreach (var h in history) {
             await this.LoadNameOfLocationAsync(h);
         }
@@ -201,7 +201,7 @@ public partial class DispatchService {
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationTruck>().Where(p => p.TruckId == request.TruckId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
-        var history = this.Mapper.Map<List<HistoryLocationTruckDto>>(list);
+        var history = list.Select(HistoryLocationTruckConverter.ToDto).ToList();
         foreach (var h in history) {
             await this.LoadNameOfLocationAsync(h);
         }
@@ -212,7 +212,7 @@ public partial class DispatchService {
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationTrailer>().Where(p => p.TrailerId == request.TrailerId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
-        var history = this.Mapper.Map<List<HistoryLocationTrailerDto>>(list);
+        var history = list.Select(HistoryLocationTrailerConverter.ToDto).ToList();
         foreach (var h in history) {
             await this.LoadNameOfLocationAsync(h);
         }
@@ -223,7 +223,7 @@ public partial class DispatchService {
         // NOTE: skips a filter by Date, because a load has few locations
         var list = await Table<HistoryLocationLoad>().Where(p => p.LoadId == request.LoadId)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
-        var history = this.Mapper.Map<List<HistoryLocationLoadDto>>(list);
+        var history = list.Select(HistoryLocationLoadConverter.ToDto).ToList();
         foreach (var h in history) {
             await this.LoadNameOfLocationAsync(h);
         }
@@ -234,7 +234,7 @@ public partial class DispatchService {
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationDatDriver>().Where(p => p.DatDriverId == request.DatDriverId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
-        var history = this.Mapper.Map<List<HistoryLocationDatDriverDto>>(list);
+        var history = list.Select(HistoryLocationDatDriverConverter.ToDto).ToList();
         foreach (var h in history) {
             await this.LoadNameOfLocationAsync(h);
         }

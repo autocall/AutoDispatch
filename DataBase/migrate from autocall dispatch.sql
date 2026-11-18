@@ -3,7 +3,7 @@
 -- Блок 0 — компании и пользователи; блоки 1–5 — справочники и объекты, грузы, HistoryObject, Event, список файлов; блок 6 — проверка FK.
 --
 -- Блок 0. Кого переносим:
---   * компании с событиями d_Event за последние 6 месяцев (на 2026-11-11 — 7 компаний);
+--   * компании с событиями d_Event за 6 месяцев до первого переноса — с 2026-05-18 (7 компаний; дата зафиксирована для догона, см. @since);
 --   * их не удалённые пользователи со статусом allowed (VerifyId = 2; waiting и blocked не переносятся — решено 2026-11-13),
 --     у которых есть хотя бы одна роль с модулем AutoDispatch (Permissions.GetModulesByRole V1):
 --     Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin — остальные роли V1 (User, Driver, Gps Support) не переносятся;
@@ -17,12 +17,20 @@
 -- UserName = Users.Name V1 (отображаемое имя в истории; пусто -> email); NormalizedUserName уникален, при дубле добавляется email.
 -- Повторный запуск перезаливает блок целиком (шаг 0.0 удаляет перенесённых по Id из autocall); пользователи, заведённые в autodispatch
 -- руками, остаются и по Email пропускаются.
+--
+-- Догон (перед сверкой этапа 7 и в окно переключения этапа 8 — AI/wiki/data-migration.md «Догон»): весь скрипт ещё раз в одной сессии под sa.
+-- Блоки 0–2 перезаливаются целиком (Company — только новые: на неё ссылаются FK данных), блок 3 дополняет _MigrateHistoryKeep
+-- и докачивает снимки (новые и пропущенные ниже max(Id)), блок 4 — события после max(Id), блок 5 — список каталогов для досинка файлов,
+-- блок 6 — FK. Если в autodispatch уже писал новый сервер (проверка App этапа 7), его Event и HistoryObject занимают Id из того же диапазона,
+-- что новые записи V1, — перед блоком 1 удалить их (шаг «записи нового сервера» ниже) или переносить заново в пустую БД.
 
 use autodispatch;
 set nocount on;
 set xact_abort on;
 
-declare @since datetime2(0) = dateadd(month, -6, sysutcdatetime());
+-- окно активности компаний зафиксировано датой первого переноса 2026-11-18 минус 6 месяцев: при догоне набор компаний не меняется
+-- (UA LOGISTICS — последнее событие 2026-06-08 — со скользящим окном выпала бы 2026-12-08, а её снимки и события остались бы без Company)
+declare @since datetime2(0) = '2026-05-18';
 declare @sinceLogin datetime2(0) = dateadd(month, -12, sysutcdatetime());   -- окно входа пользователей шире окна активности компаний
 
 -- активные компании — одна временная таблица на весь скрипт (второй select into #active в том же batch не компилируется)
@@ -35,10 +43,13 @@ declare @systemUserId uniqueidentifier = '00000000-0000-0000-0000-000000001000';
 begin tran;
 
 -------- 0.0 очистка прошлого переноса (служебные Company и пользователи System/Admin не задеты: их Id нет в autocall) --------
-delete from dbo.UserSetting       where UserId in (select Id from autocall.dbo.Users);
-delete from dbo.IdentityUserRoles where UserId in (select Id from autocall.dbo.Users);
+-- Company не удаляется: после блока 6 на неё ссылаются FK данных (догон); новые компании добавляет шаг 0.3
+delete from dbo.UserSetting        where UserId in (select Id from autocall.dbo.Users);
+delete from dbo.IdentityUserRoles  where UserId in (select Id from autocall.dbo.Users);
+delete from dbo.IdentityUserClaims where UserId in (select Id from autocall.dbo.Users);
+delete from dbo.IdentityUserLogins where UserId in (select Id from autocall.dbo.Users);
+delete from dbo.IdentityUserToken  where UserId in (select Id from autocall.dbo.Users);
 delete from dbo.IdentityUsers     where Id     in (select Id from autocall.dbo.Users);
-delete from dbo.Company           where Id     in (select EntityId from autocall.dbo.Company);
 
 -------- 0.2 пользователи с ролями AutoDispatch --------
 -- имена ролей V1 в таблице Roles совпадают с RoleName без пробелов ("Gps Support" -> GpsSupport);
@@ -79,15 +90,17 @@ from #user u
 where exists (select 1 from #user x where upper(x.UserName) = upper(u.UserName) collate database_default and x.Id <> u.Id)
    or exists (select 1 from dbo.IdentityUsers x where x.NormalizedUserName = upper(u.UserName) collate database_default);
 
--------- 0.3 компании отобранных пользователей (удалённые восстанавливаются активными) --------
+-------- 0.3 все активные компании, в том числе без переносимых пользователей (удалённые восстанавливаются активными) --------
+-- решено 2026-11-18: данные блоков 1–4 идут по #active, без строки Company не включатся FK CompanyId (UA LOGISTICS — 0 пользователей allowed)
 select c.EntityId as Id, c.CompanyName, c.CreatedDate, c.LastModifiedDate
 into #company
 from autocall.dbo.Company c
-where c.EntityId in (select distinct CompanyId from #user);
+where c.EntityId in (select Id from #active);
 
 insert into dbo.Company (Id, Name, CreatedDateTime, CreatedById, ModifiedDateTime, ModifiedById, IsDeleted)
 select Id, left(CompanyName, 100), CreatedDate, @systemUserId, LastModifiedDate, @systemUserId, 0
-from #company;
+from #company c
+where not exists (select 1 from dbo.Company x where x.Id = c.Id);
 
 -------- 0.4 IdentityUsers + роли --------
 insert into dbo.IdentityUsers (Id, CompanyId, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp,
@@ -102,11 +115,38 @@ insert into dbo.IdentityUserRoles (UserId, RoleId)
 select distinct u.Id, r.RoleId
 from #user u join #role r on r.LegacyUserId = u.Id;
 
+-------- 0.5 настройки App: секции UserSetting, только dispatch (решено 2026-11-17, AI/wiki/user-settings.md) --------
+-- Settings.Binary V1 = gzip JSON (Json.NET, $type) словаря «свойство UserSettings -> значение»; Binary как есть не переносится —
+-- раскладывается по секциям, как в AutoCall V3: строка на свойство, Section = имя свойства. Свойства AutoCall (DataSourceSettings,
+-- Sound/HotKey/CallService/Connection/Zoom, BoardsSettings, Default*PatternSettings, PatternTabs, PatternsDialogGridView, ViewType, Volume*)
+-- не переносятся; в BoardsSettings2 остаются только борды Dispatch*. byte[] (раскладки гридов Telerik, DockingLayout, Selected*Company)
+-- — строка base64 без обёртки {"$type":"System.Byte[], mscorlib","$value":…}; остальные объекты — JSON Json.NET как есть (с $type).
+-- null-свойства не пишутся (секции нет -> App берёт дефолт). Проверено select'ом 2026-11-17: 17 пользователей, 201 строка, весь JSON валиден.
+insert into dbo.UserSetting (UserId, Section, Json, ModifiedDateTime)
+select u.Id, j.[key],
+    case
+        when j.[key] = 'BoardsSettings2' then
+            (select '{' + string_agg(cast('"' + b.[key] + '":' + b.value as nvarchar(max)), ',') + '}' from openjson(j.value) b where b.[key] like 'Dispatch%')
+        when j.value like '{"$type":"System.Byte`[`], mscorlib","$value":"%' escape '`' then '"' + substring(j.value, 46, len(j.value) - 46)
+        when j.type = 1 then '"' + string_escape(j.value, 'json') + '"'
+        else j.value
+    end,
+    sysutcdatetime()
+from #user u
+join autocall.dbo.Settings s on s.UserId = u.Id
+cross apply openjson(cast(decompress(s.Binary) as nvarchar(max))) j
+where j.type <> 0
+  and j.[key] in ('BoardsSettings2', 'DockingLayout', 'FiltersColumns', 'DefaultLoadSettings', 'DatCompaniesDialogGridView',
+      'EquipmentsDialogGridViewDrivers', 'EquipmentsDialogGridViewTrucks', 'EquipmentsDialogGridViewTrailers',
+      'EquipmentsDialogGridViewWarehouses', 'EquipmentsDialogGridViewYards',
+      'SelectedCarrierCompany', 'SelectedBrokerCompany', 'ScanEmail', 'ScanBW', 'ScanADF', 'SearchTrailerWarehouseMode');
+
 -------- итог --------
 select 'active companies (d_Event)' as [table], count(*) as [rows] from #active
 union all select 'companies inserted', count(*) from #company
 union all select 'users', count(*) from #user
 union all select 'user roles', count(*) from dbo.IdentityUserRoles ur join #user u on u.Id = ur.UserId
+union all select 'user settings', count(*) from dbo.UserSetting us join #user u on u.Id = us.UserId
 union all select 'admins', count(distinct u.Id) from #user u join #role r on r.LegacyUserId = u.Id where r.RoleId = '00000000-0000-0000-0000-000000000007'
 union all select 'owners', count(distinct u.Id) from #user u join #role r on r.LegacyUserId = u.Id where r.RoleId = '00000000-0000-0000-0000-000000000006';
 
@@ -123,7 +163,7 @@ commit tran;
 -- rollback tran;  -- вместо commit для прогона «на сухую»
 
 -- ======================================================================================================================
--- Блоки 1–5 (написаны 2026-11-13, на боевой БД не прогонялись). Схема приёмника — AI/wiki/data-model.md:
+-- Блоки 1–5 (написаны 2026-11-13, прогнаны 2026-11-18 — пробный перенос в autodispatch на db.myautocall.net). Схема приёмника — AI/wiki/data-model.md:
 --   таблицы без префикса d_, d_ActualCompany -> DispatchCompany, ActualCompanyId -> DispatchCompanyId,
 --   geography -> пары decimal (OriginLocation.Lat/.Long -> OriginLatitude/OriginLongitude и т.д.).
 -- Ключи Guid и int identity сохраняются. FK на время заливки отключаются (блоки идут не в порядке зависимостей:
@@ -138,6 +178,12 @@ if object_id('tempdb..#active') is null begin
 end;
 
 exec sp_MSforeachtable 'alter table ? nocheck constraint all';
+
+-------- записи нового сервера — только для догона после проверки App этапа 7 (AI/wiki/data-migration.md «Догон») --------
+-- Блоки 1–2 и так перезаливаются целиком; Event и HistoryObject — нет, а новый сервер нумерует их после max(Id) прошлого прогона.
+-- Подставить maxId из итогов блоков 3 и 4 прошлого прогона (записаны в data-migration.md) и раскомментировать:
+-- delete from dbo.Event         where Id > /* Event maxId */ 0;
+-- delete from dbo.HistoryObject where Id > /* HistoryObject maxId */ 0;
 
 -------- 1. справочники и объекты компаний --------
 begin tran;
@@ -355,12 +401,14 @@ union all select 'HistoryLocationDatDriver', count(*) from dbo.HistoryLocationDa
 commit tran;
 
 -------- 3. HistoryObject — снимки, на которые ссылаются перенесённые объекты, плюс все снимки грузов активных компаний не в статусе Paid --------
--- Правило QuartzService наоборот (AI/wiki/data-migration.md). Отбор — в постоянную таблицу dbo._MigrateHistoryKeep: строится один раз,
--- заливка пакетами по 100 000 Id без общей транзакции, возобновляется с max(Id) приёмника. Для полного повтора:
---   delete from dbo.HistoryObject; drop table dbo._MigrateHistoryKeep;
-if object_id('dbo._MigrateHistoryKeep') is null begin
+-- Правило QuartzService наоборот (AI/wiki/data-migration.md). Отбор — в постоянную таблицу dbo._MigrateHistoryKeep: при каждом запуске
+-- дополняется ссылками, появившимися в V1 после прошлого прогона (догон); заливка пакетами по 100 000 Id без общей транзакции,
+-- возобновляется с max(Id) приёмника, затем докачиваются снимки ниже max(Id), ставшие нужными позже (Undo, груз вышел из Paid).
+-- Для полного повтора: delete from dbo.HistoryObject; drop table dbo._MigrateHistoryKeep;
+if object_id('dbo._MigrateHistoryKeep') is null
     create table dbo._MigrateHistoryKeep (Id int not null primary key);
-    with refs as (
+
+with refs as (
         select HistoryId as Id from autocall.dbo.d_Load l join #active c on c.Id = l.CompanyId where HistoryId is not null
         union select hl.HistoryId from autocall.dbo.d_HistoryLocationLoad hl join autocall.dbo.d_Load l on l.EntityId = hl.LoadId join #active c on c.Id = l.CompanyId
         union select hl.HistoryWarehouseId from autocall.dbo.d_HistoryLocationLoad hl join autocall.dbo.d_Load l on l.EntityId = hl.LoadId join #active c on c.Id = l.CompanyId where hl.HistoryWarehouseId is not null
@@ -378,13 +426,14 @@ if object_id('dbo._MigrateHistoryKeep') is null begin
         union select hl.HistoryId from autocall.dbo.d_HistoryLocationDriver hl join autocall.dbo.d_Driver d on d.EntityId = hl.DriverId join #active c on c.Id = d.CompanyId
         union select hl.HistoryId from autocall.dbo.d_HistoryLocationDatDriver hl join autocall.dbo.d_DatDriver d on d.EntityId = hl.DatDriverId join #active c on c.Id = d.CompanyId)
     insert into dbo._MigrateHistoryKeep (Id)
-    select Id from autocall.dbo.d_HistoryObject where Id in (select Id from refs)
-    union
-    select h.Id from autocall.dbo.d_HistoryObject h
-      join autocall.dbo.d_Load l on l.EntityId = h.ReferenceId
-      join #active c on c.Id = l.CompanyId
-     where l.IsDeleted = 0 and l.Status <> 6;
-end;
+    select x.Id from (
+        select Id from autocall.dbo.d_HistoryObject where Id in (select Id from refs)
+        union
+        select h.Id from autocall.dbo.d_HistoryObject h
+          join autocall.dbo.d_Load l on l.EntityId = h.ReferenceId
+          join #active c on c.Id = l.CompanyId
+         where l.IsDeleted = 0 and l.Status <> 6) x
+    where not exists (select 1 from dbo._MigrateHistoryKeep k where k.Id = x.Id);
 
 declare @lastHistory int, @batch int;
 set identity_insert dbo.HistoryObject on;
@@ -400,13 +449,23 @@ while 1 = 1 begin
     raiserror ('HistoryObject: +%d after %d', 0, 1, @batch, @lastHistory) with nowait;
     if @batch = 0 break;
 end;
+-- снимки ниже max(Id), которых не было в отборе прошлого прогона
+insert into dbo.HistoryObject ([Id], [Data], [CreatedDate], [ReferenceId], [GroupId], [Undo])
+select h.[Id], h.[Data], h.[CreatedDate], h.[ReferenceId], h.[GroupId], h.[Undo]
+from autocall.dbo.d_HistoryObject h
+join dbo._MigrateHistoryKeep k on k.Id = h.Id
+where not exists (select 1 from dbo.HistoryObject x where x.Id = h.Id);
+set @batch = @@rowcount;
+raiserror ('HistoryObject: +%d below max(Id)', 0, 1, @batch) with nowait;
 set identity_insert dbo.HistoryObject off;
 dbcc checkident ('dbo.HistoryObject', reseed);
 
-select 'HistoryObject' as [table], count(*) as [rows], sum(datalength(Data)) / 1024 / 1024 as [mb] from dbo.HistoryObject;
+select 'HistoryObject' as [table], count(*) as [rows], max(Id) as [maxId], sum(datalength(Data)) / 1024 / 1024 as [mb] from dbo.HistoryObject;
 
 -------- 4. Event активных компаний: HistoryId среди перенесённых снимков или пусто; пакетами по 500 000, возобновляемо --------
 -- Для полного повтора: delete from dbo.Event;
+-- Догон берёт события после max(Id); старые события, чей снимок попал в отбор только сейчас (груз вышел из Paid), не докачиваются —
+-- полный проход по d_Event слишком дорог, теряется только их история.
 declare @lastEvent int;
 set identity_insert dbo.Event on;
 while 1 = 1 begin
@@ -427,10 +486,19 @@ dbcc checkident ('dbo.Event', reseed);
 
 select 'Event' as [table], count(*) as [rows], max(Id) as [maxId] from dbo.Event;
 
--------- 5. файлы: каталоги E:\Files\{EntityId} для Scripts/sync-dispatch-files.ps1 (tar | ssh), список — в dirs.txt --------
-select EntityId from autocall.dbo.d_Load        where CompanyId in (select Id from #active) and IsDeleted = 0
-union select EntityId from autocall.dbo.d_DatCompany where CompanyId in (select Id from #active) and IsDeleted = 0
-union select EntityId from autocall.dbo.d_SetupPacket where CompanyId in (select Id from #active) and IsDeleted = 0;
+-------- 5. файлы: каталоги E:\Files\{EntityId} для Scripts/sync-dispatch-files.ps1 (tar | ssh) — результат сохранить в dirs.txt --------
+-- Каталог {EntityId} бывает у груза, карриера (DatCompany), setup packet, водителя, трака, трейлера, дефекта и ремонта, шаблонов
+-- DispatchCompany (V1 FileGetFullPath; до 2026-11-18 список брал только первые три). Берётся из перенесённых строк; каталоги,
+-- которых нет на диске, скрипт пропускает. Нижний регистр: сервер строит путь через Guid.ToString(), на Linux регистр важен.
+select lower(convert(varchar(36), EntityId)) as Dir from dbo.Load where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.DatCompany      where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.SetupPacket     where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.Driver          where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.Truck           where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.Trailer         where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.Defect          where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.DefectRepair    where IsDeleted = 0
+union select lower(convert(varchar(36), EntityId)) from dbo.DispatchCompany where IsDeleted = 0;
 
 -------- 6. включить FK с проверкой: нарушения — ошибка с именем ограничения --------
 -- Проверено на боевой БД 2026-11-13: три удалённых груза активной компании ссылаются на DatCompany, ShipperReceiverCompany и

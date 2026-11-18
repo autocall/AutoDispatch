@@ -1,5 +1,4 @@
 using System.Text;
-using AutoMapper;
 using AutoCall.Common.Enums;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Dtos.Enums;
@@ -8,6 +7,7 @@ using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Logic.Dtos.Dispatch;
 using AutoDispatch.Web.Logic.Email;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Utils;
 
@@ -22,7 +22,7 @@ public static class DispatchEmailGenerator {
 
     /// <summary> </summary>
     /// <param name="children"> Using for multi-stops</param>
-    private static string _replaceFields1(IMapper mapper, StringBuilder sb, DatCompanyDto carrier, LoadDto load, List<LoadDto> children, ActualCompanyDto company, bool showPickupAddress = true) {
+    private static string _replaceFields1(StringBuilder sb, DatCompanyDto carrier, LoadDto load, List<LoadDto> children, ActualCompanyDto company, bool showPickupAddress = true) {
 
         #region [ init fields ]
 
@@ -115,7 +115,7 @@ public static class DispatchEmailGenerator {
                 rates.Add(new Tuple<string, string>("CarrierView Tracking:", $"{currency.GetDescription()}{load.CarrierViewTracking.Value:N2}"));
             }
 
-            foreach (var gain in mapper.Map<List<GainViewModel>>(load.Gains)) {
+            foreach (var gain in ExpensesConverter.ToGains(load.Gains)) {
                 if (gain.Cost != null) {
                     rates.Add(new Tuple<string, string>($"{gain.TypeDescription()}:", $"{currency.GetDescription()}{gain.Cost:N2}"));
                 }
@@ -237,7 +237,7 @@ public static class DispatchEmailGenerator {
         return sb.ToString();
     }
 
-    public static async Task<Email.Email> GenerateConfirmationAsync(IMapper mapper, DatCompanyDto carrier, LoadDto load, List<LoadDto> children, ActualCompanyDto company, List<string> toEmails) {
+    public static async Task<Email.Email> GenerateConfirmationAsync(DatCompanyDto carrier, LoadDto load, List<LoadDto> children, ActualCompanyDto company, List<string> toEmails) {
         if (company.SMTP_Email == null) {
             throw new Exception("SMTP_Email is null");
         }
@@ -245,7 +245,7 @@ public static class DispatchEmailGenerator {
             _l.e($"Load '{load.EntityId}' ConfirmationFile is null");
             throw new Exception("ConfirmationFile is null");
         }
-        var content = _replaceFields1(mapper, new StringBuilder(await File.ReadAllTextAsync(EmailTemplate("confirmation.html"))), carrier, load, children, company, load.ShowPickupAddress);
+        var content = _replaceFields1(new StringBuilder(await File.ReadAllTextAsync(EmailTemplate("confirmation.html"))), carrier, load, children, company, load.ShowPickupAddress);
 
         var email = new Email.Email();
         email.IsBodyHTML = true;

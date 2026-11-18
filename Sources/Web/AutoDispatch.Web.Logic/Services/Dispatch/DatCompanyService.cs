@@ -5,6 +5,7 @@ using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Email;
 using AutoDispatch.Web.Logic.WebServices;
 using AutoDispatch.Web.Logic.WebServices.Safer;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -13,6 +14,10 @@ namespace AutoDispatch.Web.Logic.Services.Dispatch;
 public class DatCompanyService : DispatchCrudService<DatCompanyDto, DatCompany> {
 
     public DatCompanyService(ServicesHost host) : base(host) { }
+
+    protected override DatCompanyDto ToDto(DatCompany model) => DatCompanyConverter.ToDto(model);
+
+    protected override DatCompany ToModel(DatCompanyDto dto) => DatCompanyConverter.ToModel(dto);
 
     /// <summary>
     ///     Gets company details by MC# or DOT# </summary>

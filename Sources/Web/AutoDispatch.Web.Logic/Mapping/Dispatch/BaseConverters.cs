@@ -7,40 +7,20 @@ using AutoDispatch.Web.Logic.Helpers.Dispatch;
 namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 /// <summary>
-///     Конвертеры V1 (Converters/Dispatch/**) на ITypeConverter AutoMapper 13: ConvertCore(source) как TypeConverter V1.
-///     DispatchMappingProfile регистрирует их по namespace через reflection </summary>
-public abstract class TypeConverter<TSource, TDestination> : ITypeConverter<TSource, TDestination> {
+///     Общие поля конвертеров V1 (Converters/Dispatch/**): базовые классы Base_* / BaseObject_* стали методами Fill*.
+///     Конвертеры — статические классы XConverter.ToModel/ToDto, в AutoMapper не регистрируются (решено 2026-11-18) </summary>
+public static class BaseConverter {
 
-    protected ResolutionContext Context { get; private set; }
-
-    public TDestination Convert(TSource source, TDestination destination, ResolutionContext context) {
-        this.Context = context;
-        return source == null ? default : ConvertCore(source);
-    }
-
-    protected abstract TDestination ConvertCore(TSource source);
-}
-
-public abstract class Base_DtoToModel<TBaseDto, TBaseEntity> : TypeConverter<TBaseDto, TBaseEntity>
-    where TBaseDto : BaseDto
-    where TBaseEntity : BaseEntity {
-    protected override TBaseEntity ConvertCore(TBaseDto source) {
-        var destination = Activator.CreateInstance<TBaseEntity>();
+    public static void FillModel(BaseDto source, BaseEntity destination) {
         destination.EntityId = source.EntityId;
         destination.CreatedById = source.CreatedById;
         destination.CreatedDate = source.CreatedDate;
         destination.LastModifiedById = source.LastModifiedById;
         destination.LastModifiedDate = source.LastModifiedDate;
         destination.IsDeleted = source.IsDeleted;
-        return destination;
     }
-}
 
-public abstract class Base_ModelToDto<TBaseEntity, TBaseDto> : TypeConverter<TBaseEntity, TBaseDto>
-    where TBaseEntity : BaseEntity
-    where TBaseDto : BaseDto {
-    protected override TBaseDto ConvertCore(TBaseEntity source) {
-        var destination = Activator.CreateInstance<TBaseDto>();
+    public static void FillDto(BaseEntity source, BaseDto destination) {
         destination.EntityId = source.EntityId;
         destination.CreatedById = source.CreatedById;
         destination.CreatedByName = UserNameCache.Get(source.CreatedById);
@@ -49,29 +29,58 @@ public abstract class Base_ModelToDto<TBaseEntity, TBaseDto> : TypeConverter<TBa
         destination.LastModifiedByName = UserNameCache.Get(source.LastModifiedById);
         destination.LastModifiedDate = source.LastModifiedDate;
         destination.IsDeleted = source.IsDeleted;
-        return destination;
+    }
+
+    public static void FillObjectModel(BaseObjectDto source, BaseObjectEntity destination) {
+        FillModel(source, destination);
+        destination.CompanyId = source.CompanyId;
+        destination.HistoryId = source.HistoryId;
+    }
+
+    public static void FillObjectDto(BaseObjectEntity source, BaseObjectDto destination) {
+        FillDto(source, destination);
+        destination.CompanyId = source.CompanyId;
+        destination.HistoryId = source.HistoryId;
     }
 }
 
-public abstract class BaseObject_DtoToModel<TBaseObjectDto, TBaseObjectEntity> : Base_DtoToModel<TBaseObjectDto, TBaseObjectEntity>
-    where TBaseObjectDto : BaseObjectDto
-    where TBaseObjectEntity : BaseObjectEntity {
-    protected override TBaseObjectEntity ConvertCore(TBaseObjectDto source) {
-        var destination = base.ConvertCore(source);
-        destination.CompanyId = source.CompanyId;
-        destination.HistoryId = source.HistoryId;
-        return destination;
-    }
-}
+/// <summary>
+///     Конвертер по типу объекта для обобщённых методов DispatchService (SaveWithHistoryAsync, BaseDeleteAsync, Undo),
+///     как V1 Object.DtoToVm в App: цепочка типов → конкретный XConverter </summary>
+public static class ObjectConverter {
 
-public abstract class BaseObject_ModelToDto<TBaseObjectEntity, TBaseObjectDto> : Base_ModelToDto<TBaseObjectEntity, TBaseObjectDto>
-    where TBaseObjectEntity : BaseObjectEntity
-    where TBaseObjectDto : BaseObjectDto {
-    protected override TBaseObjectDto ConvertCore(TBaseObjectEntity source) {
-        var destination = base.ConvertCore(source);
-        destination.CompanyId = source.CompanyId;
-        destination.HistoryId = source.HistoryId;
-        return destination;
+    public static TEntity ToModel<TEntity>(BaseObjectDto source) where TEntity : BaseObjectEntity {
+        if (source == null) return null;
+        BaseObjectEntity result = source switch {
+            LoadDto dto => LoadConverter.ToModel(dto),
+            DriverDto dto => DriverConverter.ToModel(dto),
+            TruckDto dto => TruckConverter.ToModel(dto),
+            TrailerDto dto => TrailerConverter.ToModel(dto),
+            DatCompanyDto dto => DatCompanyConverter.ToModel(dto),
+            DatDriverDto dto => DatDriverConverter.ToModel(dto),
+            WarehouseDto dto => WarehouseConverter.ToModel(dto),
+            YardDto dto => YardConverter.ToModel(dto),
+            SetupPacketDto dto => SetupPacketConverter.ToModel(dto),
+            _ => throw new Exception("Undefined type of BaseObjectDto: " + source.GetType())
+        };
+        return (TEntity)result;
+    }
+
+    public static TDto ToDto<TDto>(BaseObjectEntity source, IMapper mapper) where TDto : BaseObjectDto {
+        if (source == null) return null;
+        BaseObjectDto result = source switch {
+            Load entity => LoadConverter.ToDto(entity),
+            Driver entity => DriverConverter.ToDto(entity),
+            Truck entity => TruckConverter.ToDto(entity),
+            Trailer entity => TrailerConverter.ToDto(entity),
+            DatCompany entity => DatCompanyConverter.ToDto(entity),
+            DatDriver entity => DatDriverConverter.ToDto(entity),
+            Warehouse entity => WarehouseConverter.ToDto(entity),
+            Yard entity => YardConverter.ToDto(entity),
+            SetupPacket entity => SetupPacketConverter.ToDto(entity, mapper),
+            _ => throw new Exception("Undefined type of BaseObjectEntity: " + source.GetType())
+        };
+        return (TDto)result;
     }
 }
 

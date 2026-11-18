@@ -1,16 +1,14 @@
-using System.Reflection;
 using AutoMapper;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Dtos.Dispatch;
-using AutoDispatch.Web.Logic.Mapping.Dispatch;
-using AutoDispatch.Web.Logic.WebServices.Safer;
 
 namespace AutoDispatch.Web.Logic.Mapping;
 
 /// <summary>
-///     Маппинг dispatch (V1 BllMappingProfile): простые пары ReverseMap плюс все ITypeConverter из Mapping.Dispatch
-///     (регистрация по namespace через reflection, как в V1). ActualCompany* контракта ↔ DispatchCompany* </summary>
+///     Маппинг dispatch (V1 BllMappingProfile): только автоматические пары (ReverseMap, простой ForMember).
+///     Конвертеры с реализацией — статические XConverter в Mapping.Dispatch, здесь не регистрируются (решено 2026-11-18).
+///     ActualCompany* контракта ↔ DispatchCompany* </summary>
 public class DispatchMappingProfile : Profile {
     public DispatchMappingProfile() {
         CreateMap<ShipperReceiverCompany, ShipperReceiverCompanyDto>().ReverseMap();
@@ -27,7 +25,6 @@ public class DispatchMappingProfile : Profile {
         CreateMap<SetupPacketContact, SetupPacketContactDto>().ReverseMap();
         CreateMap<SetupPacketReference, SetupPacketReferenceDto>().ReverseMap();
         CreateMap<SetupPacketInsuranceAgency, SetupPacketInsuranceAgencyDto>().ReverseMap();
-        CreateMap<SaferCompanyModel, CensusCompanyDto>().ConvertUsing<SaferCompany_ModelToDto>();
 
         // шаги CarrierRegistration (V1 BllMappingProfile): модель шага ↔ SetupPacketDto (у шага 13 — только Step, файлы сохраняет контроллер)
         CreateMap<SetupPacketStep00Model, SetupPacketDto>().ReverseMap();
@@ -45,16 +42,5 @@ public class DispatchMappingProfile : Profile {
         CreateMap<SetupPacketStep12Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep13Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep14Model, SetupPacketDto>().ReverseMap();
-
-        var converterInterface = typeof(ITypeConverter<,>);
-        var ns = typeof(TypeConverter<,>).Namespace;
-        foreach (var type in Assembly.GetExecutingAssembly().GetTypes()) {
-            if (type.Namespace != ns || type.IsClass == false || type.IsAbstract || type.IsGenericTypeDefinition) continue;
-            var converterType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == converterInterface);
-            if (converterType == null) continue;
-            var map = GetType().GetMethod(nameof(CreateMap), Type.EmptyTypes)
-                .MakeGenericMethod(converterType.GenericTypeArguments).Invoke(this, null);
-            map.GetType().GetMethod("ConvertUsing", Type.EmptyTypes).MakeGenericMethod(type).Invoke(map, null);
-        }
     }
 }

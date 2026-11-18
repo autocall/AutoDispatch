@@ -16,7 +16,7 @@ public abstract class DispatchCrudService<TDto, TEntity> : DispatchBaseService
 
     public virtual async Task<TDto> GetByIdAsync(Guid id) {
         var model = await GetByIdAsync<TEntity>(id);
-        return Mapper.Map<TDto>(model);
+        return ToDto(model);
     }
 
     public virtual async Task<TDto> GetByIdAsync(Guid? id) {
@@ -25,12 +25,12 @@ public abstract class DispatchCrudService<TDto, TEntity> : DispatchBaseService
 
     public virtual async Task<List<TDto>> GetAllAsync() {
         var models = await Alive<TEntity>().ToListAsync();
-        return Mapper.Map<List<TDto>>(models);
+        return models.Select(ToDto).ToList();
     }
 
     public virtual async Task<List<TDto>> SearchForAsync(System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) {
         var models = await Alive<TEntity>().Where(predicate).ToListAsync();
-        return Mapper.Map<List<TDto>>(models);
+        return models.Select(ToDto).ToList();
     }
 
     /// <summary>
@@ -38,7 +38,7 @@ public abstract class DispatchCrudService<TDto, TEntity> : DispatchBaseService
     public virtual async Task SaveAsync(TDto dto, Guid userId) {
         var model = await GetByIdAsync<TEntity>(dto.EntityId);
         if (model == null) {
-            model = Mapper.Map<TEntity>(dto);
+            model = ToModel(dto);
             if (model.EntityId == Guid.Empty) {
                 dto.EntityId = model.EntityId = Guid.NewGuid();
             }
@@ -46,7 +46,7 @@ public abstract class DispatchCrudService<TDto, TEntity> : DispatchBaseService
             model.CreatedDate = model.LastModifiedDate = DateTime.UtcNow;
             await InsertAsync(model);
         } else {
-            var newModel = Mapper.Map<TEntity>(dto);
+            var newModel = ToModel(dto);
             newModel.CreatedById = model.CreatedById;
             newModel.CreatedDate = model.CreatedDate;
             newModel.LastModifiedById = userId;
@@ -55,6 +55,15 @@ public abstract class DispatchCrudService<TDto, TEntity> : DispatchBaseService
             await UpdateAsync(newModel);
         }
     }
+
+    /// <summary>
+    ///     Сущность → DTO. По умолчанию автоматический маппинг AutoMapper; сервисы с конвертером (DatCompany, DispatchCompany,
+    ///     SetupPacket) переопределяют вызовом статического XConverter </summary>
+    protected virtual TDto ToDto(TEntity model) => Mapper.Map<TDto>(model);
+
+    /// <summary>
+    ///     DTO → сущность, см. <see cref="ToDto"/> </summary>
+    protected virtual TEntity ToModel(TDto dto) => Mapper.Map<TEntity>(dto);
 
     /// <summary>
     ///     Поля, которые при обновлении берутся из БД, если DTO их не прислал (пароли) </summary>

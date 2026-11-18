@@ -1,6 +1,7 @@
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Logic.WebServices;
+using AutoDispatch.Web.Logic.WebServices.Safer;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -13,7 +14,7 @@ public class CensusService : BaseService {
     public async Task<List<CensusCompanyDto>> SearchCensusCompaniesAsync(CensusCompanySearchDto search) {
         var result = await Host.GetService<BrokersnapshotWebService>().CompaniesAsync(Convert(search));
         if (result.Success) {
-            return Mapper.Map<List<CensusCompanyDto>>(result.Data);
+            return result.Data.Select(SaferCompanyConverter.ToDto).ToList();
         }
         throw new InfoException(result.ErrorMessage);
     }

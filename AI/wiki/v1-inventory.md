@@ -31,6 +31,7 @@ AutoMapper 4.2.1, log4net/Common.Logging, Newtonsoft 8, System.ServiceModel. `Au
 | `DatCompanyDataService` | `api/DatCompany/Search?dot&mc`, `api/DatCompany/SendSetupPocket`, `Home/SearchCensusCompanies`, `CarrierRegistration/FactoringCompanies` |
 | `HelperDataService` | `Dispatch/SearchLoads`, `SearchCustomers`, `GetPlaceAutocomplete`, `GetPlaceDetails`, `GetDistance`, `ExtractLoadFromPdf(2)` |
 | `ActualCompanyDataService` | `ActualCompany/ActualCompaniesByUserId` |
+| `SettingsRepository` (`AutoCall.Data`, WCF) | `svc/SettingsService`: `GetSettingsBinary/SetSettingsBinary`, `Get/SetDefaultColumnSettings`, `Get/SetDefaultFilterSettings` — настройки пользователя и дефолты компании, см. [[user-settings]] (добавлено 2026-11-17) |
 
 Не dispatch, хотя лежит в `Dialogs/Dispatch`: `SimilarLoadsDialog` (WinForms `ReportViewer`, `SimilarLoadsReport.rdlc`) —
 открывается кнопкой «Similar Loads» из карточки груза лоадборда (`RecordBaseDetailsDialog.cs:181`, `LoadDetails*Dialog.xaml`),

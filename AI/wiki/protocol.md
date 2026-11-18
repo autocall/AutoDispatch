@@ -100,6 +100,7 @@ JWT Bearer, ответ — данные как есть через `JsonSuccess`
 | `Api/SetupPacket/FactoringCompanies` | GET | `SetupPacketFactoringCompanyDto[]` по имени | `CarrierRegistration/FactoringCompanies` |
 | `Api/Account/SignIn` | POST `{email, password}` | `SessionDto` + `hasBnsfRailway`, `customStatuses` (как OAuth V1) | `Api/Token` |
 | `Api/Account/Session` | GET | `SessionDto` без токена | `Api/Account/Check` (на сервере V1 не было) |
+| `Api/Settings` (этап 7, не сделан) | GET; `PUT Api/Settings/{section}`, тело — JSON секции | все секции одним объектом или `null` ([[user-settings]]) | WCF `svc/SettingsService` |
 
 Не переносятся: `api/DatCompany/SendSetupPocket` (на сервере V1 отсутствует), `Api/Account/Logout` (JWT без серверной сессии).
 `/Temp/{guid}.png` — статика из `AppSettings.TempPath` без авторизации, как `Web/Temp` V1 (OpenAI забирает картинки по URL).

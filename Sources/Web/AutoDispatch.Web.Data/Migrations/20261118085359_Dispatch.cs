@@ -11,6 +11,12 @@ namespace AutoDispatch.Web.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<string>(
+                name: "Signature",
+                table: "IdentityUsers",
+                type: "varchar(64)",
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "CompanyCustomStatus",
                 columns: table => new
@@ -911,29 +917,6 @@ namespace AutoDispatch.Web.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CacheLoadIndex",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "getdate()"),
-                    CompanyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LoadId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    City = table.Column<string>(type: "varchar(16)", unicode: false, maxLength: 16, nullable: false),
-                    Company = table.Column<string>(type: "varchar(16)", unicode: false, maxLength: 16, nullable: false),
-                    Type = table.Column<byte>(type: "tinyint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CacheLoadIndex", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CacheLoadIndex_Company_CompanyId",
-                        column: x => x.CompanyId,
-                        principalTable: "Company",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Driver",
                 columns: table => new
                 {
@@ -1329,26 +1312,6 @@ namespace AutoDispatch.Web.Data.Migrations
                         principalTable: "Load",
                         principalColumn: "EntityId");
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CacheLoadIndex_CompanyId",
-                table: "CacheLoadIndex",
-                column: "CompanyId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CacheLoadIndex_LoadId",
-                table: "CacheLoadIndex",
-                column: "LoadId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CacheLoadLink_City",
-                table: "CacheLoadIndex",
-                column: "City");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CacheLoadLink_Company",
-                table: "CacheLoadIndex",
-                column: "Company");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CompanyCustomStatus_CompanyId",
@@ -1806,13 +1769,6 @@ namespace AutoDispatch.Web.Data.Migrations
                 column: "HistoryId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_CacheLoadIndex_Load_LoadId",
-                table: "CacheLoadIndex",
-                column: "LoadId",
-                principalTable: "Load",
-                principalColumn: "EntityId");
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_Driver_Load_CurrentLoadId",
                 table: "Driver",
                 column: "CurrentLoadId",
@@ -1824,11 +1780,80 @@ namespace AutoDispatch.Web.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Driver_Load_CurrentLoadId",
+                name: "FK_DatCompany_DispatchCompany_DispatchCompanyId",
+                table: "DatCompany");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Load_DispatchCompany_DispatchCompanyId",
+                table: "Load");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DatCompany_HistoryObject_HistoryId",
+                table: "DatCompany");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DatDriver_HistoryObject_HistoryId",
+                table: "DatDriver");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Driver_HistoryObject_HistoryId",
                 table: "Driver");
 
-            migrationBuilder.DropTable(
-                name: "CacheLoadIndex");
+            migrationBuilder.DropForeignKey(
+                name: "FK_Load_HistoryObject_HistoryId",
+                table: "Load");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_SetupPacket_HistoryObject_HistoryId",
+                table: "SetupPacket");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Trailer_HistoryObject_HistoryId",
+                table: "Trailer");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Truck_HistoryObject_HistoryId",
+                table: "Truck");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Warehouse_HistoryObject_HistoryId",
+                table: "Warehouse");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Yard_HistoryObject_HistoryId",
+                table: "Yard");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DatCompany_SetupPacket_SetupPacketId",
+                table: "DatCompany");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Load_Trailer_HistoryAssignedTrailerId",
+                table: "Load");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Load_Trailer_HistoryTrailerId",
+                table: "Load");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Load_Trailer_TrailerId",
+                table: "Load");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Truck_Trailer_TrailerId",
+                table: "Truck");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Driver_Truck_TruckId",
+                table: "Driver");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Load_Truck_HistoryTruckId",
+                table: "Load");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Driver_Load_CurrentLoadId",
+                table: "Driver");
 
             migrationBuilder.DropTable(
                 name: "CompanyCustomStatus");
@@ -1867,6 +1892,30 @@ namespace AutoDispatch.Web.Data.Migrations
                 name: "HistoryLocationTrailer");
 
             migrationBuilder.DropTable(
+                name: "DispatchCompany");
+
+            migrationBuilder.DropTable(
+                name: "HistoryObject");
+
+            migrationBuilder.DropTable(
+                name: "SetupPacket");
+
+            migrationBuilder.DropTable(
+                name: "SetupPacketContact");
+
+            migrationBuilder.DropTable(
+                name: "SetupPacketInsuranceAgency");
+
+            migrationBuilder.DropTable(
+                name: "Trailer");
+
+            migrationBuilder.DropTable(
+                name: "Yard");
+
+            migrationBuilder.DropTable(
+                name: "Truck");
+
+            migrationBuilder.DropTable(
                 name: "Load");
 
             migrationBuilder.DropTable(
@@ -1887,29 +1936,9 @@ namespace AutoDispatch.Web.Data.Migrations
             migrationBuilder.DropTable(
                 name: "Warehouse");
 
-            migrationBuilder.DropTable(
-                name: "DispatchCompany");
-
-            migrationBuilder.DropTable(
-                name: "SetupPacket");
-
-            migrationBuilder.DropTable(
-                name: "Truck");
-
-            migrationBuilder.DropTable(
-                name: "SetupPacketContact");
-
-            migrationBuilder.DropTable(
-                name: "SetupPacketInsuranceAgency");
-
-            migrationBuilder.DropTable(
-                name: "Trailer");
-
-            migrationBuilder.DropTable(
-                name: "Yard");
-
-            migrationBuilder.DropTable(
-                name: "HistoryObject");
+            migrationBuilder.DropColumn(
+                name: "Signature",
+                table: "IdentityUsers");
         }
     }
 }

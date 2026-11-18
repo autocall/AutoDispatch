@@ -3,6 +3,7 @@ using LinqToDB.Async;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -13,15 +14,15 @@ public class ConfirmationService : DispatchBaseService {
     public ConfirmationService(ServicesHost host) : base(host) { }
 
     public async Task<LoadDto> GetLoadByIdAsync(Guid loadId) {
-        return Mapper.Map<LoadDto>(await GetByIdAsync<Load>(loadId));
+        return LoadConverter.ToDto(await GetByIdAsync<Load>(loadId));
     }
 
     public async Task<DatCompanyDto> GetDatCompanyByIdAsync(Guid datCompanyId) {
-        return Mapper.Map<DatCompanyDto>(await GetByIdAsync<DatCompany>(datCompanyId));
+        return DatCompanyConverter.ToDto(await GetByIdAsync<DatCompany>(datCompanyId));
     }
 
     public async Task<ActualCompanyDto> GetActualCompanyByIdAsync(Guid actualCompanyId) {
-        return Mapper.Map<ActualCompanyDto>(await GetByIdAsync<DispatchCompany>(actualCompanyId));
+        return DispatchCompanyConverter.ToDto(await GetByIdAsync<DispatchCompany>(actualCompanyId), Mapper);
     }
 }
 

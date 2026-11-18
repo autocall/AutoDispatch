@@ -166,3 +166,63 @@ EO.WebBrowser → WebView2 на этапе 7), публичные URL как в 
 
 ## [2026-11-17] decision | Отступления этапа 6 приняты
 Пользователь: выключенные шаги 3, 8–12 и views версии 1 не переносить; packet без карточки FMCSA создаётся без предзаполнения — оставить. [[plan]], [[setup-packet]].
+
+## [2026-11-17] decision | Настройки пользователя App
+Пользователь: перенести текущие настройки, разделить по секциям как в V3; `Settings.Binary` не переносить — только свойства dispatch.
+Найдено при разборе этапа 7: App V1 хранил настройки через WCF `svc/SettingsService` (в инвентаре пропущено). Классификация 16 секций по коду V1,
+шаг 0.5 блока 0 `migrate from autocall dispatch.sql` (проверен select'ом на `autocall`: 17 пользователей, 201 строка, JSON валиден).
+Открыто: дефолты колонок/фильтров компании (`Company.DefaultColumnSettings/DefaultFilterSettings`, заполнено у 1 из 7). [[user-settings]], [[plan]],
+[[data-migration]], [[protocol]], [[v1-inventory]].
+
+## [2026-11-17] decision | Дефолты колонок и фильтров компании не переносятся
+Пользователь: `Company.DefaultColumnSettings/DefaultFilterSettings` V1 не переносить — новые пользователи получают дефолты кода App. [[user-settings]], [[plan]].
+
+## [2026-11-17] decision | Telerik WPF в App — R1 2022 WPF60, как в V3
+Решение пользователя: не «текущие пакеты», а установленный R1 2022 `Binaries/WPF60` (2022.1.222) по `HintPath`. Сверка 26 DLL V1 (2021.1.223):
+19 есть с теми же именами, 7 (Documents, FormatProviders.*, RichTextBoxUI) слиты в `Telerik.Windows.Controls.RichTextBox.dll` с теми же namespace. [[plan]].
+
+## [2026-11-18] decision | DI и AutoMapper в App — как в AutoCall V3
+Решение пользователя: MS DI с регистрацией конкретных классов без интерфейсов, все регистрации при старте; AutoMapper 12 только для
+автоматических маппингов; конвертеры V1 — статические `XConverter.ToVm/ToDto` (F12 ведёт в код), без reflection. Отступление от V3 —
+`App.Services` в UI (~60 мест: диалоги V1 создаются через `new`). Отвергнут фасад `ServiceLocator` + прослойка `TypeConverter`. [[plan]] «Решить».
+
+## [2026-11-18] refactor | Сервер: конвертеры dispatch — статические классы, DispatchMappingProfile без reflection
+По решению пользователя правится только `DispatchMappingProfile`: ~30 конвертеров `Mapping/Dispatch` → `XConverter.ToModel/ToDto`,
+`BaseConverter.Fill*`, `ObjectConverter` для обобщённых методов `DispatchService`, `DispatchCrudService.ToDto/ToModel`; около 100 мест
+`Mapper.Map<…>` → вызов конвертера. Сборка без ошибок, офлайн-тесты 27/27 (новый `Test11_ObjectConverterByType`); 12 HTTP-тестов
+ждут запущенного сервера (миграции). [[web-logic]], [[plan]].
+
+## [2026-11-18] query | Сканер TWAIN в App — использование по боевой БД
+Схемы трейлеров сканировала одна активная компания (BEST AMERICAN): 2 454 схемы, 2020–2024, последняя 2024-09-01, после — ни одной.
+`ScanEmail` у 2 пользователей. Сканы документов груза не отличить от загрузки. Вопрос открыт в [[plan]] «Решить» («Сканер TWAIN в App»).
+
+## [2026-11-18] decision | Сканер TWAIN в App — переносится как есть
+Решение пользователя: проверить использование у клиентов нельзя, сканер переносится как есть (TwainDotNet). Если под net10 или со сканером
+клиента не заработает — переделать `ScannerDialog` на NTwain. [[plan]] «Решить», этап 7.
+
+## [2026-11-18] decision | Сканер: ScanFileHelper.FindFile/RenameTempFile — закомментированными
+Решение пользователя: мёртвый код `FindFile` и `RenameTempFile` и вызов в `DispatchActions` переносятся закомментированными с пометкой;
+`DeleteOldTempFiles` остаётся. [[plan]] «Решить» — «Сканер TWAIN в App».
+
+## [2026-11-18] lint | Предел загрузки файлов закрыт по коду
+App V1 ограничивает файл 20 МБ (`FileSizeHelper.Check20MBSize`), эндпоинты App на сервере с `DisableRequestSizeLimit`, nginx `100m` — достаточно.
+Пометка «уточнить» снята в [[deploy]] и [[web]].
+
+## [2026-11-18] decision | Перенос: Company — все активные компании, в том числе без пользователей
+Блок 6 скрипта переноса падал на `FK_Truck_Company_CompanyId`: UA LOGISTICS INC (`9B33CE4A…`) в `#active` (2 события за 6 мес), но без пользователей
+allowed, поэтому не попала в `#company`, а её Truck/Driver/Trailer/Load перенеслись. Решение пользователя: переносить компанию без пользователей —
+шаг 0.3 берёт `Company` по `#active`. [[data-migration]]
+
+## [2026-11-18] decision | Критерий этапа 7 — проверка на хосте (вариант Б)
+Решение пользователя: проверять на `autodispatch` на `db.myautocall.net`, куда перенесены данные 2026-11-18. Проверено через MCP: доступ есть,
+количество строк 12 основных таблиц совпадает с `autocall`, FK доверенные, 17 пользователей с ролями и настройками. V1 продолжает работать
+(снимок 10:13 UTC). [[plan]] «Решить», [[data-migration]] «Пробный перенос на хосте».
+
+## [2026-11-18] decision | Догон переноса перед сверкой этапа 7; скрипт под догон, файлы
+Решение пользователя: перед сверкой догнать перенос; файлы не синхронизированы. Скрипт `migrate from autocall dispatch.sql` поправлен под повторный
+запуск: окно `#active` зафиксировано с 2026-05-18 (иначе UA LOGISTICS выпала бы 2026-12-08), блок 0 не удаляет `Company` (FK данных после блока 6
+не дали бы удалить) и чистит Identity-claims/logins/tokens, блок 3 дополняет `_MigrateHistoryKeep` и докачивает пропущенные снимки ниже `max(Id)`,
+итог блока 3 выводит `maxId`, шаг удаления записей нового сервера (закомментирован), комментарий блоков 1–5 «не прогонялись» заменён.
+Блок 5 брал только Load/DatCompany/SetupPacket — теперь все сущности с каталогами (Driver, Truck, Trailer, Defect, DefectRepair, DispatchCompany),
+из `autodispatch`, Guid в нижнем регистре. Новый `Scripts/sync-dispatch-files.ps1` (Full пачками с возобновлением, Diff с `-DeleteExtra`).
+Правки скрипта и синхронизация не выполнялись. [[data-migration]] «Догон», «Файлы»; [[plan]] этап 7.

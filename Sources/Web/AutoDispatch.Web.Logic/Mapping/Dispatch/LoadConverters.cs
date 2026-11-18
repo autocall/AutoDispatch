@@ -6,18 +6,21 @@ using AutoDispatch.Web.Data.Entities.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 
-/// <summary>
-///     V1 Load_DtoToModel: ActualCompanyId контракта → DispatchCompanyId, geography → decimal-пары.
-///     Также используется для сериализации снимков истории </summary>
-public class Load_DtoToModel : BaseObject_DtoToModel<LoadDto, Load> {
-    protected override Load ConvertCore(LoadDto source) {
+public static class LoadConverter {
+
+    /// <summary>
+    ///     V1 Load_DtoToModel: ActualCompanyId контракта → DispatchCompanyId, geography → decimal-пары.
+    ///     Также используется для сериализации снимков истории </summary>
+    public static Load ToModel(LoadDto source) {
+        if (source == null) return null;
         if (source.OriginLocation == null) {
             throw new Exception($"[{source.IndexString}]: Require Origin");
         }
         if (source.DestinationLocation == null) {
             throw new Exception($"[{source.IndexString}]: Require Destination");
         }
-        var destination = base.ConvertCore(source);
+        var destination = new Load();
+        BaseConverter.FillObjectModel(source, destination);
         destination.OldOrderId = source.OldOrderId;
         destination.DispatchCompanyId = source.ActualCompanyId;
         destination.Index = source.Index;
@@ -165,11 +168,11 @@ public class Load_DtoToModel : BaseObject_DtoToModel<LoadDto, Load> {
         destination.Layout = LoadLayoutConverter.ToModel(source.Layout);
         return destination;
     }
-}
 
-public class Load_ModelToDto : BaseObject_ModelToDto<Load, LoadDto> {
-    protected override LoadDto ConvertCore(Load source) {
-        var destination = base.ConvertCore(source);
+    public static LoadDto ToDto(Load source) {
+        if (source == null) return null;
+        var destination = new LoadDto();
+        BaseConverter.FillObjectDto(source, destination);
         destination.OldOrderId = source.OldOrderId;
         destination.ActualCompanyId = source.DispatchCompanyId;
         destination.Index = source.Index;

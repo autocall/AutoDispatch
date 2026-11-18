@@ -10,6 +10,7 @@ using AutoDispatch.Dtos.Enums;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -19,14 +20,14 @@ public partial class DispatchService {
 
     public async Task<LoadDriversResponseData> LoadDrivers(LoadDriversRequestData request) {
         var entities = await BaseLoadAsync<Driver>(request);
-        var dtos = this.Mapper.Map<List<DriverDto>>(await entities.ToListAsync());
+        var dtos = (await entities.ToListAsync()).Select(DriverConverter.ToDto).ToList();
         await this.LoadNameOfLocationAsync(dtos);
         return new LoadDriversResponseData { Drivers = dtos };
     }
 
     public async Task<LoadTrucksResponseData> LoadTrucks(LoadTrucksRequestData request) {
         var entities = await BaseLoadAsync<Truck>(request);
-        var dtos = this.Mapper.Map<List<TruckDto>>(await entities.ToListAsync());
+        var dtos = (await entities.ToListAsync()).Select(TruckConverter.ToDto).ToList();
         // NOTES: подгрузка в конвертере приведёт к множеству запросов
         await this.loadDefectsAsync(dtos, request.AllDefects);
         await this.LoadNameOfLocationAsync(dtos);
@@ -47,7 +48,7 @@ public partial class DispatchService {
         } else {
             trailerEntities = trailerEntities.Where(e => e.History == false);
         }
-        var dtos = this.Mapper.Map<List<TrailerDto>>(await trailerEntities.ToListAsync());
+        var dtos = (await trailerEntities.ToListAsync()).Select(TrailerConverter.ToDto).ToList();
         await this.loadDefectsAsync(dtos, request.AllDefects);
         await this.LoadNameOfLocationAsync(dtos);
         return new LoadTrailersResponseData { Trailers = dtos };
@@ -55,19 +56,19 @@ public partial class DispatchService {
 
     public async Task<LoadWarehousesResponseData> LoadWarehouses(LoadWarehousesRequestData request) {
         var entities = await BaseLoadAsync<Warehouse>(request);
-        return new LoadWarehousesResponseData { Warehouses = this.Mapper.Map<List<WarehouseDto>>(await entities.ToListAsync()) };
+        return new LoadWarehousesResponseData { Warehouses = (await entities.ToListAsync()).Select(WarehouseConverter.ToDto).ToList() };
     }
 
     public async Task<LoadYardsResponseData> LoadYards(LoadYardsRequestData request) {
         var entities = await BaseLoadAsync<Yard>(request);
-        return new LoadYardsResponseData { Yards = this.Mapper.Map<List<YardDto>>(await entities.ToListAsync()) };
+        return new LoadYardsResponseData { Yards = (await entities.ToListAsync()).Select(YardConverter.ToDto).ToList() };
     }
 
     public async Task<LoadLoadsResponseData> LoadLoads(LoadLoadsRequestData request) {
         var entities = await BaseLoadAsync<Load>(request);
         var expression = GetHistoryLoadsLambda(request.Types, request.HistoryBegin, request.HistoryEnd);
         var models = await entities.Where(expression).ToListAsync();
-        var dtos = this.Mapper.Map<List<LoadDto>>(models);
+        var dtos = models.Select(LoadConverter.ToDto).ToList();
         dtos = await dtos.IncludeCompaniesAsync(Db);
         await this.LoadNameOfLocationAsync(dtos);
         return new LoadLoadsResponseData { Loads = dtos };
@@ -77,7 +78,7 @@ public partial class DispatchService {
     public async Task<LoadLoadsZipResponseData> LoadLoadsZip(LoadLoadsZipRequestData request) {
         var entities = await BaseLoadAsync<Load>(request);
         var expression = GetHistoryLoadsLambda(request.Types, request.HistoryBegin, request.HistoryEnd);
-        var dtos = await this.Mapper.Map<List<LoadDto>>(await entities.Where(expression).ToListAsync()).IncludeCompaniesAsync(Db);
+        var dtos = await (await entities.Where(expression).ToListAsync()).Select(LoadConverter.ToDto).ToList().IncludeCompaniesAsync(Db);
         await this.LoadNameOfLocationAsync(dtos);
         return new LoadLoadsZipResponseData {
             LoadsZip = dtos.DivideBy(100).Select(e => ZipExtension.SerializeObject(e)).ToList()
@@ -179,12 +180,12 @@ OFFSET ({skip}) ROWS FETCH NEXT ({top}) ROWS ONLY");
         var loads = await Alive<Load>().Where(e => loadIds.Contains(e.EntityId)).ToListAsync();
         var subLoads = await Alive<Load>().Where(e => e.ParentId != null && loadIds.Contains(e.ParentId.Value)).ToListAsync();
 
-        var dtos = await Mapper.Map<List<LoadDto>>(loads.Union(subLoads)).IncludeCompaniesAsync(Db);
+        var dtos = await loads.Union(subLoads).Select(LoadConverter.ToDto).ToList().IncludeCompaniesAsync(Db);
         await this.LoadNameOfLocationAsync(dtos);
 
         var actualCompanyIds = dtos.Select(e => e.ActualCompanyId).Distinct().ToList();
         var actualCompanies = await Alive<DispatchCompany>().Where(e => actualCompanyIds.Contains(e.EntityId)).ToListAsync();
-        var actualCompanyDtos = Mapper.Map<List<ActualCompanyDto>>(actualCompanies);
+        var actualCompanyDtos = actualCompanies.Select(e => DispatchCompanyConverter.ToDto(e, Mapper)).ToList();
 
         return new LoadHistory2ResponseData {
             Loads = dtos,
@@ -251,17 +252,17 @@ OFFSET ({skip}) ROWS FETCH NEXT ({top}) ROWS ONLY");
     public async Task<LoadSetupPacketsResponseData> LoadSetupPackets(LoadSetupPacketsRequestData request) {
         var entities = await (await BaseLoadAsync<SetupPacket>(request)).ToListAsync();
         await Host.GetService<SetupPacketService>().LoadRelationsAsync(entities);
-        return new LoadSetupPacketsResponseData { SetupPackets = this.Mapper.Map<List<SetupPacketDto>>(entities) };
+        return new LoadSetupPacketsResponseData { SetupPackets = entities.Select(e => SetupPacketConverter.ToDto(e, this.Mapper)).ToList() };
     }
 
     public async Task<LoadDatCompaniesResponseData> LoadDatCompanies(LoadDatCompaniesRequestData request) {
         var entities = await BaseLoadAsync<DatCompany>(request);
-        return new LoadDatCompaniesResponseData { DatCompanies = this.Mapper.Map<List<DatCompanyDto>>(await entities.Where(e => e.IsDeleted == false).ToListAsync()) };
+        return new LoadDatCompaniesResponseData { DatCompanies = (await entities.Where(e => e.IsDeleted == false).ToListAsync()).Select(DatCompanyConverter.ToDto).ToList() };
     }
 
     public async Task<LoadDatDriversResponseData> LoadDatDrivers(LoadDatDriversRequestData request) {
         var entities = await BaseLoadAsync<DatDriver>(request);
-        var dtos = this.Mapper.Map<List<DatDriverDto>>(await entities.ToListAsync());
+        var dtos = (await entities.ToListAsync()).Select(DatDriverConverter.ToDto).ToList();
         await this.LoadNameOfLocationAsync(dtos);
         return new LoadDatDriversResponseData { DatDrivers = dtos };
     }

@@ -1,5 +1,4 @@
 using AutoDispatch.Dtos.Dtos;
-using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.WebServices.Safer;
 
@@ -84,8 +83,9 @@ public class SaferCompanyModel {
 
 /// <summary>
 ///     V1 Converters/Dispatch/Safer/WebModelToDto </summary>
-public class SaferCompany_ModelToDto : TypeConverter<SaferCompanyModel, CensusCompanyDto> {
-    protected override CensusCompanyDto ConvertCore(SaferCompanyModel source) {
+public static class SaferCompanyConverter {
+    public static CensusCompanyDto ToDto(SaferCompanyModel source) {
+        if (source == null) return null;
         var destination = new CensusCompanyDto();
         destination.CARSHIP = source.CARSHIP;
         destination.DOT_NUMBER = source.DOT_NUMBER;

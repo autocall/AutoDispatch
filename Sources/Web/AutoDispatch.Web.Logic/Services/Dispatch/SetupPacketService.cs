@@ -9,6 +9,7 @@ using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Email;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.WebServices;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -18,6 +19,10 @@ namespace AutoDispatch.Web.Logic.Services.Dispatch;
 public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacket> {
 
     public SetupPacketService(ServicesHost host) : base(host) { }
+
+    protected override SetupPacketDto ToDto(SetupPacket model) => SetupPacketConverter.ToDto(model, Mapper);
+
+    protected override SetupPacket ToModel(SetupPacketDto dto) => SetupPacketConverter.ToModel(dto);
 
     /// <summary>
     ///     Get all Factoring Companies </summary>
@@ -166,7 +171,7 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
     public async Task OnlySaveAsync(SetupPacketDto dto, Guid userId) {
         var model = await GetByIdAsync<SetupPacket>(dto.EntityId);
         if (model != null) {
-            var newModel = Mapper.Map<SetupPacket>(dto);
+            var newModel = SetupPacketConverter.ToModel(dto);
             newModel.CreatedById = model.CreatedById;
             newModel.CreatedDate = model.CreatedDate;
             newModel.LastModifiedById = userId;
@@ -282,13 +287,13 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
         var store = await GetByIdAsync<SetupPacket>(id);
         if (store == null) return null;
         await LoadRelationsAsync(new[] { store });
-        return Mapper.Map<SetupPacketDto>(store);
+        return SetupPacketConverter.ToDto(store, Mapper);
     }
 
     public override async Task<List<SetupPacketDto>> GetAllAsync() {
         var stores = await Alive<SetupPacket>().ToListAsync();
         await LoadRelationsAsync(stores);
-        return Mapper.Map<List<SetupPacketDto>>(stores);
+        return stores.Select(e => SetupPacketConverter.ToDto(e, Mapper)).ToList();
     }
 
     /// <summary>

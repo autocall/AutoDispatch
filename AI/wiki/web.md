@@ -31,7 +31,7 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
 
 - **`UserSetting` оставлен** только для секции `Map` (настройки карты `/Map`: тип, трафик, погода, тема). План называл его в
   удаляемом; без него `MapController.SaveSettings` и `map_controller.ts` теряли бы сохранение. `Api/Settings` (секции App) убран,
-  `UserSettingService` — только `GetMapAsync/SetMapAsync`.
+  `UserSettingService` — только `GetMapAsync/SetMapAsync`. С 2026-11-17 решено вернуть секции App (`Api/Settings`) на этапе 7 — [[user-settings]].
 - **`RoleEnum`** = роли V1 с модулем AutoDispatch: Agent 1, Warehouse 2, Dispatcher 3, Sales 4, Accounting 5, Owner 6, Admin 7
   (решение этапа 0). Seed создаёт их все; форма пользователя по умолчанию Dispatcher. Права по ролям — этапы 3–6.
 - **Метрики**: остались Web CPU, DB CPU, Geocoding, Online, App exceptions; показатели dispatch — этап 9.
@@ -55,7 +55,7 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
 ## Deploy и скрипты
 
 `Deploy/AutoDispatch.Web/{Dockerfile,appsettings.Production.json.example}` (+ volume `/files`), `Deploy/nginx/dispatch.myautocall.net.conf`
-(порт 5005, `client_max_body_size 100m` — предел уточнить), `Deploy/server-setup.txt`, `Deploy/metric_cpu.sh`,
+(порт 5005, `client_max_body_size 100m` — хватает: файл App до 20 МБ, см. [[deploy]]), `Deploy/server-setup.txt`, `Deploy/metric_cpu.sh`,
 `Scripts/publish-autodispatch-web.ps1` (контейнер `autodispatch.web`, `-v /home/autodispatch/files:/files`), `Scripts/commands.txt`,
 `DataBase/create autodispatch*.sql`, `grant metrics autodispatch.sql`, `create log indexes.sql`. Подробности — [[deploy]].
 

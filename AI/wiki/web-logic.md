@@ -14,7 +14,7 @@
 | `Services/Dispatch/DispatchService*.cs` | 9 partial-файлов: ядро и события компании, `Location`, `Load` (поиск истории, `LoadHistory2` сырой SQL с гаверсинусом, статистика), `Save` (все Save*/Delete*, история и снимки), `Files` (дефекты, файлы, страховка), `Emails` (SMTP компании, setup packet, инвойсы, confirmation, SMS), `Undo`, `Trackers` (CarrierView, BNSF, Waiting), `Events` (long-polling `EventNotificationAsync`) | `DispatchService.cs` 4651 строка |
 | `Services/Dispatch/IDispatchService.cs` | 74 метода с `[MinAccess]` — таблица `Name → handler` для `Api/Dispatch/Request` (этап 4) | `IDispatchService` |
 | `Services/Dispatch/*Service.cs` | `DatCompanyService`, `DispatchCompanyService` (=ActualCompany), `CensusService`, `SetupPacketService`, `ConfirmationService`, `CustomStatusService`, `CustomerCompanyService`, `ShipperReceiverCompanyService`, `FactoringCompanyService`, `HistoryCleanupService`, `GeocodeService`, `FixLocationLoadsService`, `ReportService`, `OpenAIService` | те же имена |
-| `Mapping/Dispatch/*`, `DispatchMappingProfile` | конвертеры `ITypeConverter` (регистрация по namespace через reflection) и простые `ReverseMap`; профиль добавлен в `Program.cs` | `Converters/Dispatch/**`, `BllMappingProfile` |
+| `Mapping/Dispatch/*`, `DispatchMappingProfile` | конвертеры — статические классы `XConverter.ToModel/ToDto` (с 2026-11-18, см. ниже), профиль — только автоматические пары (`ReverseMap`, простой `ForMember`); профиль добавлен в `Program.cs` | `Converters/Dispatch/**`, `BllMappingProfile` |
 | `WebServices/` | `CarrierView`, `Bnsf` (HttpClient + cookies на запрос), `Safer` (FMCSA + `BrokersnapshotWebService.CompanyAsync/DownloadCertificateAsync`), `SmsWebService` (Bandwidth), `OpenAI` | `DataServices/*` |
 | `Helpers/Dispatch/` | `StateHelper` (статика State/Country/Zone, снята с боевой БД 2026-11-13), `DispatchHelper` (номера грузов и инвойсов, rate), `DispatchFileHelper` (пути `FilesPath/{EntityId}`), `LoadCompanyNames`, `UserNameCache`, `SetupPacketBinaryHelper`, `DatCompanyContactHelper`, `LocationHelper`, `ImageHelper` (SkiaSharp), `CompareEntities`, `ExpressionHelper` | `Helpers/*` |
 | `Utils/` | `DispatchPdfGenerator` (iTextSharp: подпись confirmation, merge, схема), `DispatchEmailGenerator` (шаблоны `Resources/Emails`) | `PdfGenerator`, `EmailGenerator` |
@@ -49,6 +49,22 @@
   шрифты через `FontsProviderBase` из `Resources/Fonts` — OFL-замены шрифтов Microsoft (Carlito, Liberation; Wingdings — с хоста `/files/_fonts`), PNG → JPEG через SkiaSharp ([[plan]]).
   Текст PDF для OpenAI — PdfPig с разделителями `----------- PageN -----------` (формат Telerik, на него завязан разбор страниц),
   PNG — PDFtoImage.
+
+
+## Конвертеры — статические классы (2026-11-18)
+
+По решению пользователя (как в AutoCall V3: конвертер открывается по F12, без reflection) конвертеры V1 не регистрируются в AutoMapper:
+- пара `X_DtoToModel`/`X_ModelToDto` → `XConverter.ToModel/ToDto` (`Load`, `Driver`, `Truck`, `Trailer`, `DatCompany`, `DatDriver`, `Warehouse`, `Yard`,
+  `SetupPacket`, `DispatchCompany`, `HistoryLocation*`), `SaferCompanyConverter.ToDto`, `ExpensesConverter.ToExpenses/ToGains`; тела перенесены как были;
+- базовые `Base_*`/`BaseObject_*` → `BaseConverter.FillModel/FillDto/FillObjectModel/FillObjectDto`, `Activator.CreateInstance` → `new`;
+  прослойка `TypeConverter<S,D>` и сканирование сборки в `DispatchMappingProfile` удалены; `null` на входе → `null`, как у прослойки;
+- вложенные автоматические маппинги (`ActualCompanyCustom`, контакты, агентства и References setup packet) остались в AutoMapper:
+  `DispatchCompanyConverter.ToDto` и `SetupPacketConverter.ToDto` принимают `IMapper` параметром;
+- обобщённый код: `DispatchCrudService` — виртуальные `ToDto/ToModel` (по умолчанию `Mapper.Map` для `CustomerCompany`/`ShipperReceiver`,
+  переопределены в `DatCompanyService`, `DispatchCompanyService`, `SetupPacketService`); `SaveWithHistoryAsync`, `BaseDeleteAsync`, Undo в
+  `DispatchService` — `ObjectConverter.ToModel/ToDto` со `switch` по типу (как `Object.DtoToVm` V1 в App).
+Не тронуто: `ModelState2ErrorsConverter` в `ViewMappingProfile` сервера (копия V3) и таблица `DispatchRequestHandlers` (reflection по
+`IDispatchService`, [[protocol]]) — пользователь решил править только `DispatchMappingProfile`. Тест `08_DispatchLogic.Test11_ObjectConverterByType`.
 
 ## Не перенесено (решения в [[plan]])
 

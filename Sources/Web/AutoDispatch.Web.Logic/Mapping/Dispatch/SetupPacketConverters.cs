@@ -1,13 +1,16 @@
+using AutoMapper;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 
-/// <summary>
-///     V1 SetupPacket_DtoToModel: контакты и агентства — только Id (сами записи сохраняет SetupPacketService) </summary>
-public class SetupPacket_DtoToModel : TypeConverter<SetupPacketDto, SetupPacket> {
-    protected override SetupPacket ConvertCore(SetupPacketDto source) {
+public static class SetupPacketConverter {
+
+    /// <summary>
+    ///     V1 SetupPacket_DtoToModel: контакты и агентства — только Id (сами записи сохраняет SetupPacketService) </summary>
+    public static SetupPacket ToModel(SetupPacketDto source) {
+        if (source == null) return null;
         var destination = new SetupPacket();
 
         // sets default version
@@ -224,14 +227,11 @@ public class SetupPacket_DtoToModel : TypeConverter<SetupPacketDto, SetupPacket>
 
         return destination;
     }
-}
 
-/// <summary>
-///     V1 SetupPacket_ModelToDto: контакты, агентства и References — из навигаций, если загружены (SetupPacketService.LoadRelationsAsync) </summary>
-public class SetupPacket_ModelToDto : TypeConverter<SetupPacket, SetupPacketDto> {
-    protected override SetupPacketDto ConvertCore(SetupPacket source) {
-        var mapper = Context.Mapper;
-
+    /// <summary>
+    ///     V1 SetupPacket_ModelToDto: контакты, агентства и References — из навигаций, если загружены (SetupPacketService.LoadRelationsAsync) </summary>
+    public static SetupPacketDto ToDto(SetupPacket source, IMapper mapper) {
+        if (source == null) return null;
         var destination = new SetupPacketDto();
         destination.Version = source.Version;
         destination.CompanyId = source.CompanyId;

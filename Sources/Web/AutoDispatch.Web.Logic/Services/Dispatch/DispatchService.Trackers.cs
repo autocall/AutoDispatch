@@ -15,6 +15,7 @@ using AutoDispatch.Web.Logic.Utils;
 using AutoDispatch.Web.Logic.WebServices;
 using AutoDispatch.Web.Logic.WebServices.Bnsf;
 using AutoDispatch.Web.Logic.WebServices.CarrierView;
+using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -84,7 +85,7 @@ public partial class DispatchService {
         load.TrackerId = response.Data.data.id;
         await Table<Load>().Where(e => e.EntityId == load.EntityId).Set(e => e.TrackerId, load.TrackerId).UpdateAsync();
 
-        var dto = Mapper.Map<LoadDto>(load);
+        var dto = LoadConverter.ToDto(load);
         // V1 ставил CarrierViewLate/Link/Comments/StatusesJson на отсоединённую сущность — в БД они не попадали; их пишет SyncCarrierViewTracker
         dto.CarrierViewPhone = response.Data.data.driver_phone;
         dto.TrackerId = response.Data.data.id;
@@ -115,7 +116,7 @@ public partial class DispatchService {
         if (dataResponse.Data.success == false) {
             throw new InfoException(CombineErrors(dataResponse.Data.errors));
         }
-        var dto = Mapper.Map<LoadDto>(load);
+        var dto = LoadConverter.ToDto(load);
         dto.TrackerId = null;
         dto.CarrierViewPhone = null;
         dto.CarrierViewLink = null;
@@ -184,7 +185,7 @@ public partial class DispatchService {
 
     public async Task<LoadDto> GetLoadByTrackerIdAsync(int id) {
         var model = await Alive<Load>().FirstOrDefaultAsync(e => e.TrackerId == id);
-        return Mapper.Map<LoadDto>(model);
+        return LoadConverter.ToDto(model);
     }
 
     #endregion [ CarrierView Tracker ]
@@ -210,7 +211,7 @@ public partial class DispatchService {
                         (e.WasAtDelivery == false && now - e.LastStatusChangedDate > _2hour && e.Status == status2) ||
                         (e.WasAtDelivery == true && now - e.LastStatusChangedDate > _1hour && e.Status == status2)).ToList();
 
-        var loads = Mapper.Map<List<LoadDto>>(loadEntities);
+        var loads = loadEntities.Select(LoadConverter.ToDto).ToList();
         foreach (var load in loads) {
             switch (load.Status) {
                 case LoadStatus.AtPickUp:
@@ -278,7 +279,7 @@ public partial class DispatchService {
                 throw new InfoException(result.ErrorMessage);
             }
             var trailerDtos = new List<TrailerDto>();
-            var trailers = Mapper.Map<List<TrailerDto>>(await Alive<Trailer>().Where(e => e.CompanyId == company.CompanyId).ToListAsync());
+            var trailers = (await Alive<Trailer>().Where(e => e.CompanyId == company.CompanyId).ToListAsync()).Select(TrailerConverter.ToDto).ToList();
             foreach (TrailerDto trailerDto in trailers) {
                 bool changed = false;
                 var bnsfTrailer = result.Data.Trailers.FirstOrDefault(e => trailerDto.Number == e.Unit);
@@ -347,8 +348,8 @@ public partial class DispatchService {
             var trailerDtos = new List<TrailerDto>();
             List<string> usings = result.Data.Trailers.Select(e => e.Unit).ToList();
             foreach (var subUnits in usings.DivideBy()) {
-                var trailers = Mapper.Map<List<TrailerDto>>(await Alive<Trailer>()
-                    .Where(e => e.CompanyId == company.CompanyId && subUnits.Contains(e.Number) && e.History == false).ToListAsync());
+                var trailers = (await Alive<Trailer>()
+                    .Where(e => e.CompanyId == company.CompanyId && subUnits.Contains(e.Number) && e.History == false).ToListAsync()).Select(TrailerConverter.ToDto).ToList();
                 foreach (TrailerDto trailerDto in trailers) {
                     BnsfRailwayTrailerDto bnsfTrailer = result.Data.Trailers.FirstOrDefault(e => trailerDto.Number == e.Unit);
                     if (bnsfTrailer != null) {

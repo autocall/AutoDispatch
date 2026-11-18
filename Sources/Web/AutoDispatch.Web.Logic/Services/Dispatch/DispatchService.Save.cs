@@ -29,7 +29,7 @@ public partial class DispatchService {
     public async Task<SaveDriverResponseData> SaveDriver(SaveDriverRequestData request) {
         Driver entity = await BaseSaveAsync<DriverDto, Driver>(request.UserId, request.Driver);
         await this._saveEventHistoryDriverAsync(EventTypeModel.Driver, entity, null, request.UserId);
-        DriverDto dto = this.Mapper.Map<DriverDto>(entity);
+        DriverDto dto = DriverConverter.ToDto(entity);
         await this.LoadNameOfLocationAsync(dto);
         return new SaveDriverResponseData { Driver = dto };
     }
@@ -45,7 +45,7 @@ public partial class DispatchService {
         Truck entity = await BaseSaveAsync<TruckDto, Truck>(request.UserId, request.Truck);
         await SaveDefectsAsync(request.Truck.Defects, entity.CompanyId, request.UserId);
         await this._saveEventHistoryTruckAsync(EventTypeModel.Truck, entity, null, request.UserId);
-        TruckDto dto = this.Mapper.Map<TruckDto>(entity);
+        TruckDto dto = TruckConverter.ToDto(entity);
         await this.loadDefectsAsync(new List<TruckDto>() { dto });
         await this.LoadNameOfLocationAsync(dto);
         return new SaveTruckResponseData { Truck = dto };
@@ -56,7 +56,7 @@ public partial class DispatchService {
         var oldLocation = request.Trailer.CurrentLocation;
         if (request.Trailer.YardId != null) {
             var yard = await GetByIdAsync<Yard>(request.Trailer.YardId);
-            yardDto = Mapper.Map<YardDto>(yard);
+            yardDto = YardConverter.ToDto(yard);
             var trucksAny = await Alive<Truck>().AnyAsync(e => e.TrailerId == request.Trailer.EntityId);
             if (trucksAny) {
                 throw new InfoException("Cannot link a trailer with truck and yard");
@@ -73,7 +73,7 @@ public partial class DispatchService {
             await SaveDefectsAsync(request.Trailer.Defects, entity.CompanyId, request.UserId);
         }
         await this._saveEventHistoryTrailerAsync(EventTypeModel.Trailer, entity, request.UserId);
-        TrailerDto dto = this.Mapper.Map<TrailerDto>(entity);
+        TrailerDto dto = TrailerConverter.ToDto(entity);
         if (request.SkipDefects == false) {
             await this.loadDefectsAsync(new List<TrailerDto>() { dto });
         }
@@ -96,13 +96,13 @@ public partial class DispatchService {
     public async Task<SaveWarehouseResponseData> SaveWarehouse(SaveWarehouseRequestData request) {
         Warehouse entity = await BaseSaveAsync<WarehouseDto, Warehouse>(request.UserId, request.Warehouse);
         await this._saveEventWarehouseAsync(entity, request.UserId);
-        return new SaveWarehouseResponseData { Warehouse = this.Mapper.Map<WarehouseDto>(entity) };
+        return new SaveWarehouseResponseData { Warehouse = WarehouseConverter.ToDto(entity) };
     }
 
     public async Task<SaveYardResponseData> SaveYard(SaveYardRequestData request) {
         Yard entity = await BaseSaveAsync<YardDto, Yard>(request.UserId, request.Yard);
         await this._saveEventYardAsync(entity, request.UserId);
-        return new SaveYardResponseData { Yard = this.Mapper.Map<YardDto>(entity) };
+        return new SaveYardResponseData { Yard = YardConverter.ToDto(entity) };
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public partial class DispatchService {
                 load.IsDeleted = parent.IsDeleted;
             }
         }
-        var dto = Mapper.Map<LoadDto>(load);
+        var dto = LoadConverter.ToDto(load);
         return new FixLoadResponseData() {
             Load = (await SaveLoad(new SaveLoadRequestData(request.UserId) { Load = dto })).Load
         };
@@ -213,7 +213,7 @@ public partial class DispatchService {
         }
         Load entity = await BaseSaveAsync<LoadDto, Load>(request.UserId, load, groupId);
         await this._saveEventHistoryLoadAsync(EventTypeModel.BookedLoad, entity, null, LoadParentType.None, request.UserId);
-        LoadDto dto = this.Mapper.Map<LoadDto>(entity);
+        LoadDto dto = LoadConverter.ToDto(entity);
         if (dto.ParentId != null) {
             //changing status for container
             await SaveParentAsync(dto.ParentId.Value, request.UserId, groupId);
@@ -300,7 +300,7 @@ public partial class DispatchService {
             await this._saveEventHistoriesLoadsAsync(EventTypeModel.BookedLoad,
                 entities.ToDictionary(e => e, e => (int?)null), LoadParentType.None, request.UserId);
             // первым Root
-            List<LoadDto> dtos = this.Mapper.Map<List<LoadDto>>(entities.OrderBy(e => e.ParentId));
+            List<LoadDto> dtos = entities.OrderBy(e => e.ParentId).Select(LoadConverter.ToDto).ToList();
             var result = new List<LoadDto>();
             result.AddRange(dtos);
             foreach (var dto in dtos) {
@@ -341,7 +341,7 @@ public partial class DispatchService {
                 var trailer = await GetByIdAsync<Trailer>(load.HistoryTrailerId);
                 // если контейнер был на railway
                 if (trailer != null && trailer.Type == (int)TrailerType.Container && trailer.BnsfUnit != null) {
-                    var trailerDto = Mapper.Map<TrailerDto>(trailer);
+                    var trailerDto = TrailerConverter.ToDto(trailer);
                     trailerDto.History = true;
                     DispatchPdfGenerator.DeleteOriginScheme(trailerDto);
                     await SaveTrailer(new SaveTrailerRequestData(userId) { Trailer = trailerDto });
@@ -419,10 +419,10 @@ public partial class DispatchService {
             oldBoard != parent.Board ||
             oldContainerType != parent.ContainerType ||
             oldDivideType != parent.DivideType) {
-            LoadDto dto = this.Mapper.Map<LoadDto>(parent);
+            LoadDto dto = LoadConverter.ToDto(parent);
             parent = await BaseSaveAsync<LoadDto, Load>(userId, dto, groupId);
             var result = await this._saveEventHistoryLoadAsync(EventTypeModel.BookedLoad, parent, null, LoadParentType.None, userId);
-            return Mapper.Map<List<LoadDto>>(result.loads);
+            return result.loads.Select(LoadConverter.ToDto).ToList();
         }
         return new List<LoadDto>();
     }
@@ -431,7 +431,7 @@ public partial class DispatchService {
     ///     Sets status from parent to children </summary>
     private async Task<List<LoadDto>> SaveChildrenAsync(LoadDto parent, Guid userId, Guid? groupId) {
         var children = await Alive<Load>().Where(e => e.ParentId == parent.EntityId || e.ShipmentId == parent.EntityId).ToListAsync();
-        var childrenDtos = this.Mapper.Map<List<LoadDto>>(children);
+        var childrenDtos = children.Select(LoadConverter.ToDto).ToList();
         var changeDtos = new List<LoadDto>();
         // sets Status from parent
         if (childrenDtos.Any()) {
@@ -494,7 +494,7 @@ public partial class DispatchService {
         // loads contacts
         await Host.GetService<SetupPacketService>().LoadRelationsAsync(new[] { entity });
         await this._saveEventSetupPacketAsync(entity, request.UserId);
-        return new SaveSetupPacketResponseData() { SetupPacket = this.Mapper.Map<SetupPacketDto>(entity) };
+        return new SaveSetupPacketResponseData() { SetupPacket = SetupPacketConverter.ToDto(entity, this.Mapper) };
     }
 
     public async Task<SaveDatCompanyResponseData> SaveDatCompany(SaveDatCompanyRequestData request) {
@@ -506,7 +506,7 @@ public partial class DispatchService {
         }
 
         #region To Send Email
-        var oldDto = Mapper.Map<DatCompanyDto>(await GetByIdAsync<DatCompany>(request.DatCompany.EntityId));
+        var oldDto = DatCompanyConverter.ToDto(await GetByIdAsync<DatCompany>(request.DatCompany.EntityId));
         if (oldDto != null && oldDto.SetupPacketAccept == false && request.DatCompany.SetupPacketAccept == true) {
             request.DatCompany.HistoryId = oldDto.HistoryId;
             request.DatCompany.CompanyId = oldDto.CompanyId;
@@ -518,7 +518,7 @@ public partial class DispatchService {
         LoadCompanyNames.RemoveDatBroker(entity.EntityId);
         await this._saveEventDatCompanyAsync(entity, request.UserId);
 
-        return new SaveDatCompanyResponseData { DatCompany = this.Mapper.Map<DatCompanyDto>(entity) };
+        return new SaveDatCompanyResponseData { DatCompany = DatCompanyConverter.ToDto(entity) };
     }
 
     public async Task<SaveDatDriverResponseData> SaveDatDriver(SaveDatDriverRequestData request) {
@@ -547,7 +547,7 @@ public partial class DispatchService {
                 }
             }
         }
-        DatDriverDto dto = this.Mapper.Map<DatDriverDto>(entity);
+        DatDriverDto dto = DatDriverConverter.ToDto(entity);
         await this.LoadNameOfLocationAsync(dto);
         return new SaveDatDriverResponseData { DatDriver = dto };
     }
@@ -700,7 +700,7 @@ public partial class DispatchService {
         TEntity entity = await GetByIdAsync<TEntity>(dto.EntityId);
         if (entity == null) {
             @new = true;
-            entity = this.Mapper.Map<TEntity>(dto);
+            entity = ObjectConverter.ToModel<TEntity>(dto);
             dto.CreatedById = entity.CreatedById = userId;
             dto.CreatedDate = entity.CreatedDate = DateTime.UtcNow;
             dto.LastModifiedById = entity.LastModifiedById = userId;
@@ -711,7 +711,7 @@ public partial class DispatchService {
             SetSms(entity, @new);
             await InsertAsync(entity);
         } else {
-            TEntity entity2 = this.Mapper.Map<TEntity>(dto);
+            TEntity entity2 = ObjectConverter.ToModel<TEntity>(dto);
             entity2.CreatedById = entity.CreatedById;
             entity2.CreatedDate = entity.CreatedDate;
             _saveWithHistory_SpecialUpdate(entity, entity2, userId);
@@ -726,7 +726,7 @@ public partial class DispatchService {
         }
         #endregion
         #region Correct HistoryObject and Save both
-        historyObject.Data = ZipExtension.SerializeObject(Mapper.Map<TDto>(entity));
+        historyObject.Data = ZipExtension.SerializeObject(ObjectConverter.ToDto<TDto>(entity, Mapper));
         await UpdateAsync(historyObject);
         #endregion
         return entity;
@@ -883,7 +883,7 @@ public partial class DispatchService {
         if (anyChildren == false) {
             Load parent = await GetByIdAsync<Load>(parentId);
             parent.ContainerType = (byte)ContainerType.None;
-            var dto = Mapper.Map<LoadDto>(parent);
+            var dto = LoadConverter.ToDto(parent);
             Load entity = await BaseSaveAsync<LoadDto, Load>(userId, dto);
             await this._saveEventHistoryLoadAsync(EventTypeModel.BookedLoad, entity, null, LoadParentType.None, userId);
         }
@@ -931,7 +931,7 @@ public partial class DispatchService {
             throw new InfoException($"{typeof(TEntity).Name} was not found: {entityId}");
         }
         entity.IsDeleted = true;
-        var dto = Mapper.Map<TDto>(entity);
+        var dto = ObjectConverter.ToDto<TDto>(entity, Mapper);
         entity = await this.SaveWithHistoryAsync<TDto, TEntity>(dto, userId);
         return (dto, entity);
     }
@@ -942,7 +942,7 @@ public partial class DispatchService {
         foreach (var entity in entities) {
             entity.IsDeleted = true;
         }
-        var dtos = Mapper.Map<List<TDto>>(entities);
+        var dtos = entities.Select(e => ObjectConverter.ToDto<TDto>(e, Mapper)).ToList();
         entities = await this.SaveWithHistoriesAsync<TDto, TEntity>(dtos, userId);
         return (entities, dtos);
     }
