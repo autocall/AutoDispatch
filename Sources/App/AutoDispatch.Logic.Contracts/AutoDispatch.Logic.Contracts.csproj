@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Копия V1 App/Project/Logic/AutoDispatch.Logic.Contracts: вьюмодели, модели data-сервисов, перечисления.
+       Интерфейсы сервисов, менеджеров и data-сервисов убраны — DI без интерфейсов (AI/wiki/plan.md «DI и AutoMapper в App»).
+       Из AutoCall.Logic.Contracts V1 сюда перенесено только то, что нужно dispatch (настройки, базовые вьюмодели, софтфон) -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCall.Common\AutoCall.Common.csproj" />
+    <ProjectReference Include="..\AutoDispatch.Data\AutoDispatch.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Telerik.Windows.Controls">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.GridView">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.GridView.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.Navigation">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.Navigation.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Data">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.RichTextBox">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.RichTextBox.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Core">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.Xls">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Xls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Zip">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Zip.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

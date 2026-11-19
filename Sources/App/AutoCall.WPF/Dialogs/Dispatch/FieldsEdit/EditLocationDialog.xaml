@@ -1,0 +1,45 @@
+﻿<Window x:Class="AutoCall.WPF.Dialogs.Dispatch.EditLocationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Map" Height="700" Width="900" WindowStartupLocation="CenterScreen" 
+        Closed="MapDialog_OnClosed"
+        Icon="/AutoDispatch;component/Resources/icon.ico">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0"
+            BorderBrush="Black" BorderThickness="0,0,0,1">
+            <!-- V1: WindowsFormsHost + EO.WinForm.WebControl -->
+            <wv2:WebView2 x:Name="browser"/>
+        </Border>
+
+        <Border Name="bComments" Grid.Row="1" 
+            BorderBrush="Black" BorderThickness="0" Padding="5,0,5,5"
+            VerticalAlignment="Bottom" HorizontalAlignment="Left" >
+            <StackPanel Orientation="Vertical">
+                <TextBlock HorizontalAlignment="Left"
+                    Style="{StaticResource titleTextBlock}"
+                    Text="Comments" />
+                <telerik:XamlDataProvider x:Name="xamlDataProvider" Xaml="{Binding Comments, Mode=TwoWay}" RichTextBox="{Binding ElementName=richTextBox}" SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                <telerik:RadRichTextBox x:Name="richTextBox" 
+                    Width="400" MinHeight="70" Margin="0"
+                    Style="{StaticResource fieldRadRichTextBox}"
+                    VerticalContentAlignment="Top"
+                    IsSelectionMiniToolBarEnabled="True"
+                    IsSpellCheckingEnabled="False"
+                    DocumentInheritsDefaultStyleSettings="True"
+                    FontFamily="Calibri" 
+                    FontSize="14" />
+            </StackPanel>
+        </Border>
+
+        <Button x:Name="btnOk" Grid.Row="2" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="2" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</Window>

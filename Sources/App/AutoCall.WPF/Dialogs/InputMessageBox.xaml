@@ -1,0 +1,31 @@
+﻿<Window x:Class="AutoCall.WPF.Dialogs.InputMessageBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:autoCall="clr-namespace:AutoCall.WPF.Converters.AutoCall"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:core="clr-namespace:AutoCall.WPF.Core"
+    Height="180" Width="400"
+    WindowStartupLocation="CenterScreen"
+    Icon="/AutoDispatch;component/Resources/icon.ico"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Name="tbDescription" Text="test"
+            TextAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox Grid.Row="2" Name="tbText" HorizontalAlignment="Stretch" Margin="5, 0" Style="{StaticResource fieldTextBox}"/>
+        <!--Dialog buttons-->
+        <Button x:Name="btnCancel"
+            Grid.Row="4" Click="OnCancelButtonClicked"
+            Style="{StaticResource CancelButtonStyle}">Cancel</Button>
+        <Button x:Name="btnOk"
+            Grid.Row="4" Click="OnOkButtonClicked"
+            Style="{StaticResource OkButtonStyle}">OK</Button>
+    </Grid>
+</Window>

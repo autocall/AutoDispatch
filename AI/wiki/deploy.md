@@ -60,6 +60,17 @@ Map:Key, Metric:Token` — как в V3; dispatch-специфичные: `Carri
 setup packet (`DownloadFileMC/COI`) с проверкой доступа, как в V1. `DataProtection` — `/keys`. Long-polling `Response`:
 таймаут Kestrel/nginx `proxy_read_timeout` должен быть больше времени ожидания в `EventNotificationAsync` (**уточнить** значение V1).
 
+## Публикация App (этап 7, 2026-11-19)
+
+`Sources/App/AutoCall.WPF/Properties/PublishProfiles/ClickOnceProfile.pubxml`: `InstallUrl https://dispatch.myautocall.net/Download/`,
+локально `D:\Publish\AutoDispatch_Publish\`, рантайм-пререквизит .NET Desktop 10 **x86** (App x86; в V3 — x64). `Scripts/publish-autodispatch-app.ps1` —
+копия V3: MSBuild VS 18, `tar | ssh` в `/home/autodispatch/download`. Подпись манифестов — сертификат AutoCall V3 (решено 2026-11-19):
+`AutoCall.Publish_3_TemporaryKey.pfx` скопирован из `AutoCallV3/Repo/Sources/App/AutoCall.View` в `Sources/App/AutoCall.WPF` (в `.gitignore`),
+отпечаток `F3C16FA5…FFF9E`, `CN=AutoCall`, самоподписанный до 2126; для подписи должен стоять в `CurrentUser\My` машины, с которой публикуют.
+Проверено 2026-11-19 пробным `msbuild /t:Publish` без выгрузки. Тот же ключ нужен для всех обновлений — хранить копию `.pfx`. В `/home/autodispatch/download` вручную положить `New Driver Application Package.pdf` из V1 `Web/Download`
+(353 КБ, 2020): бланк пакета документов для приёма нового водителя, который диспетчер скачивает ссылкой в шапке справочника
+Drivers (`DriversDialog`) — App берёт его с `{WebUrl}/Download/`. `fw9.pdf` из той же папки V1 не нужен: W-9 сервер берёт из `DocumentsPath`. Подробнее — [[app]].
+
 ## Бэкап
 
 Файлы в `/home/autodispatch/files` сейчас нигде не бэкапятся (на Windows они под бэкапом сервера) — **решить** в [[plan]].

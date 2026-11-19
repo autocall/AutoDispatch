@@ -1,0 +1,116 @@
+﻿<dialogs:BaseDispatchDialog  
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.FactoringCompanyDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls" 
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    mc:Ignorable="d" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+    Background="{x:Static SystemColors.ControlBrush}"
+    Title="Factoring Company">
+    <Window.Resources>
+        <!-- Proxy -->
+        <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
+        <Style x:Key="title" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource titleTextBlock}"/>
+        <Style x:Key="fieldRadPhoneTextInput" TargetType="{x:Type userControls:RadPhoneTextInput}">
+            <Setter Property="Margin" Value="0,5,5,5"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel>
+        <!-- Actual Company -->
+        <telerik:RadComboBox
+            Height="32" Margin="2,2,0,0" IsEnabled="true"
+            HorizontalAlignment="Left" VerticalAlignment="Top"
+            SelectionChanged="ActualCompany_SelectionChanged"
+            SelectedItem="{Binding SelectedActualCompany, Mode=TwoWay}"
+            ItemsSource="{Binding ActualCompanies}">
+            <telerik:RadComboBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                        <TextBlock Text="{Binding LegalName}" VerticalAlignment="Center" Margin="5,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </telerik:RadComboBox.ItemTemplate>
+            <telerik:RadComboBox.SelectionBoxTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                        <TextBlock Text="{Binding LegalName}" VerticalAlignment="Center" Margin="5,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </telerik:RadComboBox.SelectionBoxTemplate>
+        </telerik:RadComboBox>
+        <Grid DataContext="{Binding SelectedActualCompany}" IsEnabled="{Binding Converter={StaticResource NotNullToBoolConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Grid DataContext="{Binding FactoringCompany}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+
+                <CheckBox Grid.Column="1" Margin="5" IsChecked="{Binding HasFactoringCompany}">Use Factoring Company</CheckBox>
+                <TextBlock Grid.Column="0" Grid.Row="1"
+                    Style="{StaticResource title}"
+                    Text="Company Name"/>
+                <telerik:RadWatermarkTextBox WatermarkContent="Phoenix Capital Group, L.L.C." Grid.Column="1" Grid.Row="1" 
+                    IsEnabled="{Binding HasFactoringCompany}"
+                    Style="{StaticResource fieldTextBox}"
+                    Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="0" Grid.Row="2"
+                    Style="{StaticResource title}"
+                    Text="Address"/>
+                <telerik:RadWatermarkTextBox WatermarkContent="PO BOX 1415" Grid.Column="1" Grid.Row="2" 
+                    IsEnabled="{Binding HasFactoringCompany}"
+                    Style="{StaticResource fieldTextBox}"
+                    Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="0" Grid.Row="3"
+                    Style="{StaticResource title}"
+                    Text="City"/>
+                <telerik:RadWatermarkTextBox WatermarkContent="Des Moines, IA. 50305-1415" Grid.Column="1" Grid.Row="3" 
+                    IsEnabled="{Binding HasFactoringCompany}"
+                    Style="{StaticResource fieldTextBox}"
+                    Text="{Binding City, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="0" Grid.Row="4"
+                    Style="{StaticResource title}"
+                    Text="Phone"/>
+                <userControls:RadPhoneTextInput Grid.Column="1" Grid.Row="4" 
+                    IsEnabled="{Binding HasFactoringCompany}"
+                    Style="{StaticResource fieldRadMaskedTextInput}"
+                    Value="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="0" Grid.Row="5"
+                    Style="{StaticResource title}"
+                    Text="Email"/>
+                <telerik:RadWatermarkTextBox WatermarkContent="Email" Grid.Column="1" Grid.Row="5" 
+                    IsEnabled="{Binding HasFactoringCompany}"
+                    Style="{StaticResource fieldTextBox}"
+                    Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
+            <!--Error message-->
+            <TextBlock x:Name="tbError" Grid.Row="1" Grid.ColumnSpan="4" Margin="5" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Right" Visibility="Hidden" />
+            <!--Progress bar-->
+            <telerik:RadProgressBar x:Name="progressBar" Grid.Row="1" Grid.ColumnSpan="4" Margin="5" IsIndeterminate="True" Visibility="Hidden" />
+            <!-- OK -->
+            <Button x:Name="btnOk" Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Left" Style="{StaticResource OkButtonStyle}" Click="Ok_OnClick">OK</Button>
+            <Button x:Name="btnCancel" Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Right" Style="{StaticResource CancelButtonStyle}" Click="Cancel_OnClick">Cancel</Button>
+        </Grid>
+    </StackPanel>
+</dialogs:BaseDispatchDialog>

@@ -1,0 +1,133 @@
+﻿<Window
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.EditGainsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:markup="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    mc:Ignorable="d" 
+    d:DesignWidth="300"
+    Title="Edit Accessorial" Width="600" SizeToContent="Height"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <Window.Resources>
+        <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <converters:CurrencyFormatConverter x:Key="CurrencyFormatConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <dispatch:ContactsControl_CountToVisibilityConverter x:Key="CountToVisibilityConverter" Count="1"/>
+        <Style TargetType="{x:Type telerik:RadWatermarkTextBox}" BasedOn="{StaticResource fieldRadWatermarkTextBox}"/>
+        <!-- Phone TextBox -->
+        <Style x:Key="phoneTextBox" TargetType="{x:Type userControls:RadPhoneTextInput}" BasedOn="{StaticResource fieldRadMaskedTextInput}">
+            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="IsLastPositionEditable" Value="False"/>
+            <Setter Property="IsClearButtonVisible" Value="False"/>
+        </Style>
+        <Style x:Key="extTextBox" TargetType="{x:Type telerik:RadWatermarkTextBox}" BasedOn="{StaticResource fieldRadWatermarkTextBox}">
+            <Setter Property="Margin" Value="-1,5,-1,5"/>
+        </Style>
+        <!-- Base Buttons -->
+        <Style TargetType="{x:Type telerik:RadButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}">
+            <Setter Property="Margin" Value="5,0,0,5"/>
+            <Setter Property="Cursor" Value="{markup:Static Cursors.Hand}"/>
+        </Style>
+        <!-- Phone Button -->
+        <Style TargetType="{x:Type userControls:RadPhoneButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}">
+            <Setter Property="Margin" Value="0,5,0,5"/>
+        </Style>
+        <!-- Delete Button -->
+        <Style x:Key="deleteButton" TargetType="{x:Type telerik:RadButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}" x:Shared="False">
+            <Setter Property="ToolTip" Value="Delete accessorial"/>
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Image Source="/AutoDispatch;component/Resources/small_delete.png"/>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="Click" Handler="Delete_OnClicked"/>
+        </Style>
+        <!-- Calculate Button -->
+        <Style x:Key="calcButton" TargetType="{x:Type telerik:RadButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}" x:Shared="False">
+            <Setter Property="ToolTip" Value="Calculate accessorial"/>
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Image Source="/AutoDispatch;component/Resources/calculator.png"/>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="Click" Handler="Calculate_OnClicked"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <ItemsControl Name="lvGains" Grid.Row="1" ItemsSource="{Binding}" BorderThickness="0" Margin="0,5,0,0"
+            HorizontalContentAlignment="Stretch" HorizontalAlignment="Center" Grid.IsSharedSizeScope="True">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <userControls:TwoColumnPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderThickness="0,0,0,1" BorderBrush="DarkGray" Width="260" Margin="5,0,5,5">
+                        <Grid ShowGridLines="False">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="label"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Row="0" Grid.Column="0" Margin="0,0,5,5"
+                                VerticalAlignment="Center" HorizontalAlignment="Right" FontWeight="Bold"
+                                Text="{Binding Type, Converter={StaticResource EnumToDescriptionConverter}}"/>
+                            <telerik:RadWatermarkTextBox Name="tbCost" Margin="0,0,0,5" Height="26"
+                                Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"
+                                Width="80" WatermarkContent="$0.00"
+                                Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, Converter={StaticResource CurrencyFormatConverter}, TargetNullValue=''}" />
+                            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal">
+                                <telerik:RadButton HorizontalAlignment="Right" Margin="5,0,0,5" Width="26" Height="26"
+                                    Visibility="{Binding Path=Text, ElementName=tbCost, Converter={StaticResource StringToVisibilityConverter}}"
+                                    Style="{StaticResource deleteButton}"/>
+                                <telerik:RadButton HorizontalAlignment="Right" Margin="5,0,0,5" Width="26" Height="26"
+                                    Visibility="{Binding Path=IsCalculable, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Style="{StaticResource calcButton}"/>
+                            </StackPanel>
+                            <telerik:RadWatermarkTextBox Margin="0,0,0,5" Height="26"
+                                Visibility="{Binding Path=Text, ElementName=tbCost, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource StringToVisibilityConverter}}"
+                                Grid.Row="1" Grid.ColumnSpan="3"
+                                WatermarkContent="Comment"
+                                Text="{Binding Comment}"/>
+                            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" 
+                                Visibility="{Binding Path=Text, ElementName=tbCost, Converter={StaticResource StringToVisibilityConverter}}"
+                                Orientation="Horizontal" Margin="0,0,5,5">
+                                <CheckBox
+                                    IsChecked="{Binding Paid}" Checked="Paid_OnChecked" Unchecked="Paid_Unchecked">
+                                    <TextBlock>
+                                        <Run Text="Paid "/>
+                                        <Run Text="{Binding PaidDate, StringFormat=d}"/>
+                                    </TextBlock>
+                                </CheckBox>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button x:Name="btnOk" Grid.Row="3" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Style="{StaticResource CloseButtonStyle}">Close</Button>
+    </Grid>
+</Window>
+

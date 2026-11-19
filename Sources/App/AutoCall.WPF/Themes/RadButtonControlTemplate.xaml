@@ -1,0 +1,128 @@
+﻿<!--https://social.msdn.microsoft.com/Forums/en-US/15c44e23-f10a-42b6-9f6e-6effe5c34303/how-to-animate-expander-in-wpf?forum=wpf-->
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vsm ="clr-namespace:System.Windows;assembly=PresentationFramework"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation">
+    <!-- Animated Expander Button's Template-->
+    <ControlTemplate x:Key="RadButtonControlTemplate" TargetType="{x:Type telerik:RadButton}">
+        <Grid SnapsToDevicePixels="True">
+            <vsm:VisualStateManager.VisualStateGroups>
+                <vsm:VisualStateGroup x:Name="CommonStates">
+                    <vsm:VisualState x:Name="Normal"/>
+                    <vsm:VisualState x:Name="MouseOver">
+                        <Storyboard>
+                            <DoubleAnimation Duration="0" To="1" Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="OuterMouseOverBorder"/>
+                        </Storyboard>
+                    </vsm:VisualState>
+                    <vsm:VisualState x:Name="Pressed">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="OuterPressedBorder">
+                                <DiscreteObjectKeyFrame KeyTime="0">
+                                    <DiscreteObjectKeyFrame.Value>
+                                        <Visibility>Visible</Visibility>
+                                    </DiscreteObjectKeyFrame.Value>
+                                </DiscreteObjectKeyFrame>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Duration="0" To="0" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="CommonStatesWrapper"/>
+                            <DoubleAnimation Duration="0" To="0" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="FocusVisual"/>
+                        </Storyboard>
+                    </vsm:VisualState>
+                    <vsm:VisualState x:Name="Disabled">
+                        <Storyboard>
+                            <DoubleAnimation Duration="0" To="0" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="OuterBorder"/>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="DisabledVisual">
+                                <DiscreteObjectKeyFrame KeyTime="0">
+                                    <DiscreteObjectKeyFrame.Value>
+                                        <Visibility>Visible</Visibility>
+                                    </DiscreteObjectKeyFrame.Value>
+                                </DiscreteObjectKeyFrame>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Duration="0" To="0.5" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="Content"/>
+                        </Storyboard>
+                    </vsm:VisualState>
+                </vsm:VisualStateGroup>
+                <vsm:VisualStateGroup x:Name="BackgroundVisibility">
+                    <vsm:VisualState x:Name="BackgroundIsHidden">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="OuterBorder">
+                                <DiscreteObjectKeyFrame KeyTime="0">
+                                    <DiscreteObjectKeyFrame.Value>
+                                        <Visibility>Collapsed</Visibility>
+                                    </DiscreteObjectKeyFrame.Value>
+                                </DiscreteObjectKeyFrame>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Duration="0" To="0" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="DisabledVisual"/>
+                        </Storyboard>
+                    </vsm:VisualState>
+                    <vsm:VisualState x:Name="BackgroundIsVisible"/>
+                </vsm:VisualStateGroup>
+                <vsm:VisualStateGroup x:Name="FocusStatesGroup">
+                    <vsm:VisualState x:Name="Unfocused">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="FocusVisual">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15">
+                                    <DiscreteObjectKeyFrame.Value>
+                                        <Visibility>Collapsed</Visibility>
+                                    </DiscreteObjectKeyFrame.Value>
+                                </DiscreteObjectKeyFrame>
+                            </ObjectAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </vsm:VisualState>
+                    <vsm:VisualState x:Name="Focused">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="FocusVisual">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.115">
+                                    <DiscreteObjectKeyFrame.Value>
+                                        <Visibility>Visible</Visibility>
+                                    </DiscreteObjectKeyFrame.Value>
+                                </DiscreteObjectKeyFrame>
+                            </ObjectAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </vsm:VisualState>
+                </vsm:VisualStateGroup>
+            </vsm:VisualStateManager.VisualStateGroups>
+            <Border x:Name="OuterBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                <Border BorderBrush="#FFFCFCFC" BorderThickness="{TemplateBinding BorderThickness}" Background="{x:Null}" CornerRadius="{TemplateBinding InnerCornerRadius}"/>
+            </Border>
+            <Border x:Name="OuterMouseOverBorder" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Opacity="0">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FFBDE4F9" Offset="0"/>
+                        <GradientStop Color="#FFB4E0F7" Offset="0.5"/>
+                        <GradientStop Color="#FF98D1EF" Offset="0.5"/>
+                        <GradientStop Color="#FF81C3E5" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border BorderBrush="#FFE9F6FD" BorderThickness="{TemplateBinding BorderThickness}" Background="{x:Null}" CornerRadius="{TemplateBinding InnerCornerRadius}"/>
+            </Border>
+            <Border x:Name="OuterPressedBorder" BorderBrush="#FF2C628B" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Visibility="Collapsed">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="0.5,0" StartPoint="0.5,1">
+                        <GradientStop Color="#FF6AB6DE" Offset="0"/>
+                        <GradientStop Color="#FF82C2E4" Offset="0.5"/>
+                        <GradientStop Color="#FF98D0ED" Offset="0.5"/>
+                        <GradientStop Color="#FFA9DEFB" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border BorderBrush="#FF9EB0BA" BorderThickness="{TemplateBinding BorderThickness}" Background="{x:Null}" CornerRadius="{TemplateBinding InnerCornerRadius}"/>
+            </Border>
+            <Border x:Name="DisabledVisual" BorderBrush="#FF9C9C9C" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Visibility="Collapsed">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FFF7F7F7" Offset="0.004"/>
+                        <GradientStop Color="#FFE3E3E3" Offset="1"/>
+                        <GradientStop Color="#FFF3F3F3" Offset="0.5"/>
+                        <GradientStop Color="#FFEAEAEA" Offset="0.5"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            <ContentPresenter x:Name="Content" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" TextElement.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+            <Border x:Name="CommonStatesWrapper">
+                <Border x:Name="FocusVisual" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}" Visibility="Collapsed">
+                    <Border BorderBrush="#FF99DEFD" BorderThickness="1" CornerRadius="{TemplateBinding InnerCornerRadius}"/>
+                </Border>
+            </Border>
+        </Grid>
+    </ControlTemplate>
+</ResourceDictionary>

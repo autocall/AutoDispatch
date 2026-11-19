@@ -61,7 +61,8 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 берёт первую роль, форма `/Admin/Users` при сохранении оставит одну; это принять или поправить на этапах 3–6. Ключи сохраняются:
 `Users.Id` → `IdentityUsers.Id`, `Company.EntityId` → `Company.Id`, Id ролей = `RoleEnum.ToRoleId()` (`00000000-0000-0000-0000-00000000000N`);
 `Users.Signature` → `IdentityUsers.Signature` (подпись агента в confirmed-письме, `varchar(64)`, миграция `Alter_Dispatch` 2026-11-17; в `autocall`
-nvarchar(max), заполнено у 10 пользователей, максимум 13 символов — `left(…, 64)`);
+nvarchar(max), заполнено у 10 пользователей, максимум 13 символов — `left(…, 64)`); `Users.MicroSIPLogin/MicroSIPPassword` → `IdentityUsers.SipLogin varchar(10)/SipPassword varchar(50)`
+(учётка софтфона, как в V3; заполнено у 11 из 17; колонки — миграция пользователя, решено 2026-11-19, [[plan]] «Софтфоны в App»);
 повторный запуск удаляет из `autodispatch` всех, чьи Id есть в `autocall`, и заливает заново. `UserName` = `Users.Name` (отображаемое имя,
 пусто → email); `NormalizedUserName` уникален, поэтому к повторяющимся именам добавляется email. `TimeZoneId = 'UTC'`, как в V3.
 В конце скрипт выводит итоги и список пользователей активных компаний с ролью AutoDispatch, которые **не** попали в перенос — для контроля.

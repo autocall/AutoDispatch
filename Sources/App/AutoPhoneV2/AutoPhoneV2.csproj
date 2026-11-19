@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AutoPhone v.2 — софтфон на Abto SIPVoipSDK (COM) + NAudio, код V1 App/Project/UI/AutoPhoneV2 (AI/wiki/plan.md «Софтфоны в App»).
+       csproj — как AutoCall V3: COMReference собирает только VS MSBuild (dotnet build — MSB4803), Interop.SIPVoipSDK из Libraries -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>AutoPhoneV2</RootNamespace>
+    <!-- WFO1000: публичные свойства форм V1 без DesignerSerializationVisibility — в .NET 9+ анализатор WinForms даёт ошибку -->
+    <NoWarn>$(NoWarn);WFO1000</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Remove="AutoMapper" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCall.Common\AutoCall.Common.csproj" />
+    <ProjectReference Include="..\AutoDispatch.Logic.Contracts\AutoDispatch.Logic.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Interop.SIPVoipSDK">
+      <HintPath>..\Libraries\Interop.SIPVoipSDK.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <COMReference Include="SIPVoipSDK">
+      <Guid>{51E1C96F-F16B-4D5A-A790-4C72E219F9AE}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+</Project>

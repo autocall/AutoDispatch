@@ -1,0 +1,12 @@
+﻿<userControls:AutoGreyableImage 
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.UserControls.PhoneControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    Source="/AutoDispatch;component/Resources/telephone_blue.png" 
+    Width="32" Height="32"
+    RenderOptions.BitmapScalingMode="Fant" 
+    Cursor="{x:Static Cursors.Hand}"
+    MouseUp="Phone_OnMouseUp">
+</userControls:AutoGreyableImage>
+

@@ -1,0 +1,94 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.SearchLoadDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:core="clr-namespace:AutoCall.WPF.Core" 
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    mc:Ignorable="d" 
+    Background="{x:Static SystemColors.ControlBrush}"
+    Title="Search Load"
+    Height="500" SizeToContent="Width"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen">
+    <dialogs:BaseDispatchDialog.Resources>
+        <!--Converters-->
+        <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
+        <converters:AnyToBooleanConverter x:Key="AnyToBooleanConverter"/>
+        <!-- Proxy -->
+        <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
+        <!--Loads collection source-->
+        <!-- Use in codebehind -->
+        <CollectionViewSource x:Key="LoadsViewSource" Source="{Binding CarrierLoads}" IsLiveFilteringRequested="True" Filter="LoadsViewSource_OnFilter"/>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <!--Loading control-->
+        <userControls:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="Visible" LoadingMessage="Loading..." Grid.RowSpan="10" />
+        <!--Filter-->
+        <telerik:RadWatermarkTextBox Name="tbLoadSearch"
+            Grid.Row="0" FontSize="12" 
+            HorizontalAlignment="Right" Width="120" Height="24" Margin="5"
+            WatermarkContent="Search"
+            Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            TextChanged="tbFilter_OnTextChanged" />
+        <telerik:RadGridView x:Name="gridLoads" Grid.Row="1" 
+            AutoGenerateColumns="False"
+            SelectionMode="Single" SelectionUnit="FullRow" IsFilteringAllowed="False"
+            RowIndicatorVisibility="Collapsed" ShowGroupPanel="False" ShowColumnFooters="False" 
+            CanUserReorderColumns="False" CanUserFreezeColumns="False" CanUserSortColumns="False" IsReadOnly="True"
+            EnableRowVirtualization="False"
+            MouseDoubleClick="gridLoads_OnMouseDoubleClick"
+            SelectedItem="{Binding SelectedItem, Mode=OneWayToSource}"
+            Background="{x:Static SystemColors.ControlBrush}"
+            Style="{StaticResource showHideColumnsRadGridViewStyle}">
+            <!-- Columns -->
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewImageColumn Header="" ImageWidth="20" ImageHeight="20"
+                    DataMemberBinding="{Binding ActualCompany.LogoSmall}" />
+                <telerik:GridViewDataColumn Header="Load#"
+                    DataMemberBinding="{Binding Load.IndexString}" />
+                <telerik:GridViewDataColumn Header="Date" GroupMemberPath="Load.BookedDate.Date"
+                    DataMemberBinding="{Binding Load.BookedDate, StringFormat=d}" />
+                <telerik:GridViewDataColumn Header="Status"
+                    DataMemberBinding="{Binding Load.Status, Converter={StaticResource EnumToDescriptionConverter}}" />
+                <telerik:GridViewDataColumn Header="Equipment"
+                    DataMemberBinding="{Binding Load.Equipment, Converter={StaticResource EquipmentTypeToCodeConverter}}" />
+                <telerik:GridViewDataColumn Header="Origin"
+                    DataMemberBinding="{Binding Load.OriginCity}" />
+                <telerik:GridViewDataColumn Header="Destination"
+                    DataMemberBinding="{Binding Load.DestinationCity}" />
+                <telerik:GridViewDataColumn Header="Pickup"
+                    DataMemberBinding="{Binding Load.Pickup}" />
+                <telerik:GridViewDataColumn Header="Delivery"
+                    DataMemberBinding="{Binding Load.Delivery}" />
+                <telerik:GridViewDataColumn Header="Pallets" 
+                    DataMemberBinding="{Binding Load.Pallets}" />
+                <telerik:GridViewDataColumn Header="Line Haul" 
+                    DataMemberBinding="{Binding Load.LineHaul}" />
+                <telerik:GridViewDataColumn Header="Weight" 
+                    DataMemberBinding="{Binding Load.Weight}" />
+                <telerik:GridViewDataColumn Header="Length" 
+                    DataMemberBinding="{Binding Load.Length}" />
+                <telerik:GridViewDataColumn Header="Pro#" 
+                    DataMemberBinding="{Binding Load.RecordId}" />
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="3" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>

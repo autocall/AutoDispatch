@@ -1,0 +1,65 @@
+﻿<local:DetailsBaseDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.AssignDatDriverDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:AutoCall.WPF.Dialogs.Dispatch"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    mc:Ignorable="d" 
+    d:DesignHeight="300" d:DesignWidth="300"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen"
+    Title="Assign driver" SizeToContent="Height" Width="400"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <local:DetailsBaseDialog.Resources>
+        <Style TargetType="TextBox" BasedOn="{StaticResource fieldTextBox}"/>
+        <Style x:Key="phoneTextBox" TargetType="{x:Type userControls:RadPhoneTextInput}" BasedOn="{StaticResource fieldRadMaskedTextInput}">
+            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="IsLastPositionEditable" Value="False"/>
+            <Setter Property="IsClearButtonVisible" Value="False"/>
+        </Style>
+    </local:DetailsBaseDialog.Resources>
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Text="Phone" Style="{StaticResource TextBlockTitleStyle}"/>
+            <userControls:RadPhoneTextInput x:Name="tbPhone" ValueChanged="tbPhone_ValueChanged"
+                Width="140" Margin="0,0,0,5"
+                Style="{StaticResource phoneTextBox}"
+                Value="{Binding Path=TextDatDriverPhone, UpdateSourceTrigger=PropertyChanged}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="0" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Text="Driver" Style="{StaticResource TextBlockTitleStyle}"/>
+            <TextBox Width="140" Margin="0,0,0,5"
+                Text="{Binding TextDatDriverName, Mode=TwoWay}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Text="Truck" Style="{StaticResource TextBlockTitleStyle}"/>
+            <TextBox Width="140" Margin="0,0,0,5"
+                Text="{Binding TextDatDriverTruckNumber, Mode=TwoWay}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Text="Trailer" Style="{StaticResource TextBlockTitleStyle}"/>
+            <TextBox Width="140" Margin="0,0,0,5"
+                Text="{Binding TextDatDriverTrailerNumber, Mode=TwoWay}"/>
+        </StackPanel>
+        
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Grid.ColumnSpan="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="3" Grid.ColumnSpan="2" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Grid.ColumnSpan="2" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</local:DetailsBaseDialog>

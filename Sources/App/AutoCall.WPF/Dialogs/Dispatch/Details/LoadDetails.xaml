@@ -1,0 +1,272 @@
+﻿<Border x:Class="AutoCall.WPF.Dialogs.Dispatch.UserControls.LoadDetails"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:enums="clr-namespace:AutoDispatch.Dtos.Enums;assembly=AutoDispatch.Dtos"
+        xmlns:enums2="clr-namespace:AutoDispatch.Dtos.Enums;assembly=AutoDispatch.Dtos"
+        xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+        xmlns:core="clr-namespace:AutoCall.WPF.Core"
+        xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls" xmlns:usercontrols="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+        mc:Ignorable="d" 
+        d:DesignHeight="300" d:DesignWidth="300"
+        BorderThickness="1,0,1,1" 
+        BorderBrush="Black" SnapsToDevicePixels="True">
+    <Border.Resources>
+        <converters:ColorToSolidColorBrushValueConverter x:Key="ColorToSolidColorBrushValueConverter"/>
+        <converters:CompareToVisibilityConverter x:Key="CompareToVisibilityConverter"/>
+        <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+        <converters:IsNotNullOrEmptyStringToVisibilityConverter x:Key="IsNotNullOrEmptyStringToVisibilityConverter"/>
+        <converters:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True"/>
+        <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
+        <converters:StringToFlowDocumentConverter x:Key="StringToFlowDocumentConverter"/>
+        <converters:NotNullToBoolConverter x:Key="ObjectToBoolConverter"/>
+        <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
+        <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter"/>
+    </Border.Resources>
+    <Grid DataContext="{Binding Load, Mode=OneWay}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockValueStyle}">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Margin" Value="2"/>
+            </Style>
+        </Grid.Resources>
+        <Border Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" DataContext="{Binding Data.DatDriver, Source={StaticResource proxy}}" 
+                Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}"
+                BorderThickness="0,0,0,1" BorderBrush="Gray">
+            <usercontrols:DatDriverInfo />
+        </Border>
+        <!--Loading control-->
+        <userControls:LoadingControl x:Name="loading" LoadingMessage="downloading file..." Panel.ZIndex="100" Visibility="Collapsed" Grid.RowSpan="10" Grid.ColumnSpan="10" />
+        <!-- vertival bar -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="10" Background="{Binding Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" 
+            BorderThickness="0,0,1,0" BorderBrush="Black">
+            <TextBlock Text="{Binding RelativeIndex, Mode=OneWay}" HorizontalAlignment="Center"/>
+        </Border>
+        <!-- right # -->
+        <TextBlock Grid.Row="1" Grid.Column="2"
+            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5,3,5,0">
+            <Run Text="{Binding IndexString, StringFormat={}#{0}, Mode=OneWay}" FontWeight="Bold"/>
+        </TextBlock>
+        <!-- company -->
+        <TextBlock Grid.Row="1" Grid.Column="1" FontWeight="Bold" Margin="5,3,5,0"
+            Text="{Binding Company, Mode=OneWay}">
+        </TextBlock>
+        <!-- orgin - destin -->
+        <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Vertical" Margin="5,3,5,0">
+            <Grid>
+                <TextBlock FontSize="12" FontWeight="Bold">
+                    <Run Text="{Binding Direction, Mode=OneWay}"/>
+                    <Run Text="{Binding Status, Mode=OneWay, StringFormat={}({0}), Converter={StaticResource EnumToDescriptionConverter}}" FontWeight="Normal"/>
+                </TextBlock>
+            </Grid>
+            <TextBlock FontWeight="Bold" Visibility="{Binding Status, Converter={StaticResource CompareToVisibilityConverter}, ConverterParameter={x:Static enums:LoadStatus.AtPickUp}}">
+                <Run >Pickup</Run>
+                <Run Text="{Binding Pickup, Mode=OneWay}"/>
+            </TextBlock>
+            <TextBlock FontWeight="Bold">
+                <Run >Delivery</Run>
+                <Run Text="{Binding Delivery, Mode=OneWay}"/>
+            </TextBlock>
+        </StackPanel>
+        <!-- Pro# -->
+        <StackPanel Grid.Row="3" Grid.Column="1" Margin="5,3,5,0" Orientation="Horizontal">
+            <TextBlock Text="Pro#"/>
+            <TextBlock FontWeight="Bold" Text="{Binding RecordId}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="10" Orientation="Horizontal" Margin="5,0,5,0">
+            <StackPanel Orientation="Horizontal" Margin="2" 
+                Visibility="{Binding Pallets, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Image Source="/AutoDispatch;component/Resources/pallet.png" Height="16" Width="16"/>
+                <TextBlock>
+                    <!--<TextBlock.Text>
+                        <MultiBinding Converter="{StaticResource LoadTotalToStringConverter}" ConverterParameter="{x:Static enums:DivideType.Pallets}">
+                            <Binding Path="Pallets"/>
+                            <Binding />
+                            <Binding Path="Data.AllLoads" Source="{StaticResource proxy}"/>
+                        </MultiBinding>
+                    </TextBlock.Text>-->
+                    <Run Text="{Binding Pallets}"/>
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="2" 
+                Visibility="{Binding Length, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Image Source="/AutoDispatch;component/Resources/trailer_small.png" Height="16" Width="30"/>
+                <TextBlock>
+                    <!--<TextBlock.Text>
+                        <MultiBinding Converter="{StaticResource LoadTotalToStringConverter}" ConverterParameter="{x:Static enums:DivideType.Length}">
+                            <Binding Path="Length"/>
+                            <Binding />
+                            <Binding Path="Data.AllLoads" Source="{StaticResource proxy}"/>
+                        </MultiBinding>
+                    </TextBlock.Text>-->
+                    <Run Text="{Binding Weight}"/>
+                    <Run Text="ft" Foreground="Gray"/>
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="2"
+                Visibility="{Binding Weight, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Image Source="/AutoDispatch;component/Resources/weight.png" Height="16" Width="16"/>
+                <TextBlock>
+                    <Run Text="{Binding Weight}"/>
+                    <Run Text="kLbs" Foreground="Gray"/>
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+        <WrapPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="10" Margin="0,0,100,0">
+            <!-- Confirmation -->
+            <StackPanel Orientation="Vertical" Margin="5,0,5,5" 
+                Visibility="{Binding ConfirmationFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <TextBlock Margin="0" Visibility="{Binding ConfirmationDateView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                    <Hyperlink 
+                        IsEnabled="{Binding ConfirmationFileView, Converter={StaticResource ObjectToBoolConverter}}"
+                        Click="Confirmation_OnClick">
+                        <Run Text="Confirmation"/>
+                        <Run Text="{Binding ConfirmationDateView, StringFormat=d, Mode=OneWay}"/>
+                    </Hyperlink>
+                </TextBlock>
+                <TextBlock Margin="0" Foreground="Gray"
+                    Text="{Binding EmailConfirmationSentDateView, StringFormat=Sent {0:d}}"
+                    Visibility="{Binding EmailConfirmationSentDateView, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                <TextBlock Margin="0" Foreground="Gray"
+                    Text="{Binding ConfirmedDateView, StringFormat=Signed {0:d}}"
+                    Visibility="{Binding ConfirmedDateView, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+            </StackPanel>
+            <!-- BOL -->
+            <TextBlock Margin="5,0,5,5" VerticalAlignment="Top"
+                Visibility="{Binding BOLDateView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink 
+                    IsEnabled="{Binding BOLFileView, Converter={StaticResource ObjectToBoolConverter}}"
+                    Click="BOL_OnClick">
+                    <Run Text="{Binding BOLDateView, StringFormat=BOL {0:d}, Mode=OneWay}"/>
+                </Hyperlink>
+            </TextBlock>
+            <!-- POD -->
+            <TextBlock Margin="5,0,5,5" VerticalAlignment="Top"
+                Visibility="{Binding PODDateView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink 
+                    IsEnabled="{Binding PODFileView, Converter={StaticResource ObjectToBoolConverter}}"
+                    Click="POD_OnClick">
+                    <Run Text="{Binding PODDateView, StringFormat=POD {0:d}, Mode=OneWay}"/>
+                </Hyperlink>
+            </TextBlock>
+            <!-- Invoice -->
+            <TextBlock Margin="5,0,5,5" VerticalAlignment="Top"
+                Visibility="{Binding InvoiceDate, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink 
+                    IsEnabled="{Binding InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                    Click="Invoice_OnClick">
+                    <Run Text="{Binding InvoiceDate, StringFormat=Invoice {0:d}, Mode=OneWay}"/>
+                </Hyperlink>
+            </TextBlock>
+            <!-- Check -->
+            <TextBlock Margin="5,0,5,5" VerticalAlignment="Top"
+                Visibility="{Binding CheckDate, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink 
+                    IsEnabled="{Binding CheckFile, Converter={StaticResource ObjectToBoolConverter}}"
+                    Click="Check_OnClick">
+                    <Run Text="{Binding CheckDate, StringFormat=Check {0:d}, Mode=OneWay}"/>
+                </Hyperlink>
+            </TextBlock>
+            <!-- Photo -->
+            <TextBlock Margin="5,0,5,5" VerticalAlignment="Top"
+                Visibility="{Binding PhotoFile, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink 
+                    Click="Photo_OnClick">
+                    <Run Text="Photo"/>
+                </Hyperlink>
+            </TextBlock>
+            <!-- Trailer Scheme -->
+            <TextBlock Margin="5,0,5,5" VerticalAlignment="Top"
+                Visibility="{Binding TrailerSchemeFile, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink 
+                    Click="TrailerScheme_OnClick">
+                    <Run Text="Trailer Scheme"/>
+                </Hyperlink>
+            </TextBlock>
+        </WrapPanel>
+        <!-- Comments1 -->
+        <Grid Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="10" Margin="5,0"
+            Visibility="{Binding Comment1Text, Converter={StaticResource IsNotNullOrEmptyStringToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                Style="{StaticResource titleTextBlock}"
+                Text="Comments for Dispatcher"
+                HorizontalAlignment="Left" Margin="0,0,5,3"
+                Visibility="{Binding BoardType, Converter={StaticResource BorderTypeToVisibilityConverter}, ConverterParameter={x:Static enums2:DispatchBoardType.Carrier}}"/>
+            <TextBlock Grid.Column="0"
+                Style="{StaticResource titleTextBlock}"
+                Text="External Comments"
+                HorizontalAlignment="Left" Margin="0,0,5,3"
+                Visibility="{Binding BoardType, Converter={StaticResource BorderTypeToVisibilityConverter}, ConverterParameter={x:Static enums2:DispatchBoardType.Broker}}"/>
+            <telerik:XamlDataProvider Name="xamlDataProvider"
+                Xaml="{Binding Comments, Mode=OneWay}" 
+                RichTextBox="{Binding ElementName=richTextBox}" 
+                SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+            <telerik:RadRichTextBox Name="richTextBox" Grid.Column="1"
+                Width="Auto" BorderThickness="0" Margin="0"
+                IsReadOnly="True"
+                Style="{StaticResource fieldRadRichTextBox}"
+                VerticalContentAlignment="Top"
+                IsSpellCheckingEnabled="False"
+                IsContextMenuEnabled="False"
+                IsSelectionMiniToolBarEnabled="False"
+                IsImageMiniToolBarEnabled="False">
+            </telerik:RadRichTextBox>
+        </Grid>
+        <!-- Comments2 -->
+        <Grid Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="10" Margin="5,0"
+            Visibility="{Binding Comment2Text, Converter={StaticResource IsNotNullOrEmptyStringToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                Style="{StaticResource titleTextBlock}"
+                Text="Comments for Broker"
+                HorizontalAlignment="Left" Margin="0,0,5,3"
+                Visibility="{Binding BoardType, Converter={StaticResource BorderTypeToVisibilityConverter}, ConverterParameter={x:Static enums2:DispatchBoardType.Carrier}}"/>
+            <TextBlock Grid.Column="0"
+                Style="{StaticResource titleTextBlock}"
+                Text="Internal Comments"
+                HorizontalAlignment="Left" Margin="0,0,5,3"
+                Visibility="{Binding BoardType, Converter={StaticResource BorderTypeToVisibilityConverter}, ConverterParameter={x:Static enums2:DispatchBoardType.Broker}}"/>
+            <telerik:XamlDataProvider Name="xamlDataProvider2"
+                Xaml="{Binding Comments2, Mode=OneWay}" 
+                RichTextBox="{Binding ElementName=richTextBox2}" 
+                SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+            <telerik:RadRichTextBox Name="richTextBox2" Grid.Column="1"
+                Width="Auto" BorderThickness="0" Margin="0"
+                IsReadOnly="True"
+                Style="{StaticResource fieldRadRichTextBox}"
+                VerticalContentAlignment="Top"
+                IsSpellCheckingEnabled="False"
+                IsContextMenuEnabled="False"
+                IsSelectionMiniToolBarEnabled="False"
+                IsImageMiniToolBarEnabled="False">
+            </telerik:RadRichTextBox>
+        </Grid>
+    </Grid>
+</Border>

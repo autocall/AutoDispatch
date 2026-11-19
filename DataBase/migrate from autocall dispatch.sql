@@ -74,6 +74,7 @@ select
     coalesce(nullif(ltrim(rtrim(u.Name)), ''), u.Email) as UserName,
     u.Email, u.PasswordHash, u.SecurityStamp, u.PhoneNumber, u.LockoutEnabled, u.LockoutEndDateUtc,
     u.CreatedDate, u.LastModifiedDate,
+    left(nullif(ltrim(rtrim(u.MicroSIPLogin)), ''), 10) as SipLogin, left(nullif(u.MicroSIPPassword, ''), 50) as SipPassword, -- софтфон App (решено 2026-11-19, AI/wiki/plan.md «Софтфоны в App»)
     left(nullif(ltrim(rtrim(u.Signature)), ''), 64) as Signature -- подпись агента в confirmed-письме (AdUser.Signature varchar(64); в V1 nvarchar(max), заполнено у 10, max 13 символов)
 into #user
 from autocall.dbo.Users u
@@ -105,10 +106,10 @@ where not exists (select 1 from dbo.Company x where x.Id = c.Id);
 -------- 0.4 IdentityUsers + роли --------
 insert into dbo.IdentityUsers (Id, CompanyId, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp,
     ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount, TimeZoneId,
-    CreatedDateTime, ModifiedDateTime, CreatedId, ModifiedId, IsDeleted, Signature)
+    CreatedDateTime, ModifiedDateTime, CreatedId, ModifiedId, IsDeleted, Signature, SipLogin, SipPassword)
 select u.Id, u.CompanyId, u.UserName, upper(u.UserName), u.Email, upper(u.Email), 1, u.PasswordHash, u.SecurityStamp,
     lower(convert(varchar(36), newid())), u.PhoneNumber, 0, 0, u.LockoutEndDateUtc, u.LockoutEnabled, 0, 'UTC',
-    u.CreatedDate, u.LastModifiedDate, @systemUserId, @systemUserId, 0, u.Signature
+    u.CreatedDate, u.LastModifiedDate, @systemUserId, @systemUserId, 0, u.Signature, u.SipLogin, u.SipPassword
 from #user u;
 
 insert into dbo.IdentityUserRoles (UserId, RoleId)
@@ -118,9 +119,10 @@ from #user u join #role r on r.LegacyUserId = u.Id;
 -------- 0.5 настройки App: секции UserSetting, только dispatch (решено 2026-11-17, AI/wiki/user-settings.md) --------
 -- Settings.Binary V1 = gzip JSON (Json.NET, $type) словаря «свойство UserSettings -> значение»; Binary как есть не переносится —
 -- раскладывается по секциям, как в AutoCall V3: строка на свойство, Section = имя свойства. Свойства AutoCall (DataSourceSettings,
--- Sound/HotKey/CallService/Connection/Zoom, BoardsSettings, Default*PatternSettings, PatternTabs, PatternsDialogGridView, ViewType, Volume*)
+-- Sound/HotKey/Connection/Zoom, BoardsSettings, Default*PatternSettings, PatternTabs, PatternsDialogGridView, ViewType, Volume*)
 -- не переносятся; в BoardsSettings2 остаются только борды Dispatch*. byte[] (раскладки гридов Telerik, DockingLayout, Selected*Company)
 -- — строка base64 без обёртки {"$type":"System.Byte[], mscorlib","$value":…}; остальные объекты — JSON Json.NET как есть (с $type).
+-- CallServiceSettings (софтфон) переносится с 2026-11-19 (у 13 из 17 пользователей, AI/wiki/plan.md «Софтфоны в App»).
 -- null-свойства не пишутся (секции нет -> App берёт дефолт). Проверено select'ом 2026-11-17: 17 пользователей, 201 строка, весь JSON валиден.
 insert into dbo.UserSetting (UserId, Section, Json, ModifiedDateTime)
 select u.Id, j.[key],
@@ -139,7 +141,7 @@ where j.type <> 0
   and j.[key] in ('BoardsSettings2', 'DockingLayout', 'FiltersColumns', 'DefaultLoadSettings', 'DatCompaniesDialogGridView',
       'EquipmentsDialogGridViewDrivers', 'EquipmentsDialogGridViewTrucks', 'EquipmentsDialogGridViewTrailers',
       'EquipmentsDialogGridViewWarehouses', 'EquipmentsDialogGridViewYards',
-      'SelectedCarrierCompany', 'SelectedBrokerCompany', 'ScanEmail', 'ScanBW', 'ScanADF', 'SearchTrailerWarehouseMode');
+      'SelectedCarrierCompany', 'SelectedBrokerCompany', 'ScanEmail', 'ScanBW', 'ScanADF', 'SearchTrailerWarehouseMode', 'CallServiceSettings');
 
 -------- итог --------
 select 'active companies (d_Event)' as [table], count(*) as [rows] from #active

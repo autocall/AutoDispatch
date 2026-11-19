@@ -1,0 +1,79 @@
+﻿<dialogs:BaseDispatchDialog
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.ScanSchemeSendDialog"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    mc:Ignorable="d" 
+    Title="Scanner"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen"
+    SizeToContent="Height"
+    Background="{x:Static SystemColors.ControlBrush}"
+    Height="300" Width="300"
+    d:DesignHeight="300" d:DesignWidth="400">
+    <dialogs:BaseDispatchDialog.Resources>
+        <!-- STYLES -->
+        <Style x:Key="title" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource titleTextBlock}"/>
+        <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+        <converters:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True"/>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Column="0" Grid.Row="0"
+            Style="{StaticResource title}" HorizontalAlignment="Left" Margin="5"
+            Text="1. Scheme"/>
+        <TextBlock Grid.Column="1" Grid.Row="0"
+            Visibility="{Binding FileTempPath, Converter={StaticResource NotNullToVisibilityConverter}}"
+            HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Hyperlink Click="Scheme_OnClick">
+                <Run Text="{Binding FileName}"/>
+            </Hyperlink>
+        </TextBlock>
+        <Button Grid.Column="1" Grid.Row="0" Width="100" HorizontalAlignment="Left" Click="btnScan_OnClick" Margin="0,5,5,5" Padding="5"
+                Visibility="{Binding FileTempPath, Converter={StaticResource NullToVisibilityConverter}}">
+            Scan</Button>
+
+        <TextBlock Grid.Column="0" Grid.Row="1"
+            Style="{StaticResource title}" HorizontalAlignment="Left" Margin="5">
+            <Run>2. Email</Run>
+            <Hyperlink ToolTip="Example #1: email@gmail.com&#x0a;Example #2: email1@gmail.com, email2@gmail.com&#x0a;Example #2: email1@gmail.com&#x0a;             email2@gmail.com">
+                <Run>(?)</Run>
+            </Hyperlink>
+        </TextBlock>
+        <TextBox Grid.Column="1" Grid.Row="1"
+            Style="{StaticResource fieldTextBox}"
+            Text="{Binding Emails}" TextWrapping="Wrap" AcceptsReturn="True"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="2"
+            Style="{StaticResource title}" HorizontalAlignment="Left" Margin="5"
+            Text="3. Trailer"/>
+        <TextBox Grid.Column="1" Grid.Row="2" 
+            Style="{StaticResource fieldTextBox}"
+            Text="{Binding Trailer}"/>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="3" Grid.ColumnSpan="4" Margin="5" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Right" Visibility="Hidden" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="3" Grid.ColumnSpan="4" Margin="5" IsIndeterminate="True" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="10" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked" 
+            Visibility="{Binding FileTempPath, Converter={StaticResource NotNullToVisibilityConverter}}">Send</Button>
+        <Button x:Name="btnClose" Grid.Row="10" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+
+    </Grid>
+</dialogs:BaseDispatchDialog>

@@ -26,10 +26,11 @@ App V1 читал и писал настройки через WCF `svc/SettingsS
 | `SelectedCarrierCompany`, `SelectedBrokerCompany` | `byte[]` 16 байт — Guid выбранной `DispatchCompany` | борды dispatch |
 | `ScanEmail`, `ScanBW`, `ScanADF` | настройки сканирования | `ScanSchemeSendDialog`, `ScannerDialog` |
 | `SearchTrailerWarehouseMode` | bool | `SearchTrailerWarehouseDialog` |
+| `CallServiceSettings` | софтфон: тип (None / AutoPhone = MicroSIP / AutoPhone v.2 = AbtoPhone), Single/Multi call, линии, `MicroSIPSettings` (контакты и шорткаты) — добавлено 2026-11-19, у 13 из 17 пользователей; учётка SIP — не здесь, а `SessionDto.SipLogin/SipPassword` | `SettingsDialog` (вкладка Call Services), `MainManager.InitializeCallService` — [[plan]] «Софтфоны в App» |
 
-Не переносятся (модуль AutoCall): `DataSourceSettings`, `SoundSettings`, `HotKeySettings`, `CallServiceSettings`, `ConnectionSettings`,
+Не переносятся (модуль AutoCall): `DataSourceSettings`, `SoundSettings`, `HotKeySettings`, `ConnectionSettings`,
 `ZoomSettings`, `BoardsSettings` (старый формат), `DefaultPost/Search*PatternSettings`, `PatternTabs`, `PatternsDialogGridView`,
-`ViewType`, `Volume`, `VolumeMute` (звук и хоткеи — уведомления DAT и звонки, `ViewType` — только `DatPower*Board`).
+`ViewType`, `Volume`, `VolumeMute` (звук и хоткеи — уведомления DAT и автодозвона, `ViewType` — только `DatPower*Board`).
 Локальные `Properties.Settings` (`UserName` логина, `Scanner`) остаются на машине и не переносятся.
 
 ## Формат перенесённых строк
@@ -51,9 +52,11 @@ App V1 читал и писал настройки через WCF `svc/SettingsS
 без настроек; пишет админ из `MainWindow` (`SetDefaultColumnSettings/SetDefaultFilterSettings` через тот же WCF). Из 7 компаний
 заполнено только у BEST AMERICAN (75 КБ колонок, в том числе `DatPower*`). В `Company` V3 таких полей нет — см. [[plan]] «Решить».
 
-## Этап 7 (сделать)
+## Этап 7 (сделано 2026-11-19)
 
 - Сервер: `ApiSettingsController` (`GET Api/Settings` — все секции одним объектом, `PUT Api/Settings/{section}`) и
-  `UserSettingService.GetAllJsonAsync/SetJsonAsync` — копия V3; сейчас в [[web]] только `GetMapAsync/SetMapAsync`.
-- App: `SettingsService` V1 → кэш секций и запись только изменённых (`RemoteSettingsService` V3); публичные `Get*/Set*` не меняются.
-- Проверить загрузку раскладок гридов, сохранённых Telerik 2021 (.NET Framework), в Telerik R1 2022 под .NET.
+  `UserSettingService.GetAllJsonAsync/SetJsonAsync` — копия V3, рядом `GetMapAsync/SetMapAsync` для карты [[web]].
+- App: `AutoCall.Logic.Settings.SettingsService` — секции в кэше (`JToken`), запись только изменённых, `SaveSettingsAsync` при закрытии окна;
+  публичные `Get*/Set*` V1 не менялись. JSON V1 с `$type`/`$values` читается Newtonsoft без разрешения типов — проверено на перенесённых секциях.
+  `UserName` входа и параметры сканера — локальный `%AppData%\AutoDispatch\settings.json` — [[app]].
+- Не проверено: загрузка раскладок гридов, сохранённых Telerik 2021 (.NET Framework), в Telerik R1 2022 под .NET — при сверке этапа 7.

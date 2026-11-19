@@ -1,0 +1,117 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.TrailerLayoutPickupDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+    xmlns:core="clr-namespace:AutoCall.WPF.Core"
+    xmlns:enums="clr-namespace:AutoDispatch.Dtos.Enums;assembly=AutoDispatch.Dtos"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    Title="Pickup" Width="600" Height="750"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen"
+    Loaded="EditBookLoadDialog_OnLoaded"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <dialogs:BaseDispatchDialog.Resources>
+        <converters:ColorToSolidColorBrushValueConverter x:Key="ColorToSolidColorBrushValueConverter"/>
+        <converters:BooleanToObjectConverter x:Key="BooleanToVisibilityConverter" True="{x:Static Visibility.Hidden}" False="{x:Static Visibility.Visible}"/>
+        <converters:CustomCompareConverter x:Key="DivideTypeToMarginCustomCompareConverter" 
+            TrueValue="{x:Static enums:DivideType.Pallets}" FalseValue="{x:Static enums:DivideType.Length}">
+            <converters:CustomCompareConverter.TrueResult>
+                <Thickness Left="2" Top="2" Right="2" Bottom="2" />
+            </converters:CustomCompareConverter.TrueResult>
+            <converters:CustomCompareConverter.FalseResult>
+                <Thickness Left="0" Top="0" Right="-1" Bottom="-1" />
+            </converters:CustomCompareConverter.FalseResult>
+        </converters:CustomCompareConverter>
+
+        <!--<converters:CustomCompareConverter x:Key="DivideTypeToBorderCustomCompareConverter" 
+                 TrueResult="{x:Static enums:DivideType.Pallets}" FalseResult="{x:Static enums:DivideType.Length}">
+            <converters:CustomCompareConverter.TrueValue>
+                <Thickness Left="1" Top="1" Right="1" Bottom="1" />
+            </converters:CustomCompareConverter.TrueValue>
+            <converters:CustomCompareConverter.FalseValue>
+                <Thickness Left="0" Top="0" Right="0" Bottom="0" />
+            </converters:CustomCompareConverter.FalseValue>
+        </converters:CustomCompareConverter>-->
+
+        <core:BindingProxy x:Key="proxy1" Data="{Binding}"/>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,30,0">
+                <userControls:LoadInfo Margin="5" DataContext="{Binding Load}"/>
+                <userControls:TrailerInfo Grid.Column="1" DataContext="{Binding Trailer}"/>
+                <!-- free pallets -->
+            </StackPanel>
+            <ItemsControl Grid.Row="1" Margin="10,5,5,5" ItemsSource="{Binding AvailablePallets}" VerticalAlignment="Stretch" 
+                Drop="freeList_Drop" AllowDrop="True" Padding="2">
+                <ItemsControl.Template>
+                    <ControlTemplate>
+                        <ScrollViewer x:Name="ScrollViewer" Padding="{TemplateBinding Padding}">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel SnapsToDevicePixels="True"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="{Binding Data.Trailer.Width, Source={StaticResource proxy1}, Mode=OneWay}" 
+                            Height="{Binding Data.Trailer.Height, Source={StaticResource proxy1}, Mode=OneWay}" 
+                            Cursor="Hand" BorderBrush="Black" BorderThickness="1"
+                            Margin="{Binding Load.DivideType, Converter={StaticResource DivideTypeToMarginCustomCompareConverter}}"
+                            Visibility="{Binding Changed, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" 
+                            MouseLeftButtonDown="MoveItem_MouseLeftButtonDown">
+                            <TextBlock Text="{Binding Load.IndexString}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <!--<Rectangle StrokeThickness="1" Width="40" Height="40" Margin="2"
+                            Fill="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" Stroke="Black"/>-->
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <!-- New pallet -->
+            <Border Grid.Row="2"
+                Width="{Binding Data.Trailer.Width, Source={StaticResource proxy1}, Mode=OneWay}" 
+                Height="{Binding Data.Trailer.Height, Source={StaticResource proxy1}, Mode=OneWay}" 
+                Margin="10" BorderThickness="1" Cursor="Hand" BorderBrush="Black" SnapsToDevicePixels="True"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom" MouseLeftButtonDown="AddItem_MouseLeftButtonDown"
+                Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}">
+                <TextBlock Text="+" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Border>
+            <!-- Move All -->
+            <Button Grid.Row="2" x:Name="btnMoveAll" HorizontalAlignment="Center" Click="btnMoveAll_Clicked" Width="100" Height="30" VerticalAlignment="Bottom" Margin="10">Load All</Button>
+            <!-- Recycle -->
+            <Image Grid.Row="2"
+                Source="/AutoDispatch;component/Resources/trash.png" Margin="10" Stretch="None"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" AllowDrop="true" Drop="RemoveLoad_OnDrop" />
+
+        <!-- Trailer cells -->
+        <userControls:TrailerLayout Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" DataContext="{Binding Trailer}" 
+            AllowDrag="{Binding Data.Load.EntityId, Source={StaticResource proxy1}, Mode=OneWay}" AllowReorder="True" 
+            Drop="Trailer_OnDrop" Margin="5,10,10,5"/>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Right" Visibility="Hidden" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0" Margin="5" IsIndeterminate="True" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="4" Grid.ColumnSpan="2" Grid.Column="0" HorizontalAlignment="Left" Click="btnOk_Clicked" Width="100" Margin="5">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Right" Click="btnClose_Clicked" IsCancel="True" Width="100" Margin="5">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>

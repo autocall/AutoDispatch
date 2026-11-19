@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="AutoCall.WPF.Dialogs.Dispatch.UserControls.LoadInfo"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:enums="clr-namespace:AutoDispatch.Dtos.Enums;assembly=AutoDispatch.Dtos"
+             xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <converters:CompareToVisibilityConverter x:Key="CompareToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="Load" Style="{StaticResource titleTextBlock}" VerticalAlignment="Top" Grid.Column="0" Margin="0,0,10,0"/>
+        <StackPanel Orientation="Vertical" Grid.Column="1">
+            <TextBlock>
+                <Run Text="{Binding Company, Mode=OneWay}" FontWeight="Bold"/>
+            </TextBlock>
+            <TextBlock Style="{StaticResource TextBlockValueStyle}">
+                <Run Text="{Binding Direction, Mode=OneWay}" FontWeight="Bold"/>
+            </TextBlock>
+            <TextBlock Style="{StaticResource TextBlockValueStyle}">
+                <Run >pickup:</Run>
+                <Run Text="{Binding Pickup, Mode=OneWay}" FontWeight="Bold"/>
+            </TextBlock>
+            <TextBlock Style="{StaticResource TextBlockValueStyle}">
+                <Run >delivery:</Run>
+                <Run Text="{Binding Delivery, Mode=OneWay}" FontWeight="Bold"/>
+            </TextBlock>
+            <!-- Pallets -->
+            <TextBlock  Style="{StaticResource TextBlockValueStyle}"
+                Visibility="{Binding DivideType, Converter={StaticResource CompareToVisibilityConverter}, ConverterParameter={x:Static enums:DivideType.Pallets}}">
+                <Run >pallets:</Run>
+                <Run Text="{Binding Pallets, Mode=OneWay}" FontWeight="Bold"/>
+            </TextBlock>
+            <!-- Length -->
+            <TextBlock  Style="{StaticResource TextBlockValueStyle}"
+                Visibility="{Binding DivideType, Converter={StaticResource CompareToVisibilityConverter}, ConverterParameter={x:Static enums:DivideType.Length}}">
+                <Run >length:</Run>
+                <Run Text="{Binding Length, Mode=OneWay}" FontWeight="Bold"/>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>

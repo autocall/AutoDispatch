@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Копия V1 Sources/_Common/AutoCall.Common. BaseDto, DisplayAttribute, AutoCallEquipmentType, EnumExtensions —
+       в общем контракте Sources/Shared/AutoDispatch.Dtos (те же namespace V1); GetDescriptionShort — EnumShortExtensions.
+       Логгеры _l/_webl — поверх Serilog (как AutoCall V3), Common.Logging/log4net убраны -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Remove="AutoMapper" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\AutoDispatch.Dtos\AutoDispatch.Dtos.csproj" />
+  </ItemGroup>
+
+</Project>

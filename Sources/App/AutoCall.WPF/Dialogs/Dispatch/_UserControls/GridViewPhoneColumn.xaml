@@ -1,0 +1,21 @@
+﻿<telerik:GridViewDynamicHyperlinkColumn
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.UserControls.GridViewPhoneColumn"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    mc:Ignorable="d" >
+    <telerik:GridViewColumn.Resources>
+        <!-- uses in codebehind -->
+        <converters:ToStringConverter x:Key="ToStirngConverter"/>
+    </telerik:GridViewColumn.Resources>
+    <telerik:GridViewColumn.CellStyle>
+        <Style TargetType="telerik:GridViewCell">
+            <EventSetter Event="MouseEnter" Handler="Cell_MouseOnEnter"/>
+            <EventSetter Event="MouseLeave" Handler="Cell_MouseOnLeave"/>
+            <EventSetter Event="Hyperlink.Click" Handler="Phone_Click"/>
+        </Style>
+    </telerik:GridViewColumn.CellStyle>
+</telerik:GridViewDynamicHyperlinkColumn>

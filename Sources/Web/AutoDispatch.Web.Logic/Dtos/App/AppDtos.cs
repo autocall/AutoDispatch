@@ -17,6 +17,9 @@ public class SessionDto {
     public bool HasBnsfRailway { get; set; }
     /// <summary> Пользовательские статусы компании (OAuth V1 customStatuses, там — JSON словаря Id → Name) </summary>
     public List<AutoDispatch.Dtos.Dtos.CompanyCustomStatusDto> CustomStatuses { get; set; }
+    /// <summary> Учётка SIP софтфона (V1 сессия MicroSIPLogin/MicroSIPPassword), как в AutoCall V3 </summary>
+    public string SipLogin { get; set; }
+    public string SipPassword { get; set; }
 }
 
 public class ChangePasswordDto {

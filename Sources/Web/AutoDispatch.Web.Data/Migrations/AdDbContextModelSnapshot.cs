@@ -139,6 +139,12 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<string>("Signature")
                         .HasColumnType("varchar(64)");
 
+                    b.Property<string>("SipLogin")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("SipPassword")
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("TimeZoneId")
                         .HasColumnType("varchar(64)");
 

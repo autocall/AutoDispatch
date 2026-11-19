@@ -30,3 +30,10 @@ logs
 
 # MCP db-readonly: пароль логина, как в AutoCallV3
 /AI/mcp/db-readonly/.env
+
+# App: адрес сервера и учётка DEBUG (шаблон Settings.cs.example в git), как в AutoCallV3
+/Sources/App/AutoCall.Common/Settings.cs
+# App: SIPVoipSDK софтфона и сторонние DLL, как в AutoCallV3
+/Sources/App/AutoCall.WPF/Resources/phone/SIPVoipSDK
+# App: сторонние DLL (Interop.SIPVoipSDK, TwainDotNet), как /Libraries в AutoCallV3
+/Sources/App/Libraries

@@ -1,0 +1,15 @@
+﻿<telerik:RadButton
+    x:Class="AutoCall.WPF.UserControls.RadPhoneButton"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    Cursor="{x:Static Cursors.Hand}"
+    Click="Phone_OnMouseUp"
+    ToolTip="Dial phone number">
+    <telerik:RadButton.Content>
+        <Image 
+            Source="/AutoDispatch;component/Resources/black_phone.png" 
+            RenderOptions.BitmapScalingMode="Fant"/>
+    </telerik:RadButton.Content>
+</telerik:RadButton>
+

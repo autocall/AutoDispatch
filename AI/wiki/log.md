@@ -243,3 +243,29 @@ allowed, поэтому не попала в `#company`, а её Truck/Driver/Tr
 (блок 5) — список отсутствующих. Проверен на хосте на тестовых каталогах в `/tmp` (регистр, права 600 → 644, пробелы в именах, дельта), тест удалён.
 Хост: `temp` и `files` на одном `/dev/md2`, свободно 765 ГБ — две копии по 255 ГБ помещаются; `temp` никто не чистит. `temp` удалить после
 переключения. Ручная команда `mv` в нижний регистр в [[data-migration]] заменена скриптом; обновлены [[plan]], [[deploy]], `Deploy/server-setup.txt`, хаб.
+
+## [2026-11-19] decision | Софтфоны в App — переносятся AutoPhone и AutoPhone v.2, мёртвый код — закомментированным
+Звонок по клику — часть dispatch-диалогов (колонка Phone бордов, справочники, карточка карриера, контакты груза/карриера/брокера), шёл через
+софтфон модуля AutoCall. Решение пользователя: перенести те, что есть в AutoCall V3 — AutoPhone (MicroSIP), AutoPhone v.2 (`AutoPhoneV2`, Abto),
+None, и окно Settings только с вкладкой Call Services. Сервер: `AdUser.SipLogin/SipPassword` + `SessionDto` (миграция — пользователь); скрипт
+переноса — SIP в шаге 0.4, секция `CallServiceSettings` в 0.5 (13 из 17 пользователей, JSON проверен на боевой). Мёртвый код V1 —
+`EditBaseLoadControl.Phone_OnMouseUp`, `PhoneControl`, DAT rate (`GetHybridRate` на сервере V1 всегда `DISABLED`) — закомментированным с пометкой.
+[[plan]] «Решить» — «Софтфоны в App», [[user-settings]], [[data-migration]].
+
+## [2026-11-19] ingest | Этап 7 — клиент AutoDispatch App перенесён (код)
+`Sources/App/AutoDispatch.sln` (.NET 10, x86): AutoCall.Common, AutoDispatch.Data/Logic/Logic.Contracts, AutoPhoneV2, AutoCall.WPF (`AssemblyName = AutoDispatch`).
+Unity → MS DI без интерфейсов, AutoMapper — только автоматические пары, остальное статические конвертеры; data-сервисы на `BaseApi` V3, один вход
+`Api/Account/SignIn`; `SettingsService` по секциям (сервер `ApiSettingsController` + `UserSettingService.GetAllJsonAsync/SetJsonAsync`); Serilog +
+`ServerLogSink`; карты — WebView2; софтфоны MicroSIP/Abto; ClickOnce x86 + `Scripts/publish-autodispatch-app.ps1`. Данные модуля AutoCall,
+которыми пользовался dispatch, заменены (коды оборудования и зоны штатов — статические таблицы с `autocall`, поиск городов — Places).
+Мёртвый код V1 закомментирован с пометкой. Сборка 0 ошибок, App до входа, AutoMapper и `SettingsService` проверены; вход ждёт миграции
+`AdUser.SipLogin/SipPassword`. Новая страница [[app]]; обновлены [[plan]], [[user-settings]], [[protocol]], [[deploy]], [[index]].
+
+## [2026-11-19] fix | New Driver Application Package.pdf — назначение и адрес
+Исправлено описание в [[deploy]]: PDF — бланк для нового водителя по ссылке в справочнике Drivers App, а не вложение писем setup packet.
+Адрес в `DriversDialog` — `{WebUrl}Download/…` вместо `//Download` V1 (Kestrel с `RequestPath /Download` его не отдаёт). [[app]].
+
+## [2026-11-19] decision | App: сертификат ClickOnce из V3, проекты не переименовываются
+Решение пользователя: `AutoCall.Common` и `AutoCall.WPF` остаются с именами V1; подпись ClickOnce — сертификатом AutoCall V3
+(`AutoCall.Publish_3_TemporaryKey.pfx`, `CN=AutoCall`, в `.gitignore`), отпечаток записан в `ClickOnceProfile.pubxml`; пробный `msbuild /t:Publish`
+подписал манифест. Папка `Resources/phone` совпадает с V1/V3 и вся относится к двум софтфонам — не менялась. [[deploy]], [[app]], [[plan]].

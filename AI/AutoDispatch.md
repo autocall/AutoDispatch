@@ -15,6 +15,7 @@
 - [[v1-inventory]] — что именно переносим из V1 и что к dispatch не относится
 - [[protocol]] — `Api/Dispatch/Request|Response`, конверт `EventRequest`, что сохраняем в V3
 - [[data-migration]] — замеры, блоки переноса, догон, файлы (весь `E:\Files` FileZilla в `/home/safer/temp`, 255 ГБ, затем `Scripts/copy-dispatch-files.sh`)
+- [[app]] — клиент AutoDispatch App (.NET 10): проекты, DI, конвертеры, настройки, софтфоны, карты, мёртвый код V1
 - [[deploy]] — контейнер, поддомен, volume `/files`, секреты
 
 Индекс — `AI/wiki/index.md`, журнал — `AI/wiki/log.md`.

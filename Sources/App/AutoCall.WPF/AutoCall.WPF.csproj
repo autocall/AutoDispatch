@@ -1,0 +1,307 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AutoDispatch App: копия V1 App/Project/UI/AutoCall.WPF без модуля AutoCall (AI/wiki/plan.md этап 7), как AutoCall.View V3:
+       net10.0-windows, x86, AssemblyName AutoDispatch, MS DI в App.xaml.cs, Serilog, Telerik R1 2022 Binaries/WPF60 по HintPath.
+       Пространства имён V1 (AutoCall.WPF.*) сохранены — код переносится, а не переписывается -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>AutoDispatch</AssemblyName>
+    <RootNamespace>AutoCall.WPF</RootNamespace>
+    <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
+    <StartupObject>AutoCall.WPF.App</StartupObject>
+    <!-- WFO1000 — свойства WinForms без DesignerSerializationVisibility (код V1) -->
+    <NoWarn>$(NoWarn);WFO1000;NU1701</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Не входили в сборку V1 (нет в AutoCall.WPF.csproj): лежат как в V1, не компилируются -->
+    <Compile Remove="Dialogs\Dispatch\_UserControls\PhoneControl.xaml.cs;Dialogs\Dispatch\LoadSplit\LoadAddDestinationDialog.xaml.cs;UserControls\ContactsControl.xaml.cs" />
+    <Page Remove="Dialogs\Dispatch\_UserControls\PhoneControl.xaml;Dialogs\Dispatch\LoadSplit\LoadAddDestinationDialog.xaml;UserControls\ContactsControl.xaml" />
+    <None Include="Dialogs\Dispatch\_UserControls\PhoneControl.xaml;Dialogs\Dispatch\_UserControls\PhoneControl.xaml.cs;Dialogs\Dispatch\LoadSplit\LoadAddDestinationDialog.xaml;Dialogs\Dispatch\LoadSplit\LoadAddDestinationDialog.xaml.cs;UserControls\ContactsControl.xaml;UserControls\ContactsControl.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Мёртвый код V1: GMapControl нигде не используется (GMapViewModel — модуль AutoCall); Templates\GoogleMapsTemplate.html — только для него -->
+    <Compile Remove="UserControls\GMapControl.xaml.cs" />
+    <Page Remove="UserControls\GMapControl.xaml" />
+    <None Include="UserControls\GMapControl.xaml;UserControls\GMapControl.xaml.cs;Templates\GoogleMapsTemplate.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="DotNetProjects.SVGImage" Version="5.2.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
+    <!-- TwainDotNet 1.0 (.NET 2.0) пишет логи log4net 1.2 — пакет только ради неё (AI/wiki/plan.md «Сканер TWAIN в App») -->
+    <PackageReference Include="log4net" Version="2.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCall.Common\AutoCall.Common.csproj" />
+    <ProjectReference Include="..\AutoDispatch.Data\AutoDispatch.Data.csproj" />
+    <ProjectReference Include="..\AutoDispatch.Logic.Contracts\AutoDispatch.Logic.Contracts.csproj" />
+    <ProjectReference Include="..\AutoDispatch.Logic\AutoDispatch.Logic.csproj" />
+    <ProjectReference Include="..\AutoPhoneV2\AutoPhoneV2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="TwainDotNet">
+      <HintPath>..\Libraries\TwainDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.Data">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.Docking">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.GridView">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.GridView.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.Input">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.Input.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.Navigation">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.Navigation.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.RibbonView">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.RibbonView.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.RichTextBox">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.RichTextBox.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.FixedDocumentViewers">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Controls.FixedDocumentViewers.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Data">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Core">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Fixed">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Fixed.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Flow">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Flow.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.Xls">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Xls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.PersistenceFramework">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.PersistenceFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Zip">
+      <HintPath>C:\Program Files (x86)\Progress\Telerik UI for WPF R1 2022\Binaries\WPF60\Telerik.Windows.Zip.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\abtophone.png" />
+    <Resource Include="Resources\add.png" />
+    <Resource Include="Resources\alarm_disabled.png" />
+    <Resource Include="Resources\app_logo.png" />
+    <Resource Include="Resources\arcbest.png" />
+    <Resource Include="Resources\archive.png" />
+    <Resource Include="Resources\arrow_left.png" />
+    <Resource Include="Resources\arrow_right.png" />
+    <Resource Include="Resources\autocall.png" />
+    <Resource Include="Resources\autophone.png" />
+    <Resource Include="Resources\black_arrow.png" />
+    <Resource Include="Resources\black_down.png" />
+    <Resource Include="Resources\black_edit.png" />
+    <Resource Include="Resources\black_phone.png" />
+    <Resource Include="Resources\black_plus.png" />
+    <Resource Include="Resources\black_up.png" />
+    <Resource Include="Resources\blacklist.png" />
+    <Resource Include="Resources\bnsf.png" />
+    <Resource Include="Resources\brain.png" />
+    <Resource Include="Resources\bria.png" />
+    <Resource Include="Resources\calculator.png" />
+    <Resource Include="Resources\carrierview.png" />
+    <Resource Include="Resources\CarrierView\Arrow0.svg" />
+    <Resource Include="Resources\CarrierView\Arrow0_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow0_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow135.svg" />
+    <Resource Include="Resources\CarrierView\Arrow135_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow135_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow180.svg" />
+    <Resource Include="Resources\CarrierView\Arrow180_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow180_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow225.svg" />
+    <Resource Include="Resources\CarrierView\Arrow225_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow225_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow270.svg" />
+    <Resource Include="Resources\CarrierView\Arrow270_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow270_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow315.svg" />
+    <Resource Include="Resources\CarrierView\Arrow315_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow315_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow45.svg" />
+    <Resource Include="Resources\CarrierView\Arrow45_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow45_late.svg" />
+    <Resource Include="Resources\CarrierView\Arrow90.svg" />
+    <Resource Include="Resources\CarrierView\Arrow90_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Arrow90_late.svg" />
+    <Resource Include="Resources\CarrierView\MarkerDriveBackground.svg" />
+    <Resource Include="Resources\CarrierView\MarkerStartedBackground.svg" />
+    <Resource Include="Resources\CarrierView\MarkerStoppedBackground.svg" />
+    <Resource Include="Resources\CarrierView\Pause.svg" />
+    <Resource Include="Resources\CarrierView\Pause_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Pause_late.svg" />
+    <Resource Include="Resources\CarrierView\route_circle.svg" />
+    <Resource Include="Resources\CarrierView\route_circle_location.svg" />
+    <Resource Include="Resources\CarrierView\route_end.svg" />
+    <Resource Include="Resources\CarrierView\route_start.svg" />
+    <Resource Include="Resources\CarrierView\Start.svg" />
+    <Resource Include="Resources\CarrierView\Start_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Start_late.svg" />
+    <Resource Include="Resources\CarrierView\Stop.svg" />
+    <Resource Include="Resources\CarrierView\Stop_disabled.svg" />
+    <Resource Include="Resources\CarrierView\Stop_late.svg" />
+    <Resource Include="Resources\CarrierView\tracking_interrupted.svg" />
+    <Resource Include="Resources\CarrierView\tracking_successful.svg" />
+    <Resource Include="Resources\check.png" />
+    <Resource Include="Resources\CHRobinson.png" />
+    <Resource Include="Resources\chrome.png" />
+    <Resource Include="Resources\circle_buzy.gif" />
+    <Resource Include="Resources\circle-green.png" />
+    <Resource Include="Resources\circle-red.png" />
+    <Resource Include="Resources\clear.png" />
+    <Resource Include="Resources\clock.png" />
+    <Resource Include="Resources\Close.png" />
+    <Resource Include="Resources\coins.png" />
+    <Resource Include="Resources\coyote.png" />
+    <Resource Include="Resources\currency_blue_dollar.png" />
+    <Resource Include="Resources\currency_paid.png" />
+    <Resource Include="Resources\currency_unpaid.png" />
+    <Resource Include="Resources\cycle.gif" />
+    <Resource Include="Resources\dat.png" />
+    <Resource Include="Resources\dat_broker.png" />
+    <Resource Include="Resources\database_active.png" />
+    <Resource Include="Resources\defender.png" />
+    <Resource Include="Resources\delete.png" />
+    <Resource Include="Resources\delivery.png" />
+    <Resource Include="Resources\desktop_phone.png" />
+    <Resource Include="Resources\dice.png" />
+    <Resource Include="Resources\dispatch.png" />
+    <Resource Include="Resources\Document.png" />
+    <Resource Include="Resources\Document_bill.png" />
+    <Resource Include="Resources\Document_checked.png" />
+    <Resource Include="Resources\Document_confirmed.png" />
+    <Resource Include="Resources\edit.png" />
+    <Resource Include="Resources\email_open.png" />
+    <Resource Include="Resources\email_send.png" />
+    <Resource Include="Resources\englandlogistics.png" />
+    <Resource Include="Resources\Excel_2003.png" />
+    <Resource Include="Resources\favorite_record.png" />
+    <Resource Include="Resources\filter.png" />
+    <Resource Include="Resources\folder_open.png" />
+    <Resource Include="Resources\folder_open16.png" />
+    <Resource Include="Resources\globe.png" />
+    <Resource Include="Resources\hazMat_80x20.PNG" />
+    <Resource Include="Resources\history.png" />
+    <Resource Include="Resources\icon.ico" />
+    <Resource Include="Resources\icon_question.png" />
+    <Resource Include="Resources\iconNotify.ico" />
+    <Resource Include="Resources\inbox.png" />
+    <Resource Include="Resources\info_blue.png" />
+    <Resource Include="Resources\jbhunt.png" />
+    <Resource Include="Resources\key.png" />
+    <Resource Include="Resources\knight.png" />
+    <Resource Include="Resources\landstar.png" />
+    <Resource Include="Resources\length.png" />
+    <Resource Include="Resources\link.png" />
+    <Resource Include="Resources\load.png" />
+    <Resource Include="Resources\lock.png" />
+    <Resource Include="Resources\magellan.png" />
+    <Resource Include="Resources\map-pointer-icon.png" />
+    <Resource Include="Resources\mirror.png" />
+    <Resource Include="Resources\monitor.png" />
+    <Resource Include="Resources\new.gif" />
+    <Resource Include="Resources\pallet.png" />
+    <Resource Include="Resources\phone.png" />
+    <Resource Include="Resources\phone_green.png" />
+    <Resource Include="Resources\phone_red.png" />
+    <Resource Include="Resources\phone_transfer.png" />
+    <Resource Include="Resources\phone_transferred.png" />
+    <Resource Include="Resources\phone_white_green.png" />
+    <Resource Include="Resources\phone_white_red.png" />
+    <Resource Include="Resources\phone_white_transfer.png" />
+    <Resource Include="Resources\phone_white_yellow.png" />
+    <Resource Include="Resources\phone_yellow.png" />
+    <Resource Include="Resources\phone_yellow_hold.png" />
+    <Resource Include="Resources\pin_map_large.png" />
+    <Resource Include="Resources\post_loads.png" />
+    <Resource Include="Resources\post_trucks.png" />
+    <Resource Include="Resources\red_load.png" />
+    <Resource Include="Resources\safer32.png" />
+    <Resource Include="Resources\Scan-icon.png" />
+    <Resource Include="Resources\scanner.png" />
+    <Resource Include="Resources\scanner-jpg.png" />
+    <Resource Include="Resources\scanner-pdf.png" />
+    <Resource Include="Resources\schneider.png" />
+    <Resource Include="Resources\search_loads.png" />
+    <Resource Include="Resources\search_trucks.png" />
+    <Resource Include="Resources\settings.png" />
+    <Resource Include="Resources\shield_green.png" />
+    <Resource Include="Resources\shield_grey.png" />
+    <Resource Include="Resources\shield_red.png" />
+    <Resource Include="Resources\shield_yellow.png" />
+    <Resource Include="Resources\small_add.png" />
+    <Resource Include="Resources\small_delete.png" />
+    <Resource Include="Resources\small_next.png" />
+    <Resource Include="Resources\small_phone.png" />
+    <Resource Include="Resources\sound.png" />
+    <Resource Include="Resources\start.png" />
+    <Resource Include="Resources\stop.png" />
+    <Resource Include="Resources\tab_panel_load.png" />
+    <Resource Include="Resources\tab_panel_save.png" />
+    <Resource Include="Resources\telephone_blue.png" />
+    <Resource Include="Resources\trailer_small.png" />
+    <Resource Include="Resources\trash.png" />
+    <Resource Include="Resources\truckloads.png" />
+    <Resource Include="Resources\truckstop.png" />
+    <Resource Include="Resources\typeview_classic.png" />
+    <Resource Include="Resources\typeview_dynamic.png" />
+    <Resource Include="Resources\undo.png" />
+    <Resource Include="Resources\ups.png" />
+    <Resource Include="Resources\user_group.png" />
+    <Resource Include="Resources\usps.png" />
+    <Resource Include="Resources\volume 00.png" />
+    <Resource Include="Resources\volume 01.png" />
+    <Resource Include="Resources\volume 02.png" />
+    <Resource Include="Resources\volume 03.png" />
+    <Resource Include="Resources\warning.png" />
+    <Resource Include="Resources\warning_yellow.png" />
+    <Resource Include="Resources\weight.png" />
+    <Resource Include="Resources\xpologistics.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Софтфоны (AI/wiki/plan.md «Софтфоны в App»): AutoPhone (MicroSIP) и SDK AutoPhone v.2, звонок AbtoPhone -->
+    <None Update="Resources\phone\autophone.exe" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Resources\phone\SIPVoipSDK\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Resources\sounds\telephone-ring.wav" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

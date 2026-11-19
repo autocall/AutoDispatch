@@ -1,0 +1,65 @@
+﻿<dialogs:BaseDispatchDialog
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.SendSmsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    mc:Ignorable="d" 
+    Title="Send SMS"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen"
+    Background="{x:Static SystemColors.ControlBrush}"
+    Height="300" Width="500"
+    d:DesignHeight="300" d:DesignWidth="500">
+    <dialogs:BaseDispatchDialog.Resources>
+        <!-- STYLES -->
+        <Style x:Key="title" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource titleTextBlock}"/>
+        <Style x:Key="phoneTextBox" TargetType="{x:Type userControls:RadPhoneTextInput}" BasedOn="{StaticResource fieldRadMaskedTextInput}">
+            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="IsLastPositionEditable" Value="False"/>
+            <Setter Property="IsClearButtonVisible" Value="False"/>
+        </Style>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Column="0" Grid.Row="0"
+                Style="{StaticResource title}"
+                Text="Phone"/>
+
+        <telerik:RadAutoCompleteBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Drivers}"
+            AutoCompleteMode="Suggest" TextSearchMode="Contains" SelectionMode="Single"  Margin="0,5,5,5"
+            SelectedItem="{Binding SelectedDriver, Mode=TwoWay}"
+            SearchText="{Binding ToPhone, Mode=TwoWay}"
+            DisplayMemberPath="DisplayNameAndPhone"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="1"
+                Style="{StaticResource title}"
+                Text="Message"
+                VerticalAlignment="Top"/>
+        <TextBox Grid.Column="1" Grid.Row="1" 
+                Style="{StaticResource fieldTextBox}"
+                Text="{Binding Message}" AcceptsReturn="True" TextWrapping="Wrap"/>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" Grid.ColumnSpan="4" Margin="5" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Right" Visibility="Hidden" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Grid.ColumnSpan="4" Margin="5" IsIndeterminate="True" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="3" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">Send</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+
+    </Grid>
+</dialogs:BaseDispatchDialog>

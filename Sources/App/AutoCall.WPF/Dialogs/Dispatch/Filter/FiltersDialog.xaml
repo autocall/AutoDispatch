@@ -1,0 +1,177 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.FiltersDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:enums="clr-namespace:AutoDispatch.Logic.Contracts.Enums;assembly=AutoDispatch.Logic.Contracts"
+        xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:core="clr-namespace:AutoCall.WPF.Core"
+        MinWidth="700" MinHeight="350" SizeToContent="WidthAndHeight"
+        Icon="/AutoDispatch;component/Resources/icon.ico"
+        Background="{x:Static SystemColors.ControlBrush}">
+    <dialogs:BaseDispatchDialog.Resources>
+        <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
+        <c:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter" />
+        <c:EnumToKeyValuesConverter x:Key="EnumToKeyValuesConverter" />
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="1" Margin="30,0,5,0" Foreground="Gray" HorizontalAlignment="Left">enter <Bold>'Filter Name'</Bold></TextBlock>
+            <TextBlock Grid.Column="2" Margin="5,0" Foreground="Gray" HorizontalAlignment="Center">fields</TextBlock>
+            <TextBlock Grid.Column="3" Margin="0" Foreground="Gray" HorizontalAlignment="Right">enter <Bold>'Column'</Bold> and <Bold>'Value'</Bold> → press <Bold>'+'</Bold></TextBlock>
+        </Grid>
+
+        <StackPanel Grid.Row="1">
+            <telerik:RadListBox BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding Filters}" Background="Transparent">
+                <telerik:RadListBox.Resources>
+                    <Style TargetType="telerik:RadListBoxItem" BasedOn="{StaticResource {x:Type telerik:RadListBoxItem}}">
+                        <Setter Property="telerik:TouchManager.DragStartTrigger" Value="TapHoldAndMove"/>
+                        <Setter Property="Template" Value="{StaticResource RadListBoxItemControlTemplate1}"/>
+                    </Style>
+                </telerik:RadListBox.Resources>
+                <telerik:RadListBox.DragVisualProvider>
+                    <telerik:ScreenshotDragVisualProvider />
+                </telerik:RadListBox.DragVisualProvider>
+                <telerik:RadListBox.DragDropBehavior>
+                    <telerik:ListBoxDragDropBehavior AllowReorder="True" telerik:TouchManager.DragStartTrigger="TapHoldAndMove"/>
+                </telerik:RadListBox.DragDropBehavior>
+                <telerik:RadListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Drag -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,0" Cursor="Hand" 
+                                telerik:DragDropManager.AllowCapturedDrag="True"
+                                Background="{x:Static SystemColors.ControlBrush}">
+                                <Canvas RenderOptions.EdgeMode="Aliased" UseLayoutRounding="True"
+                                    Height="16" VerticalAlignment="Center"
+                                    Width="16" HorizontalAlignment="Center">
+                                    <Line Y1="0" Y2="16" X1="4" X2="4"
+                                        Stroke="White" StrokeThickness="1"/>
+                                    <Line Y1="0" Y2="16" X1="5" X2="5"
+                                        Stroke="#A0A0A0" StrokeThickness="1"/>
+                                    <Line Y1="0" Y2="16" X1="8" X2="8"
+                                        Stroke="White" StrokeThickness="1"/>
+                                    <Line Y1="0" Y2="16" X1="9" X2="9"
+                                        Stroke="#A0A0A0" StrokeThickness="1"/>
+                                    <Line Y1="0" Y2="16" X1="12" X2="12"
+                                        Stroke="White" StrokeThickness="1"/>
+                                    <Line Y1="0" Y2="16" X1="13" X2="13"
+                                        Stroke="#A0A0A0" StrokeThickness="1"/>
+                                </Canvas>
+                            </StackPanel>
+                            <!-- delete -->
+                            <Button Grid.Column="1" Click="btnDeleteFilter_OnClick" Margin="0,0,5,0" Cursor="Hand">
+                                <Image Source="/AutoDispatch;component/Resources/delete.png" Width="16" Height="16"/>
+                            </Button>
+                            <!-- name -->
+                            <telerik:RadWatermarkTextBox Grid.Column="2" Text="{Binding Name}" Width="80" WatermarkContent="Name"/>
+                            <!-- content -->
+                            <ItemsControl Grid.Column="3" ItemsSource="{Binding Columns}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="5,0,0,0" Background="{x:Static SystemColors.ControlBrush}">
+                                            <Border BorderThickness="1,1,0,1" CornerRadius="5,0,0,5" BorderBrush="Gray" Padding="1">
+                                                <TextBlock Text="{Binding Column, Converter={StaticResource EnumToDescriptionConverter}}"
+                                                    VerticalAlignment="Center" Margin="5,0"/>
+                                            </Border>
+                                            <Border BorderThickness="1,1,0,1" BorderBrush="Gray" Padding="1">
+                                                <TextBlock Text="{Binding Value}" VerticalAlignment="Center" Margin="5,0"/>
+                                            </Border>
+                                            <Border BorderThickness="1" CornerRadius="0,5,5,0" BorderBrush="Gray" Padding="1">
+                                                <Image Source="/AutoDispatch;component/Resources/delete.png"
+                                                    MouseLeftButtonUp="imgDeleteColumn_MouseLeftButtonUp"
+                                                    Cursor="Hand" Width="16" Height="16" Margin="3,0"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <!-- new -->
+                            <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="5,0,0,0">
+                                <telerik:RadComboBox Width="90"
+                                    ItemsSource="{Binding Source={x:Type enums:FilterColumnEnum}, Converter={StaticResource EnumToKeyValuesConverter}}" 
+                                    SelectedValue="{Binding NewKey}" 
+                                    SelectedValuePath="Key" DisplayMemberPath="Value">
+                                    <telerik:RadComboBox.EmptySelectionBoxTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="Column" Foreground="Gray" FontStyle="Italic" />
+                                        </DataTemplate>
+                                    </telerik:RadComboBox.EmptySelectionBoxTemplate>
+                                </telerik:RadComboBox>
+                                <telerik:RadWatermarkTextBox Width="90" Margin="-1,0,0,0" Text="{Binding NewValue}" WatermarkContent="Value"/>
+                                <Button Click="btnAddColumn_OnClick" Margin="3,0,0,0" Cursor="Hand">
+                                    <Image Source="/AutoDispatch;component/Resources/add.png" Width="16" Height="16"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </telerik:RadListBox.ItemTemplate>
+            </telerik:RadListBox>
+            <Button Content="Add" Margin="30,5,0,10" Width="80" HorizontalAlignment="Left" Click="btnAddFilter_OnClick" Cursor="Hand"/>
+        </StackPanel>
+
+        <Border Grid.Column="1" Grid.RowSpan="4" Width="Auto"
+            Background="AntiqueWhite" BorderBrush="Gray" BorderThickness="1" CornerRadius="10" Margin="5" Padding="10">
+            <StackPanel>
+                <TextBlock HorizontalAlignment="Center" Margin="0,0,0,10"><Bold>Examples:</Bold></TextBlock>
+                <TextBlock><Bold>Origin: Chicago</Bold> - filter by city</TextBlock>
+                <TextBlock><Bold>Origin: IL</Bold> - filter by state</TextBlock>
+                <TextBlock><Bold>Origin: ILWI</Bold> - multi-state</TextBlock>
+                <TextBlock><Bold>Destination: Z6</Bold> - zone</TextBlock>
+                <TextBlock><Bold>Destination: Z5Z6</Bold> - multi-zone</TextBlock>
+                <TextBlock><Bold>Pickup: d</Bold> - today ('<Bold>d</Bold>'='<Bold>0d</Bold>'='<Bold>+0d</Bold>')</TextBlock>
+                <TextBlock><Bold>Pickup: -1d</Bold> - yesterday</TextBlock>
+                <TextBlock><Bold>Pickup: 1d</Bold> - tomorrow</TextBlock>
+                <TextBlock><Bold>Pickup: 1w</Bold> - next week (sun→sat)</TextBlock>
+                <TextBlock><Bold>Delivery: monday</Bold> - delivery on monday</TextBlock>
+                <TextBlock><Bold>Delivery: 0d~3d</Bold> - delivery between...</TextBlock>
+                <TextBlock><Bold>Delivery: 0m</Bold> - current month</TextBlock>
+                <TextBlock><Bold>Delivery: ~1m</Bold> - current month</TextBlock>
+                <TextBlock><Bold>Delivery: 1m~</Bold> - next month and later</TextBlock>
+                <TextBlock><Bold>Created: -5d~</Bold> - created in the last 5 days</TextBlock>
+                <TextBlock><Bold>Created by: user1</Bold> - created by user</TextBlock>
+                <TextBlock><Bold>Status: waiting | en route</Bold> - combination of statuses</TextBlock>
+                <TextBlock><Bold>Custom Status: status1 | status2</Bold> - combination of statuses
+                    <Hyperlink NavigateUri="https://myautocall.net/CustomStatus" RequestNavigate="CustomStatusLink_RequestNavigate">link</Hyperlink>
+                </TextBlock>
+                <TextBlock><Bold>Equipment: V | VR</Bold> - combination of equipments</TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" TextWrapping="Wrap" Margin="5" Foreground="Red" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Margin="5" IsIndeterminate="True" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="6" HorizontalAlignment="Left" Style="{StaticResource OkButtonStyle}" Click="btnOk_OnClick">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="6" HorizontalAlignment="Right" Style="{StaticResource CancelButtonStyle}" Click="btnClose_OnClick">Cancel</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>

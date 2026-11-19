@@ -85,7 +85,9 @@ public class UserService : BaseService {
             Roles = roles.ToList(),
             // как OAuth V1 (ApplicationOAuthProvider): App читает их при входе (решено 2026-11-17)
             HasBnsfRailway = await Host.GetService<Dispatch.DispatchCompanyService>().HasBnsfRailwayAsync(user.CompanyId),
-            CustomStatuses = await Host.GetService<Dispatch.CustomStatusService>().GetStatusesAsync(user.Id)
+            CustomStatuses = await Host.GetService<Dispatch.CustomStatusService>().GetStatusesAsync(user.Id),
+            SipLogin = user.SipLogin,
+            SipPassword = user.SipPassword
         };
     }
 

@@ -1,0 +1,21 @@
+<Project>
+  <!-- Как в AutoCall V3 (Sources/App/Directory.Build.props). Отступление: Nullable и ImplicitUsings выключены —
+       код V1 переносится как есть, со своими using; implicit System.IO/System.Net.Http дали бы конфликты имён с WPF (Path и др.) -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PlatformTarget>x86</PlatformTarget>
+    <!-- 13, не 14: в коде V1 есть локальные переменные field (в C# 14 — ключевое слово в аксессорах) -->
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- CS0168/CS0219/CS0162/CS0414/CS0649/CS0169 — неиспользуемые переменные и поля кода V1; SYSLIB0014 — WebRequest/ServicePointManager V1 -->
+    <NoWarn>$(NoWarn);NU1903;MSB3277;CS0168;CS0219;CS0162;CS0414;CS0649;CS0169;CS0067;CS0108;CS0618;CS1998;CS4014;SYSLIB0014;WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,230 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.EditBrokerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+    xmlns:toUri="clr-namespace:AutoCall.WPF.Converters.ToUri"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+    xmlns:behaviors="clr-namespace:AutoCall.WPF.Behaviors"
+    SizeToContent="Height" Width="760" 
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+    SourceInitialized="EditDatCompanyDialog_OnSourceInitialized"
+    Closing="BaseDispatchDialog_Closing"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <dialogs:BaseDispatchDialog.Resources>
+        <converters:DictionaryToValueConverter x:Key="DictionaryToValueConverter"/>
+        <converters:EnumToDescriptionsConverter x:Key="EnumToDescriptionsConverter"/>
+        <converters:FileNameToBitmapImageConverter x:Key="FileNameToBitmapImageConverter"/>
+        <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+        <toUri:InsuranceStateTypeToUriConverter x:Key="InsuranceStateTypeToUriConverter"/>
+        <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <telerik:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
+        <Style x:Key="valueTextBlock" TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="3,0,0,0"/>
+        </Style>
+        <Style x:Key="valueTextBox" TargetType="{x:Type TextBox}">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
+        </Style>
+        <Style x:Key="editableTextBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="34"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <!-- Actual Company -->
+        <telerik:RadComboBox Name="cbActualCompany"
+            Width="50" Height="32" Margin="2,2,0,0"
+            HorizontalAlignment="Left" VerticalAlignment="Top"
+            SelectedValuePath="EntityId"
+            SelectedValue="{Binding ActualCompanyId}">
+            <telerik:RadComboBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                        <TextBlock Text="{Binding LegalName}" VerticalAlignment="Center" Margin="5,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </telerik:RadComboBox.ItemTemplate>
+            <telerik:RadComboBox.SelectionBoxTemplate>
+                <DataTemplate>
+                    <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                </DataTemplate>
+            </telerik:RadComboBox.SelectionBoxTemplate>
+        </telerik:RadComboBox>
+
+        <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource titleTextBlock}" Text="MC#"/>
+        <StackPanel Name="spSearchMc" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal">
+            <TextBox Name="tbMc" Width="100"
+                Style="{StaticResource editableTextBox}" 
+                KeyDown="tbMcOrDot_KeyDown"/>
+            <Button Margin="5" Width="70" Click="SearchClicked">Search</Button>
+        </StackPanel>
+
+        <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource titleTextBlock}" Text="DOT#"/>
+        <StackPanel Name="spSearchDot" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal">
+            <TextBox Name="tbDot" Width="100"
+                Style="{StaticResource editableTextBox}" 
+                KeyDown="tbMcOrDot_KeyDown"/>
+            <TextBlock Margin="5">
+                <Hyperlink Click="CarrierView_OnClick">brokersnapshot.com</Hyperlink>
+            </TextBlock>
+        </StackPanel>
+
+        <!-- DoNotUse -->
+        <TextBlock Grid.Column="2" Grid.Row="0" Style="{StaticResource titleTextBlock}" Text="Do Not Use" Foreground="Red"/>
+        <CheckBox Grid.Column="3" Grid.Row="0" Style="{StaticResource CrossCheckBoxStyle}" VerticalAlignment="Center"
+            IsChecked="{Binding DoNotUse, Mode=TwoWay}"></CheckBox>
+
+        <!-- Rating -->
+        <TextBlock Grid.Column="2" Grid.Row="1" Style="{StaticResource titleTextBlock}" Text="Rating"/>
+        <telerik:RadRating VerticalAlignment="Center"
+            Grid.Column="3" Grid.Row="1"
+            MouseDown="RadRating_MouseDown"
+            MouseUp="RadRating_MouseUp"  
+            Value="{Binding Rating, Mode=TwoWay}" Precision="Item"/>
+
+        <!--Comments-->
+        <telerik:XamlDataProvider x:Name="xamlDataProvider" 
+            Xaml="{Binding Comments, Mode=TwoWay}" 
+            RichTextBox="{Binding ElementName=richTextBox}" 
+            SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+        <telerik:RadRichTextBox x:Name="richTextBox" 
+            Grid.Column="2" Grid.Row="2" Grid.ColumnSpan="2" Grid.RowSpan="2"
+            Width="Auto" MinHeight="40"
+            Style="{StaticResource fieldRadRichTextBox}"
+            VerticalContentAlignment="Top"
+            IsSelectionMiniToolBarEnabled="True"
+            IsSpellCheckingEnabled="False"
+            DocumentInheritsDefaultStyleSettings="True"
+            FontFamily="Calibri" 
+            FontSize="14" />
+
+        <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource titleTextBlock}" Text="Entity Type"/>
+        <TextBox Name="tbEntityType"
+            Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="3"
+            Style="{StaticResource valueTextBox}" 
+            Text="{Binding EntityType, Converter={StaticResource EnumToDescriptionsConverter}, Mode=OneWay}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource titleTextBlock}" Text="Operating Status"/>
+        <TextBox Name="tbOperatingStatus" Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Operating Status:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="4" Style="{StaticResource titleTextBlock}" Text="Legal Name"/>
+        <TextBox Name="tbLegalName" Width="270"
+            Grid.Column="1" Grid.Row="4" Grid.ColumnSpan="3" 
+            Style="{StaticResource editableTextBox}" 
+            Text="{Binding Name, Mode=TwoWay}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="5" Style="{StaticResource titleTextBlock}" Text="DBA Name"/>
+        <TextBox Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=DBA Name:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="6" Style="{StaticResource titleTextBlock}" Text="Physical Address"/>
+        <TextBox Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Physical Address:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="7" Style="{StaticResource titleTextBlock}" Text="Phone"/>
+        <userControls:PhoneLinkTextBlock Grid.Column="1" Grid.Row="7" Grid.ColumnSpan="3" Style="{StaticResource valueTextBlock}" 
+            DataContext="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Phone:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="8" Style="{StaticResource titleTextBlock}" Text="Mailing Address"/>
+        <TextBox Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Mailing Address:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="9" Style="{StaticResource titleTextBlock}" Text="USDOT Number"/>
+        <TextBox Grid.Column="1" Grid.Row="9" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=USDOT Number:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="10" Style="{StaticResource titleTextBlock}" Text="MC/MX/FF Number(s)"/>
+        <TextBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=MC/MX/FF Number(s):}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="11" Style="{StaticResource titleTextBlock}" Text="Power Units"/>
+        <TextBox Grid.Column="1" Grid.Row="11" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Power Units:}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="12" Style="{StaticResource titleTextBlock}" Text="MCS-150 Form Date"/>
+        <TextBox Grid.Column="1" Grid.Row="12" Grid.ColumnSpan="3" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=MCS-150 Form Date:}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="6" Style="{StaticResource titleTextBlock}" Text="Out of Service Date"/>
+        <TextBox Grid.Column="3" Grid.Row="6" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Out of Service Date:}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="7" Style="{StaticResource titleTextBlock}" Text="State Carrier ID Number"/>
+        <TextBox Grid.Column="3" Grid.Row="7" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=State Carrier ID Number:}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="8" Style="{StaticResource titleTextBlock}" Text="DUNS Number"/>
+        <TextBox Grid.Column="3" Grid.Row="8" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=DUNS Number:}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="9" Style="{StaticResource titleTextBlock}" Text="Drivers"/>
+        <TextBox Grid.Column="3" Grid.Row="9" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=Drivers:}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="10" Style="{StaticResource titleTextBlock}" Text="MCS-150 Mileage (Year)"/>
+        <TextBox Grid.Column="3" Grid.Row="10" Style="{StaticResource valueTextBox}" 
+            Text="{Binding Fields, Converter={StaticResource DictionaryToValueConverter}, ConverterParameter=MCS-150 Mileage (Year):}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="14" Style="{StaticResource titleTextBlock}" Text="Contacts" Margin="5,12,5,5" VerticalAlignment="Top" />
+        <userControls:ContactsControl x:Name="tbEContacts" Grid.Column="1" Grid.Row="14" Width="220" Margin="0,5,5,5" HorizontalAlignment="Left"
+            DataContext="{Binding Contacts, Mode=TwoWay}"/>
+
+        <!--Manage Files control-->
+        <userControls:FilesControl x:Name="filesControl" Grid.Column="2" Grid.ColumnSpan="2" Grid.RowSpan="4" Grid.Row="14" 
+             MaxHeight="300" Margin="5" DataContext="{Binding Files, Mode=OneWay}"/>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="18" Grid.ColumnSpan="4" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="18" Grid.ColumnSpan="4" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="21" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="21" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>

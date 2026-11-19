@@ -1,0 +1,100 @@
+﻿<Window 
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.SearchDatCompanyDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+    mc:Ignorable="d" 
+    d:DesignHeight="400" d:DesignWidth="500"
+    Height="600"  Width="800" 
+    Title="Search Carrier" MinHeight="400"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen"
+    Loaded="SearchDatCompaniesDialog_OnLoaded"
+    Closed="SearchDatCompaniesDialog_OnClosed"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <Window.Resources>
+        <!-- Converters -->
+        <converters:ToStringConverter x:Key="ToStringConverter"/>
+        <converters:NotNullToBoolConverter x:Key="ObjectToBoolConverter"/>
+        <converters:EnumToDescriptionConverter x:Key="enumToDescriptionConverter"/>
+        <dispatch:DatCompaniesDialog_IdToActualCompanyLogoSmallConverter x:Key="IdToActualCompanyLogoSmallConverter"/>
+        <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <telerik:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
+        <!--Loads collection source-->
+        <!-- Use in codebehind -->
+        <CollectionViewSource x:Key="DatCompaniesViewSource" Source="{Binding DatCompanies}" IsLiveFilteringRequested="True" Filter="DatCompaniesViewSource_OnFilter"/>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <!--Loading control-->
+        <userControls:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="Visible" LoadingMessage="Loading..." Grid.RowSpan="10" />
+        <!--Filter-->
+        <telerik:RadWatermarkTextBox Name="tbLoadSearch"
+            Grid.Row="0" FontSize="12" 
+            HorizontalAlignment="Right" Width="120" Height="24" Margin="5"
+            WatermarkContent="Search"
+            Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            TextChanged="tbFilter_OnTextChanged" />
+        <telerik:RadGridView Name="gridCompanies" Grid.Row="1" 
+            AutoGenerateColumns="False" 
+            SelectionMode="Single" SelectionUnit="FullRow"
+            ShowGroupPanel="False" AutoExpandGroups="False" IsFilteringAllowed="False"
+            RowIndicatorVisibility="Collapsed" IsTabStop="False"
+            CanUserReorderColumns="True" CanUserFreezeColumns="False" IsReadOnly="True" CanUserSortColumns="True"
+            ShowColumnFooters="True" ShowGroupFooters="False"
+            SelectedItem="{Binding SelectedDatCompany, Mode=OneWayToSource}"
+            Background="{x:Static SystemColors.ControlBrush}"
+            MouseDoubleClick="grid_OnMouseDoubleClick">
+            <telerik:RadGridView.Columns>
+                <userControls:RowNumberColumn Header="" DataMemberBinding="{Binding CreatedDate}" UniqueName="Row" IsSortable="False"/>
+                <telerik:GridViewImageColumn Header="" ImageHeight="20" ImageWidth="20"
+                    DataMemberBinding="{Binding ActualCompanyId, Converter={StaticResource IdToActualCompanyLogoSmallConverter}}" />
+                <telerik:GridViewDataColumn Header="Rating" DataMemberBinding="{Binding Rating}">
+                    <telerik:GridViewDataColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid Visibility="{Binding DoNotUse, Converter={StaticResource InvertedBooleanToVisibilityConverter}}">
+                                    <telerik:RadRating Value="{Binding Rating, Mode=OneWay}" IsReadOnly="True"
+                                        Visibility="{Binding RatingVisibility}" />
+                                </Grid>
+                                <TextBlock Visibility="{Binding DoNotUse, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                                           FontWeight="Bold" Foreground="Red" Margin="5">Do Not Use</TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </telerik:GridViewDataColumn.CellTemplate>
+                    <telerik:GridViewDataColumn.CellStyle>
+                        <Style TargetType="telerik:GridViewCell">
+                            <Setter Property="Padding" Value="0"/>
+                        </Style>
+                    </telerik:GridViewDataColumn.CellStyle>
+                </telerik:GridViewDataColumn>
+                <telerik:GridViewDataColumn Header="Created" DataMemberBinding="{Binding CreatedDate, StringFormat=d}" />
+                <telerik:GridViewDataColumn Header="MC#" DataMemberBinding="{Binding McNumber}" />
+                <telerik:GridViewDataColumn Header="Legal Name" DataMemberBinding="{Binding Name}" />
+                <telerik:GridViewDataColumn Header="Entry Type" DataMemberBinding="{Binding EntityType, Converter={StaticResource enumToDescriptionConverter}}" />
+                <telerik:GridViewHyperlinkColumn Header="Contacts" DataMemberBinding="{Binding Contacts, Converter={StaticResource ToStringConverter}}" >
+                    <telerik:GridViewHyperlinkColumn.CellStyle>
+                        <Style TargetType="telerik:GridViewCell">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <EventSetter Event="PreviewMouseLeftButtonUp" Handler="Phone_OnClick"></EventSetter>
+                        </Style>
+                    </telerik:GridViewHyperlinkColumn.CellStyle>
+                </telerik:GridViewHyperlinkColumn>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+
+        <Button x:Name="btnOk" Grid.Row="2" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}" 
+            IsEnabled="{Binding SelectedDatCompany, Converter={StaticResource ObjectToBoolConverter}}"
+            Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="2" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</Window>

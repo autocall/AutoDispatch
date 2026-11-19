@@ -1,0 +1,132 @@
+﻿                         <dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.LoadDivideDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    mc:Ignorable="d" 
+    Title="Split load" Width="600" SizeToContent="Height"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+    Loaded="LoadDivideDialog_OnLoaded"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <dialogs:BaseDispatchDialog.Resources>
+        <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
+        <Style TargetType="{x:Type telerik:RadNumericUpDown}" BasedOn="{StaticResource fieldRadNumericUpDown}">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="NumberDecimalDigits" Value="0"/>
+            <Setter Property="ShowButtons" Value="False"/>
+            <Setter Property="Minimum" Value="0"/>
+        </Style>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="10" HorizontalAlignment="Center"
+            FontSize="18" FontWeight="Bold" Style="{StaticResource titleTextBlock}" Text="{Binding Title}"/>
+
+        <telerik:RadSlider x:Name="slDivide"
+            Grid.Row="1" Grid.RowSpan="4" Grid.Column="2"
+            VerticalAlignment="Center" Margin="0,0,5,0" 
+            Minimum="0" Maximum="1000" TickFrequency="100" TickPlacement="BottomRight" IsSnapToTickEnabled="True"
+            Value="{Binding Value, Mode=TwoWay}"/>
+
+        <!-- Length -->
+        <TextBlock Grid.Row="1" Grid.Column="0" 
+            Style="{StaticResource titleTextBlock}">
+            <Run Text="Length"/><Run Text=" "/>
+            <Run Foreground="Gray" Text="(ft)"/>
+        </TextBlock>
+        <telerik:RadNumericUpDown Grid.Row="1" Grid.Column="1"
+            ValueChanged="Load1Length_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load1.Length, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}"
+            Maximum="{Binding InitialLoad.Length, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.Length, Converter={StaticResource NotNullToBoolConverter}}" />
+        <!-- Weight -->
+        <TextBlock Grid.Row="2" Grid.Column="0" 
+            Style="{StaticResource titleTextBlock}">
+            <Run Text="Weight"/><Run Text=" "/>
+            <Run Foreground="Gray" Text="(kLbs)"/>
+        </TextBlock>
+        <telerik:RadNumericUpDown Grid.Row="2" Grid.Column="1" 
+            ValueChanged="Load1Weight_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load1.Weight, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}"
+            Maximum="{Binding InitialLoad.Weight, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.Weight, Converter={StaticResource NotNullToBoolConverter}}" />
+        <!-- Pallets -->
+        <TextBlock Grid.Row="3" Grid.Column="0" 
+            Style="{StaticResource titleTextBlock}"
+            Text="Pallets" />
+        <telerik:RadNumericUpDown Grid.Row="3" Grid.Column="1" 
+            ValueChanged="Load1Pallets_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load1.Pallets, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}"
+            Maximum="{Binding InitialLoad.Pallets, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.Pallets, Converter={StaticResource NotNullToBoolConverter}}" />
+        <!-- LineHaul -->
+        <TextBlock Grid.Row="4" Grid.Column="0" 
+            Style="{StaticResource titleTextBlock}"
+            Text="Line Haul" />
+        <telerik:RadNumericUpDown Grid.Row="4" Grid.Column="1" 
+            NumberDecimalDigits="2"
+            ValueChanged="Load1LineHaul_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load1.LineHaul, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}"
+            Maximum="{Binding InitialLoad.LineHaul, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.LineHaul, Converter={StaticResource NotNullToBoolConverter}}" />
+
+        <!-- Length -->
+        <telerik:RadNumericUpDown Grid.Row="1" Grid.Column="3" 
+            ValueChanged="Load2Length_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load2.Length, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
+            Maximum="{Binding InitialLoad.Length, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.Length, Converter={StaticResource NotNullToBoolConverter}}"/>
+        <!-- Weight -->
+        <telerik:RadNumericUpDown Grid.Row="2" Grid.Column="3" 
+            ValueChanged="Load2Weight_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load2.Weight, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
+            Maximum="{Binding InitialLoad.Weight, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.Weight, Converter={StaticResource NotNullToBoolConverter}}"/>
+        <!-- Paletts -->
+        <telerik:RadNumericUpDown Grid.Row="3" Grid.Column="3" 
+            ValueChanged="Load2Pallets_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load2.Pallets, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
+            Maximum="{Binding InitialLoad.Pallets, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.Pallets, Converter={StaticResource NotNullToBoolConverter}}"/>
+        <!-- LineHaul -->
+        <telerik:RadNumericUpDown Grid.Row="4" Grid.Column="3" 
+            NumberDecimalDigits="2"
+            ValueChanged="Load2LineHaul_ValueChanged" UpdateValueEvent="PropertyChanged"
+            Value="{Binding Load2.LineHaul, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
+            Maximum="{Binding InitialLoad.LineHaul, TargetNullValue='0'}"
+            IsEnabled="{Binding InitialLoad.LineHaul, Converter={StaticResource NotNullToBoolConverter}}"/>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="7" Grid.ColumnSpan="4" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Hidden" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.ColumnSpan="4" Grid.Row="7" Margin="5" IsIndeterminate="True" Height="10" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="10" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}"  Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="10" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>
+

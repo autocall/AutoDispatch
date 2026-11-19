@@ -1,0 +1,96 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.EditStopsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+        xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Map" Height="700" Width="1000" WindowStartupLocation="CenterScreen" 
+        Closed="MapDialog_OnClosed"
+        Icon="/AutoDispatch;component/Resources/icon.ico"
+        KeyUp="MapDialog_OnKeyUp">
+    <dialogs:BaseDispatchDialog.Resources>
+        <converters:ColorToSolidColorBrushValueConverter x:Key="ColorToSolidColorBrushValueConverter"/>
+        <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
+        <dispatch:EditStopsDialog_CutStringConverter x:Key="StringCopyConverter" Length="4"/>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Border BorderBrush="Black" BorderThickness="1" Margin="5,5,0,5"  Grid.Column="0">
+            <!--<WebBrowser x:Name="browser"></WebBrowser>-->
+            <!-- V1: WindowsFormsHost + EO.WinForm.WebControl -->
+            <wv2:WebView2 x:Name="browser"/>
+        </Border>
+
+        <ListView Name="stopsListView" Grid.Column="1" Margin="5" BorderThickness="0,1,0,0"
+                  SelectionMode="Single"
+                  BorderBrush="Black" Style="{StaticResource LoadsListViewStyle}"
+                  ItemsSource="{Binding Stops}" Grid.IsSharedSizeScope="True" AllowDrop="True" >
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem" BasedOn="{StaticResource LoadsListViewItemStyle}">
+                    <Setter Property="AllowDrop" Value="True"/>
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="stopsListView_OnMouseLeftButtonDown"/>
+                    <EventSetter Event="Drop" Handler="stopsListView_OnDrop"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderThickness="1,0,1,1" BorderBrush="Black" SnapsToDevicePixels="True" MaxWidth="300" >
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*" SharedSizeGroup="list_stops"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.Resources>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockValueStyle}">
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Margin" Value="2"/>
+                                </Style>
+                            </Grid.Resources>
+                            <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderThickness="0,0,1,0" BorderBrush="Gray">
+                                <TextBlock Text="{Binding Load.EntityId, Converter={StaticResource StringCopyConverter}, Mode=OneWay}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Vertical">
+                                <TextBlock FontWeight="Bold">
+                                        <Run Text="{Binding Load.BrokerCompany, Mode=OneWay}"/>
+                                </TextBlock>
+                                <TextBlock FontSize="12" FontWeight="Bold">
+                                        <Run Text="{Binding Load.OriginCity, Mode=OneWay}"/>
+                                        <Run >→</Run>
+                                        <Run Text="{Binding Load.DestinationCity, Mode=OneWay}"/>
+                                        <Run Text="{Binding Load.Status, Mode=OneWay, StringFormat={}({0}), Converter={StaticResource EnumToDescriptionConverter}}" FontWeight="Normal"/>
+                                </TextBlock>
+                                <TextBlock FontWeight="Bold">
+                                        <Run Text="{Binding Type, Mode=OneWay}" />
+                                        <Run Text="{Binding Arrive, Mode=OneWay}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="1" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5" Foreground="Red" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="1" Grid.ColumnSpan="2" Margin="5" IsIndeterminate="True" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Click="btnOk_Clicked" Width="100" Margin="4">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Click="btnClose_Clicked" IsCancel="True" Width="100" Margin="4">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>
+

@@ -1,0 +1,72 @@
+﻿<Window 
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.EmailListDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    mc:Ignorable="d" 
+    Width="350"
+    SizeToContent="Height"
+    WindowStyle="ToolWindow"
+    WindowStartupLocation="CenterScreen"
+    Background="{x:Static SystemColors.ControlBrush}"
+    Icon="/AutoDispatch;component/Resources/icon.ico" >
+    <Window.Resources>
+        <!-- Buttons -->
+        <Style TargetType="{x:Type telerik:RadButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}">
+            <Setter Property="Margin" Value="0,0,5,5"/>
+            <Setter Property="Cursor" Value="{x:Static Cursors.Hand}"/>
+        </Style>
+        <Style TargetType="{x:Type userControls:RadPhoneButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}">
+            <Setter Property="Margin" Value="0,5,5,5"/>
+        </Style>
+        <Style x:Key="addButton" TargetType="{x:Type telerik:RadButton}" BasedOn="{StaticResource {x:Type telerik:RadButton}}">
+            <Setter Property="ToolTip" Value="Add Email"/>
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Image Source="/AutoDispatch;component/Resources/black_plus.png"/>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="Click" Handler="Add_OnClicked"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <ItemsControl Name="lbEmails" Grid.Row="1" ItemsSource="{Binding Emails}" BorderThickness="0"
+            Margin="10,0" HorizontalContentAlignment="Stretch" >
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Margin="0,5" Loaded="lbEmailsItem_OnLoaded"
+                            Text="{Binding Item, UpdateSourceTrigger=PropertyChanged}"
+                            IsEnabled="{Binding Item2}" />
+                        <CheckBox Grid.Column="1" Margin="5,5,0,5" IsChecked="{Binding Item2}" Focusable="False" VerticalAlignment="Center">
+                            <CheckBox.LayoutTransform>
+                                <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                            </CheckBox.LayoutTransform>
+                        </CheckBox>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <telerik:RadButton Grid.Row="2" Padding="10,5" Margin="5,10"
+            HorizontalAlignment="Right" Focusable="False"
+            Content="Add Extra Email" Click="Add_OnClicked"/>
+        <CheckBox Grid.Row="2" Margin="5,10" Content="Save contacts" 
+            HorizontalAlignment="Left" VerticalAlignment="Center"
+            IsChecked="{Binding SaveContacts}"/>
+        <Button Grid.Row="3" x:Name="btnOk" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">Send</Button>
+        <Button Grid.Row="3" x:Name="btnClose" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</Window>

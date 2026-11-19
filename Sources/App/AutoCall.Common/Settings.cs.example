@@ -1,0 +1,19 @@
+namespace AutoCall.Common {
+
+    /// <summary>
+    ///     Адрес сервера и учётка отладки, как Settings AutoCall V3. Файл в .gitignore (учётка DEBUG), шаблон — Settings.cs.example.
+    ///     V1 брал адрес из app.config (UrlApi) </summary>
+    public static class Settings {
+
+#if DEBUG
+        public static string WebUrl => "https://localhost:7092/";
+        //public static string WebUrl => "https://dispatch.myautocall.net/";
+        public static string DebugUserName = "";
+        public static string DebugPassword = "";
+#else
+        public static string WebUrl => "https://dispatch.myautocall.net/";
+        public static string DebugUserName = "";
+        public static string DebugPassword = "";
+#endif
+    }
+}

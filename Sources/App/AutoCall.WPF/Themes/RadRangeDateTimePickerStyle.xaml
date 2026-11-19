@@ -1,0 +1,1650 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation" 
+    xmlns:Chromes="clr-namespace:Telerik.Windows.Controls.Chromes;assembly=Telerik.Windows.Controls" 
+    xmlns:vsm ="clr-namespace:System.Windows;assembly=PresentationFramework"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:Calendar="clr-namespace:Telerik.Windows.Controls.Calendar;assembly=Telerik.Windows.Controls.Input"
+    xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    mc:Ignorable="d">
+    <dispatch:RadRangeDateTimePickerConverter x:Key="RadRangeDateTimePickerConverter"/>
+
+    <Style x:Key="RadRangeDateTimePickerStyle"
+        TargetType="{x:Type userControls:RadRangeDateTimePicker}"
+        BasedOn="{StaticResource {x:Type telerik:RadDateTimePicker}}">
+        <Setter Property="CalendarStyle">
+            <Setter.Value>
+                <Style TargetType="{x:Type telerik:RadCalendar}">
+                    <Setter Property="Columns" Value="1"/>
+                    <Setter Property="Rows" Value="1"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="MonthViewStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarView}">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="BorderBrush" Value="#FF9CB6C5"/>
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="Padding" Value="3"/>
+                                <Setter Property="IsTabStop" Value="False"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarView}">
+                                            <Grid Margin="-1,-1,0,0">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <Border x:Name="BackgroundVisual" Background="{TemplateBinding Background}" Grid.RowSpan="2"/>
+                                                <Border x:Name="Header" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Margin="0" Visibility="{TemplateBinding HeaderVisibility}">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush EndPoint="0.5,0" StartPoint="0.5,1">
+                                                            <GradientStop Color="#FFA6D9F4" Offset="0"/>
+                                                            <GradientStop Color="#FFBEE6FD" Offset="0.5"/>
+                                                            <GradientStop Color="#FFD8EFFC" Offset="0.51"/>
+                                                            <GradientStop Color="#FFE5F4FD" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                    <Border BorderThickness="{TemplateBinding BorderThickness}">
+                                                        <Border.BorderBrush>
+                                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                <GradientStop Color="White"/>
+                                                                <GradientStop Color="#FFE8F5FC" Offset="1"/>
+                                                            </LinearGradientBrush>
+                                                        </Border.BorderBrush>
+                                                        <ContentPresenter ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                    </Border>
+                                                </Border>
+                                                <Grid x:Name="WeekHeaders" Grid.Row="1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="7*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="6*"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Border x:Name="VerticalOuterBorder" BorderBrush="Transparent" BorderThickness="0" Margin="0,1,-2,0" Grid.RowSpan="2" Panel.ZIndex="0">
+                                                        <Border.Visibility>
+                                                            <Binding Path="HideColumn" RelativeSource="{RelativeSource TemplatedParent}">
+                                                                <Binding.Converter>
+                                                                    <telerik:InvertedBooleanToVisibilityConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Border.Visibility>
+                                                    </Border>
+                                                    <Border x:Name="HorizontalOuterBorder" BorderBrush="White" BorderThickness="0,0,0,1" Grid.ColumnSpan="2" Margin="1,1,1,-1" Panel.ZIndex="3">
+                                                        <Border.Visibility>
+                                                            <Binding Path="HideRow" RelativeSource="{RelativeSource TemplatedParent}">
+                                                                <Binding.Converter>
+                                                                    <telerik:InvertedBooleanToVisibilityConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Border.Visibility>
+                                                    </Border>
+                                                    <Border x:Name="VerticalInnerBorder" BorderBrush="Transparent" BorderThickness="0" Margin="0,1,-2,0" Grid.RowSpan="2" Panel.ZIndex="0">
+                                                        <Border.Visibility>
+                                                            <Binding Path="HideColumn" RelativeSource="{RelativeSource TemplatedParent}">
+                                                                <Binding.Converter>
+                                                                    <telerik:InvertedBooleanToVisibilityConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Border.Visibility>
+                                                    </Border>
+                                                    <Border x:Name="HorizontalInnerBorder" BorderBrush="#FFE0E0E0" BorderThickness="0,0,0,1" Grid.ColumnSpan="2" Margin="1,1,1,0" Panel.ZIndex="3">
+                                                        <Border.Visibility>
+                                                            <Binding Path="HideRow" RelativeSource="{RelativeSource TemplatedParent}">
+                                                                <Binding.Converter>
+                                                                    <telerik:InvertedBooleanToVisibilityConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Border.Visibility>
+                                                    </Border>
+                                                    <Rectangle x:Name="VerticalBackground" Fill="#FFE7EBF6" Margin="1,1,-1,1" Grid.RowSpan="2" Panel.ZIndex="2">
+                                                        <Rectangle.Visibility>
+                                                            <Binding Path="HideColumn" RelativeSource="{RelativeSource TemplatedParent}">
+                                                                <Binding.Converter>
+                                                                    <telerik:InvertedBooleanToVisibilityConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Rectangle.Visibility>
+                                                    </Rectangle>
+                                                    <Rectangle x:Name="HorizontalBackground" Grid.ColumnSpan="2" Fill="White" Margin="1" Panel.ZIndex="1">
+                                                        <Rectangle.Visibility>
+                                                            <Binding Path="HideRow" RelativeSource="{RelativeSource TemplatedParent}">
+                                                                <Binding.Converter>
+                                                                    <telerik:InvertedBooleanToVisibilityConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Rectangle.Visibility>
+                                                    </Rectangle>
+                                                </Grid>
+                                                <ItemsPresenter Margin="2,1,1,1" Grid.Row="1"/>
+                                                <Border x:Name="BorderBrush" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.RowSpan="2"/>
+                                                <Rectangle x:Name="MinDesiredSize" Height="155" Grid.Row="1" Width="240"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="YearViewStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarView}">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="BorderBrush" Value="#FF9CB6C5"/>
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="Padding" Value="3"/>
+                                <Setter Property="IsTabStop" Value="False"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarView}">
+                                            <Grid Margin="-1,-1,0,0">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <Border x:Name="BackgroundVisual" Background="{TemplateBinding Background}" Grid.RowSpan="2"/>
+                                                <Border x:Name="Header" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Margin="0" Visibility="{TemplateBinding HeaderVisibility}">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush EndPoint="0.5,0" StartPoint="0.5,1">
+                                                            <GradientStop Color="#FFA6D9F4" Offset="0"/>
+                                                            <GradientStop Color="#FFBEE6FD" Offset="0.5"/>
+                                                            <GradientStop Color="#FFD8EFFC" Offset="0.51"/>
+                                                            <GradientStop Color="#FFE5F4FD" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                    <Border BorderThickness="{TemplateBinding BorderThickness}">
+                                                        <Border.BorderBrush>
+                                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                <GradientStop Color="White"/>
+                                                                <GradientStop Color="#FFE8F5FC" Offset="1"/>
+                                                            </LinearGradientBrush>
+                                                        </Border.BorderBrush>
+                                                        <ContentPresenter ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                    </Border>
+                                                </Border>
+                                                <ItemsPresenter Margin="2,1,1,1" Grid.Row="1"/>
+                                                <Border x:Name="BorderBrush" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.RowSpan="2"/>
+                                                <Rectangle x:Name="MinDesiredSize" Height="155" Grid.Row="1" Width="240"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="DecadeViewStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarView}">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="BorderBrush" Value="#FF9CB6C5"/>
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="Padding" Value="3"/>
+                                <Setter Property="IsTabStop" Value="False"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarView}">
+                                            <Grid Margin="-1,-1,0,0">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <Border x:Name="BackgroundVisual" Background="{TemplateBinding Background}" Grid.RowSpan="2"/>
+                                                <Border x:Name="Header" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Margin="0" Visibility="{TemplateBinding HeaderVisibility}">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush EndPoint="0.5,0" StartPoint="0.5,1">
+                                                            <GradientStop Color="#FFA6D9F4" Offset="0"/>
+                                                            <GradientStop Color="#FFBEE6FD" Offset="0.5"/>
+                                                            <GradientStop Color="#FFD8EFFC" Offset="0.51"/>
+                                                            <GradientStop Color="#FFE5F4FD" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                    <Border BorderThickness="{TemplateBinding BorderThickness}">
+                                                        <Border.BorderBrush>
+                                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                <GradientStop Color="White"/>
+                                                                <GradientStop Color="#FFE8F5FC" Offset="1"/>
+                                                            </LinearGradientBrush>
+                                                        </Border.BorderBrush>
+                                                        <ContentPresenter ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                    </Border>
+                                                </Border>
+                                                <ItemsPresenter Margin="2,1,1,1" Grid.Row="1"/>
+                                                <Border x:Name="BorderBrush" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.RowSpan="2"/>
+                                                <Rectangle x:Name="MinDesiredSize" Height="155" Grid.Row="1" Width="240"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="CenturyViewStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarView}">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="BorderBrush" Value="#FF9CB6C5"/>
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="Padding" Value="3"/>
+                                <Setter Property="IsTabStop" Value="False"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarView}">
+                                            <Grid Margin="-1,-1,0,0">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <Border x:Name="BackgroundVisual" Background="{TemplateBinding Background}" Grid.RowSpan="2"/>
+                                                <Border x:Name="Header" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Margin="0" Visibility="{TemplateBinding HeaderVisibility}">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush EndPoint="0.5,0" StartPoint="0.5,1">
+                                                            <GradientStop Color="#FFA6D9F4" Offset="0"/>
+                                                            <GradientStop Color="#FFBEE6FD" Offset="0.5"/>
+                                                            <GradientStop Color="#FFD8EFFC" Offset="0.51"/>
+                                                            <GradientStop Color="#FFE5F4FD" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                    <Border BorderThickness="{TemplateBinding BorderThickness}">
+                                                        <Border.BorderBrush>
+                                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                <GradientStop Color="White"/>
+                                                                <GradientStop Color="#FFE8F5FC" Offset="1"/>
+                                                            </LinearGradientBrush>
+                                                        </Border.BorderBrush>
+                                                        <ContentPresenter ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                    </Border>
+                                                </Border>
+                                                <ItemsPresenter Margin="2,1,1,1" Grid.Row="1"/>
+                                                <Border x:Name="BorderBrush" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.RowSpan="2"/>
+                                                <Rectangle x:Name="MinDesiredSize" Height="155" Grid.Row="1" Width="240"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="DayButtonStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarButton}">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarButton}">
+                                            <Grid x:Name="LayoutRoot" Background="Transparent">
+                                                <vsm:VisualStateManager.VisualStateGroups>
+                                                    <vsm:VisualStateGroup x:Name="CommonStates">
+                                                        <vsm:VisualState x:Name="Disabled">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Normal">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="1"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="MouseOver"/>
+                                                        <vsm:VisualState x:Name="IsInAnotherView"/>
+                                                        <vsm:VisualState x:Name="IsNotFromCurrentView">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="Content">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="ButtonType">
+                                                        <vsm:VisualState x:Name="Year"/>
+                                                        <vsm:VisualState x:Name="Decade"/>
+                                                        <vsm:VisualState x:Name="Date"/>
+                                                        <vsm:VisualState x:Name="WeekName">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="WeekNumber">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="TodayDate">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="TodayVisual">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Visible</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Month"/>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="FocusStates">
+                                                        <vsm:VisualState x:Name="Unfocused"/>
+                                                        <vsm:VisualState x:Name="Focused">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderThickness" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Thickness>1</Thickness>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="SelectionStates">
+                                                        <vsm:VisualState x:Name="Unselected"/>
+                                                        <vsm:VisualState x:Name="Selected"/>
+                                                    </vsm:VisualStateGroup>
+                                                </vsm:VisualStateManager.VisualStateGroups>
+                                                <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}"/>
+                                                <Chromes:ButtonChrome x:Name="SelectionChrome" CornerRadius="2" Margin="0,0,1,1" RenderNormal="False" RenderSelected="{TemplateBinding IsSelected}" RenderFocused="{TemplateBinding IsFocused}" RenderHighlighted="{TemplateBinding IsMouseOver}"/>
+                                                <Border x:Name="TodayVisual" BorderBrush="#FF2C628B" BorderThickness="1" CornerRadius="2" Margin="0,0,1,1" Visibility="Collapsed"/>
+                                                <ContentPresenter x:Name="Content" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="MonthButtonStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarButton}">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarButton}">
+                                            <Grid x:Name="LayoutRoot" Background="Transparent">
+                                                <vsm:VisualStateManager.VisualStateGroups>
+                                                    <vsm:VisualStateGroup x:Name="CommonStates">
+                                                        <vsm:VisualState x:Name="Disabled">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Normal">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="1"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="MouseOver"/>
+                                                        <vsm:VisualState x:Name="IsInAnotherView"/>
+                                                        <vsm:VisualState x:Name="IsNotFromCurrentView">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="Content">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="ButtonType">
+                                                        <vsm:VisualState x:Name="Year"/>
+                                                        <vsm:VisualState x:Name="Decade"/>
+                                                        <vsm:VisualState x:Name="Date"/>
+                                                        <vsm:VisualState x:Name="WeekName">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="WeekNumber">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="TodayDate">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="TodayVisual">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Visible</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Month"/>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="FocusStates">
+                                                        <vsm:VisualState x:Name="Unfocused"/>
+                                                        <vsm:VisualState x:Name="Focused">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderThickness" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Thickness>1</Thickness>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="SelectionStates">
+                                                        <vsm:VisualState x:Name="Unselected"/>
+                                                        <vsm:VisualState x:Name="Selected"/>
+                                                    </vsm:VisualStateGroup>
+                                                </vsm:VisualStateManager.VisualStateGroups>
+                                                <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}"/>
+                                                <Chromes:ButtonChrome x:Name="SelectionChrome" CornerRadius="2" Margin="0,0,1,1" RenderNormal="False" RenderSelected="{TemplateBinding IsSelected}" RenderFocused="{TemplateBinding IsFocused}" RenderHighlighted="{TemplateBinding IsMouseOver}"/>
+                                                <Border x:Name="TodayVisual" BorderBrush="#FF2C628B" BorderThickness="1" CornerRadius="2" Margin="0,0,1,1" Visibility="Collapsed"/>
+                                                <ContentPresenter x:Name="Content" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="YearButtonStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarButton}">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarButton}">
+                                            <Grid x:Name="LayoutRoot" Background="Transparent">
+                                                <vsm:VisualStateManager.VisualStateGroups>
+                                                    <vsm:VisualStateGroup x:Name="CommonStates">
+                                                        <vsm:VisualState x:Name="Disabled">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Normal">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="1"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="MouseOver"/>
+                                                        <vsm:VisualState x:Name="IsInAnotherView"/>
+                                                        <vsm:VisualState x:Name="IsNotFromCurrentView">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="Content">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="ButtonType">
+                                                        <vsm:VisualState x:Name="Year"/>
+                                                        <vsm:VisualState x:Name="Decade"/>
+                                                        <vsm:VisualState x:Name="Date"/>
+                                                        <vsm:VisualState x:Name="WeekName">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="WeekNumber">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="TodayDate">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="TodayVisual">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Visible</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Month"/>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="FocusStates">
+                                                        <vsm:VisualState x:Name="Unfocused"/>
+                                                        <vsm:VisualState x:Name="Focused">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderThickness" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Thickness>1</Thickness>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="SelectionStates">
+                                                        <vsm:VisualState x:Name="Unselected"/>
+                                                        <vsm:VisualState x:Name="Selected"/>
+                                                    </vsm:VisualStateGroup>
+                                                </vsm:VisualStateManager.VisualStateGroups>
+                                                <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}"/>
+                                                <Chromes:ButtonChrome x:Name="SelectionChrome" CornerRadius="2" Margin="0,0,1,1" RenderNormal="False" RenderSelected="{TemplateBinding IsSelected}" RenderFocused="{TemplateBinding IsFocused}" RenderHighlighted="{TemplateBinding IsMouseOver}"/>
+                                                <Border x:Name="TodayVisual" BorderBrush="#FF2C628B" BorderThickness="1" CornerRadius="2" Margin="0,0,1,1" Visibility="Collapsed"/>
+                                                <ContentPresenter x:Name="Content" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="DecadeButtonStyle">
+                        <Setter.Value>
+                            <Style TargetType="{x:Type Calendar:CalendarButton}">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Calendar:CalendarButton}">
+                                            <Grid x:Name="LayoutRoot" Background="Transparent">
+                                                <vsm:VisualStateManager.VisualStateGroups>
+                                                    <vsm:VisualStateGroup x:Name="CommonStates">
+                                                        <vsm:VisualState x:Name="Disabled">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Normal">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="1"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="MouseOver"/>
+                                                        <vsm:VisualState x:Name="IsInAnotherView"/>
+                                                        <vsm:VisualState x:Name="IsNotFromCurrentView">
+                                                            <Storyboard>
+                                                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="Content">
+                                                                    <DiscreteDoubleKeyFrame KeyTime="0" Value="0.5"/>
+                                                                </DoubleAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="ButtonType">
+                                                        <vsm:VisualState x:Name="Year"/>
+                                                        <vsm:VisualState x:Name="Decade"/>
+                                                        <vsm:VisualState x:Name="Date"/>
+                                                        <vsm:VisualState x:Name="WeekName">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="WeekNumber">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Collapsed</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="TodayDate">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="TodayVisual">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Visibility>Visible</Visibility>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                        <vsm:VisualState x:Name="Month"/>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="FocusStates">
+                                                        <vsm:VisualState x:Name="Unfocused"/>
+                                                        <vsm:VisualState x:Name="Focused">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderThickness" Storyboard.TargetName="SelectionChrome">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                                        <DiscreteObjectKeyFrame.Value>
+                                                                            <Thickness>1</Thickness>
+                                                                        </DiscreteObjectKeyFrame.Value>
+                                                                    </DiscreteObjectKeyFrame>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                            </Storyboard>
+                                                        </vsm:VisualState>
+                                                    </vsm:VisualStateGroup>
+                                                    <vsm:VisualStateGroup x:Name="SelectionStates">
+                                                        <vsm:VisualState x:Name="Unselected"/>
+                                                        <vsm:VisualState x:Name="Selected"/>
+                                                    </vsm:VisualStateGroup>
+                                                </vsm:VisualStateManager.VisualStateGroups>
+                                                <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}"/>
+                                                <Chromes:ButtonChrome x:Name="SelectionChrome" CornerRadius="2" Margin="0,0,1,1" RenderNormal="False" RenderSelected="{TemplateBinding IsSelected}" RenderFocused="{TemplateBinding IsFocused}" RenderHighlighted="{TemplateBinding IsMouseOver}"/>
+                                                <Border x:Name="TodayVisual" BorderBrush="#FF2C628B" BorderThickness="1" CornerRadius="2" Margin="0,0,1,1" Visibility="Collapsed"/>
+                                                <ContentPresenter x:Name="Content" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="BorderBrush" Value="#FF9CB6C5"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="ViewsHeaderVisibility" Value="Collapsed"/>
+                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                    <Setter Property="KeyboardNavigation.TabNavigation" Value="Once"/>
+                    <Setter Property="IsTabStop" Value="True"/>
+                    <Setter Property="TabIndex" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type telerik:RadCalendar}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border x:Name="Background" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Grid.RowSpan="2"/>
+                                    <Calendar:TransitionPanel x:Name="TransitionPanel" ClipToBounds="True" Margin="0,1,0,0" Grid.Row="1">
+                                        <telerik:RadUniformGrid x:Name="MonthViews" Columns="{TemplateBinding Columns}" Margin="1,1,0,0" Rows="{TemplateBinding Rows}"/>
+                                        <telerik:RadUniformGrid x:Name="YearViews" Columns="{TemplateBinding Columns}" Margin="1,1,0,0" Rows="{TemplateBinding Rows}" Visibility="Collapsed"/>
+                                        <telerik:RadUniformGrid x:Name="DecadeViews" Columns="{TemplateBinding Columns}" Margin="1,1,0,0" Rows="{TemplateBinding Rows}" Visibility="Collapsed"/>
+                                        <telerik:RadUniformGrid x:Name="CenturyViews" Columns="{TemplateBinding Columns}" Margin="1,1,0,0" Rows="{TemplateBinding Rows}" Visibility="Collapsed"/>
+                                    </Calendar:TransitionPanel>
+                                    <Border x:Name="OuterBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="0" Grid.RowSpan="2">
+                                        <Border x:Name="InnerBorder" BorderBrush="Transparent" BorderThickness="1" CornerRadius="0"/>
+                                    </Border>
+                                    <Border x:Name="Navigation" BorderBrush="#FF131C24" BorderThickness="1" CornerRadius="0" Margin="0,0,0,-1" Visibility="{TemplateBinding HeaderVisibility}" Panel.ZIndex="2">
+                                        <Border.Background>
+                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                <GradientStop Color="#FF83ABC0" Offset="0"/>
+                                                <GradientStop Color="#FF4D95A9" Offset="1"/>
+                                                <GradientStop Color="#FF3F7E9D" Offset="0.5"/>
+                                                <GradientStop Color="#FF0A5276" Offset="0.5"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border BorderThickness="1" CornerRadius="0" Padding="{TemplateBinding Padding}">
+                                            <Border.BorderBrush>
+                                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                    <GradientStop Color="#FFB2CCD8" Offset="0"/>
+                                                    <GradientStop Color="#FF96C3CE" Offset="1"/>
+                                                    <GradientStop Color="#FF87B2C3" Offset="0.5"/>
+                                                    <GradientStop Color="#FF75A4B7" Offset="0.5"/>
+                                                </LinearGradientBrush>
+                                            </Border.BorderBrush>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <RepeatButton x:Name="MoveLeft" Grid.Column="0">
+                                                    <RepeatButton.Style>
+                                                        <Style TargetType="{x:Type RepeatButton}">
+                                                            <Setter Property="Width" Value="22"/>
+                                                            <Setter Property="Height" Value="22"/>
+                                                            <Setter Property="Margin" Value="3"/>
+                                                            <Setter Property="IsTabStop" Value="False"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="{x:Type RepeatButton}">
+                                                                        <Grid Background="Transparent">
+                                                                            <vsm:VisualStateManager.VisualStateGroups>
+                                                                                <vsm:VisualStateGroup x:Name="CommonStates">
+                                                                                    <vsm:VisualState x:Name="Disabled">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="BackgroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="Transparent"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="ForegroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="#88FFFFFF"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Normal"/>
+                                                                                    <vsm:VisualState x:Name="MouseOver">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="BackgroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="Transparent"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="ForegroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="White"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Pressed">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="BackgroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="Transparent"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="ForegroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="White"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                </vsm:VisualStateGroup>
+                                                                            </vsm:VisualStateManager.VisualStateGroups>
+                                                                            <Chromes:ButtonChrome CornerRadius="2" RenderMouseOver="{TemplateBinding IsMouseOver}" RenderPressed="{TemplateBinding IsPressed}" RenderFocused="{TemplateBinding IsFocused}">
+                                                                                <Chromes:ButtonChrome.Style>
+                                                                                    <Style TargetType="{x:Type Chromes:ButtonChrome}">
+                                                                                        <Setter Property="BorderThickness" Value="1"/>
+                                                                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                                                                        <Setter Property="Background" Value="Transparent"/>
+                                                                                        <Setter Property="CornerRadius" Value="2"/>
+                                                                                        <Setter Property="Template">
+                                                                                            <Setter.Value>
+                                                                                                <ControlTemplate TargetType="{x:Type Chromes:ButtonChrome}">
+                                                                                                    <Grid>
+                                                                                                        <vsm:VisualStateManager.VisualStateGroups>
+                                                                                                            <vsm:VisualStateGroup x:Name="CommonStates">
+                                                                                                                <vsm:VisualState x:Name="Normal"/>
+                                                                                                                <vsm:VisualState x:Name="MouseOver">
+                                                                                                                    <Storyboard>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF516F7F" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF2A5468" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF2D576D" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF0E3C55" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="InnerBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF9FBECE" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF6D9AAF" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF79A5BB" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF54869F" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Background" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FFA6C4D2" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF4884A2" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#004884A2" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#004884A2" Offset="0.586"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                    </Storyboard>
+                                                                                                                </vsm:VisualState>
+                                                                                                                <vsm:VisualState x:Name="Pressed">
+                                                                                                                    <Storyboard>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF283842"/>
+                                                                                                                                        <GradientStop Color="#FF1B2F3B" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF1A2D3A" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF102432" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="InnerBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <SolidColorBrush Color="Transparent"/>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Background" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF556E7C" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF2B6586" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF587F96" Offset="0.109"/>
+                                                                                                                                        <GradientStop Color="#FF387294" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF05456C" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                    </Storyboard>
+                                                                                                                </vsm:VisualState>
+                                                                                                            </vsm:VisualStateGroup>
+                                                                                                        </vsm:VisualStateManager.VisualStateGroups>
+                                                                                                        <Border x:Name="OuterBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                                                                                                            <Border x:Name="InnerBorder" BorderBrush="Transparent" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding InnerCornerRadius}"/>
+                                                                                                        </Border>
+                                                                                                    </Grid>
+                                                                                                </ControlTemplate>
+                                                                                            </Setter.Value>
+                                                                                        </Setter>
+                                                                                    </Style>
+                                                                                </Chromes:ButtonChrome.Style>
+                                                                            </Chromes:ButtonChrome>
+                                                                            <Path x:Name="BackgroundIcon" Data="M4,0L4,7 3,7 3,6 2,6 2,5 1,5 1,4 0,4 0,3 1,3 1,2 2,2 2,1 3,1 3,0z" Fill="Transparent" Height="7" Margin="0,2,0,0" Width="4"/>
+                                                                            <Path x:Name="ForegroundIcon" Data="M4,0L4,7 3,7 3,6 2,6 2,5 1,5 1,4 0,4 0,3 1,3 1,2 2,2 2,1 3,1 3,0z" Fill="White" Height="7" Margin="0,1" Width="4"/>
+                                                                        </Grid>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </RepeatButton.Style>
+                                                </RepeatButton>
+                                                <Button x:Name="Header" Grid.Column="1">
+                                                    <Button.Style>
+                                                        <Style TargetType="{x:Type Button}">
+                                                            <Setter Property="Height" Value="22"/>
+                                                            <Setter Property="Margin" Value="3"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="IsTabStop" Value="False"/>
+                                                            <Setter Property="Focusable" Value="False"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="{x:Type Button}">
+                                                                        <Grid x:Name="LayoutRoot">
+                                                                            <vsm:VisualStateManager.VisualStateGroups>
+                                                                                <vsm:VisualStateGroup x:Name="CommonStates">
+                                                                                    <vsm:VisualState x:Name="Disabled">
+                                                                                        <Storyboard>
+                                                                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="LayoutRoot">
+                                                                                                <DiscreteDoubleKeyFrame KeyTime="0" Value="0.75"/>
+                                                                                            </DoubleAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Normal"/>
+                                                                                    <vsm:VisualState x:Name="MouseOver">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="TextDecorations" Storyboard.TargetName="ForegroundText">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <TextDecorationCollection>Underline</TextDecorationCollection>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="TextDecorations" Storyboard.TargetName="BackgroundText">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <TextDecorationCollection>Underline</TextDecorationCollection>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Focused">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="TextDecorations" Storyboard.TargetName="ForegroundText">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <TextDecorationCollection>Underline</TextDecorationCollection>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="TextDecorations" Storyboard.TargetName="BackgroundText">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <TextDecorationCollection>Underline</TextDecorationCollection>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Pressed">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="TextDecorations" Storyboard.TargetName="ForegroundText">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <TextDecorationCollection>Underline</TextDecorationCollection>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="TextDecorations" Storyboard.TargetName="BackgroundText">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <TextDecorationCollection>Underline</TextDecorationCollection>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                </vsm:VisualStateGroup>
+                                                                            </vsm:VisualStateManager.VisualStateGroups>
+                                                                            <TextBlock x:Name="BackgroundText" Foreground="Transparent" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,2,0,0" Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                                                                            <TextBlock x:Name="ForegroundText" Foreground="White" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,1" Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                                                                        </Grid>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <RepeatButton x:Name="MoveRight" Grid.Column="2">
+                                                    <RepeatButton.Style>
+                                                        <Style TargetType="{x:Type RepeatButton}">
+                                                            <Setter Property="Width" Value="22"/>
+                                                            <Setter Property="Height" Value="22"/>
+                                                            <Setter Property="Margin" Value="3"/>
+                                                            <Setter Property="IsTabStop" Value="False"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="{x:Type RepeatButton}">
+                                                                        <Grid Background="Transparent">
+                                                                            <vsm:VisualStateManager.VisualStateGroups>
+                                                                                <vsm:VisualStateGroup x:Name="CommonStates">
+                                                                                    <vsm:VisualState x:Name="Disabled">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="BackgroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="Transparent"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="ForegroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="#88FFFFFF"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Normal"/>
+                                                                                    <vsm:VisualState x:Name="MouseOver">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="BackgroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="Transparent"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="ForegroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="White"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                    <vsm:VisualState x:Name="Pressed">
+                                                                                        <Storyboard>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="BackgroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="Transparent"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Fill" Storyboard.TargetName="ForegroundIcon">
+                                                                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                    <DiscreteObjectKeyFrame.Value>
+                                                                                                        <SolidColorBrush Color="White"/>
+                                                                                                    </DiscreteObjectKeyFrame.Value>
+                                                                                                </DiscreteObjectKeyFrame>
+                                                                                            </ObjectAnimationUsingKeyFrames>
+                                                                                        </Storyboard>
+                                                                                    </vsm:VisualState>
+                                                                                </vsm:VisualStateGroup>
+                                                                            </vsm:VisualStateManager.VisualStateGroups>
+                                                                            <Chromes:ButtonChrome CornerRadius="2" RenderMouseOver="{TemplateBinding IsMouseOver}" RenderPressed="{TemplateBinding IsPressed}" RenderFocused="{TemplateBinding IsFocused}">
+                                                                                <Chromes:ButtonChrome.Style>
+                                                                                    <Style TargetType="{x:Type Chromes:ButtonChrome}">
+                                                                                        <Setter Property="BorderThickness" Value="1"/>
+                                                                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                                                                        <Setter Property="Background" Value="Transparent"/>
+                                                                                        <Setter Property="CornerRadius" Value="2"/>
+                                                                                        <Setter Property="Template">
+                                                                                            <Setter.Value>
+                                                                                                <ControlTemplate TargetType="{x:Type Chromes:ButtonChrome}">
+                                                                                                    <Grid>
+                                                                                                        <vsm:VisualStateManager.VisualStateGroups>
+                                                                                                            <vsm:VisualStateGroup x:Name="CommonStates">
+                                                                                                                <vsm:VisualState x:Name="Normal"/>
+                                                                                                                <vsm:VisualState x:Name="MouseOver">
+                                                                                                                    <Storyboard>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF516F7F" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF2A5468" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF2D576D" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF0E3C55" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="InnerBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF9FBECE" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF6D9AAF" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF79A5BB" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF54869F" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Background" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FFA6C4D2" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF4884A2" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#004884A2" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#004884A2" Offset="0.586"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                    </Storyboard>
+                                                                                                                </vsm:VisualState>
+                                                                                                                <vsm:VisualState x:Name="Pressed">
+                                                                                                                    <Storyboard>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF283842"/>
+                                                                                                                                        <GradientStop Color="#FF1B2F3B" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF1A2D3A" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF102432" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="InnerBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <SolidColorBrush Color="Transparent"/>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Background" Storyboard.TargetName="OuterBorder">
+                                                                                                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                                                                                                <DiscreteObjectKeyFrame.Value>
+                                                                                                                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                                                                                                        <GradientStop Color="#FF556E7C" Offset="0"/>
+                                                                                                                                        <GradientStop Color="#FF2B6586" Offset="1"/>
+                                                                                                                                        <GradientStop Color="#FF587F96" Offset="0.109"/>
+                                                                                                                                        <GradientStop Color="#FF387294" Offset="0.5"/>
+                                                                                                                                        <GradientStop Color="#FF05456C" Offset="0.5"/>
+                                                                                                                                    </LinearGradientBrush>
+                                                                                                                                </DiscreteObjectKeyFrame.Value>
+                                                                                                                            </DiscreteObjectKeyFrame>
+                                                                                                                        </ObjectAnimationUsingKeyFrames>
+                                                                                                                    </Storyboard>
+                                                                                                                </vsm:VisualState>
+                                                                                                            </vsm:VisualStateGroup>
+                                                                                                        </vsm:VisualStateManager.VisualStateGroups>
+                                                                                                        <Border x:Name="OuterBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                                                                                                            <Border x:Name="InnerBorder" BorderBrush="Transparent" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding InnerCornerRadius}"/>
+                                                                                                        </Border>
+                                                                                                    </Grid>
+                                                                                                </ControlTemplate>
+                                                                                            </Setter.Value>
+                                                                                        </Setter>
+                                                                                    </Style>
+                                                                                </Chromes:ButtonChrome.Style>
+                                                                            </Chromes:ButtonChrome>
+                                                                            <Path x:Name="BackgroundIcon" Data="M0,0L0,7 1,7 1,6 2,6 2,5 3,5 3,4 4,4 4,3 3,3 3,2 2,2 2,1 1,1 1,0z" Fill="Transparent" Height="7" Margin="0,2,0,0" Width="4"/>
+                                                                            <Path x:Name="ForegroundIcon" Data="M0,0L0,7 1,7 1,6 2,6 2,5 3,5 3,4 4,4 4,3 3,3 3,2 2,2 2,1 1,1 1,0z" Fill="White" Height="7" Margin="0,1" Width="4"/>
+                                                                        </Grid>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </RepeatButton.Style>
+                                                </RepeatButton>
+                                            </Grid>
+                                        </Border>
+                                    </Border>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="MonthViewPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <Calendar:CalendarPanel Columns="8" FirstColumn="1" IsItemsHost="True" PreserveSpaceForCollapsedChildren="True" Rows="7" VerticalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="YearViewPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <Calendar:CalendarPanel Columns="4" IsItemsHost="True" PreserveSpaceForCollapsedChildren="True" Rows="3" VerticalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="DecadeViewPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <Calendar:CalendarPanel Columns="4" IsItemsHost="True" PreserveSpaceForCollapsedChildren="True" Rows="3" VerticalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="CenturyViewPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <Calendar:CalendarPanel Columns="4" IsItemsHost="True" PreserveSpaceForCollapsedChildren="True" Rows="3" VerticalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ClockStyle">
+            <Setter.Value>
+                <Style TargetType="{x:Type telerik:RadClock}">
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="BorderBrush" Value="#FFB0B0B0"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="IsTabStop" Value="True"/>
+                    <Setter Property="TabIndex" Value="1"/>
+                    <Setter Property="StartTime" Value="0"/>
+                    <Setter Property="EndTime" Value="23:59:0"/>
+                    <Setter Property="KeyboardNavigation.TabNavigation" Value="Once"/>
+                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <telerik:RadUniformGrid x:Name="uniformGrid" Columns="4" IsItemsHost="True"/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="ItemTemplate">
+                        <Setter.Value>
+                            <DataTemplate>
+                                <TextBlock x:Name="ContentText" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding}" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type telerik:RadClock}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border x:Name="BackgroundVisual" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="0" Grid.RowSpan="2">
+                                        <Border BorderBrush="Transparent" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="0"/>
+                                    </Border>
+                                    <Border x:Name="Header" BorderBrush="#FF131C24" BorderThickness="1" CornerRadius="0" MinHeight="32">
+                                        <Border.Background>
+                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                <GradientStop Color="#FF83ABC0" Offset="0"/>
+                                                <GradientStop Color="#FF4D95A9" Offset="1"/>
+                                                <GradientStop Color="#FF3F7E9D" Offset="0.5"/>
+                                                <GradientStop Color="#FF0A5276" Offset="0.5"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border BorderThickness="1" CornerRadius="0" Padding="{TemplateBinding Padding}">
+                                            <Border.BorderBrush>
+                                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                    <GradientStop Color="#FFB2CCD8" Offset="0"/>
+                                                    <GradientStop Color="#FF96C3CE" Offset="1"/>
+                                                    <GradientStop Color="#FF87B2C3" Offset="0.5"/>
+                                                    <GradientStop Color="#FF75A4B7" Offset="0.5"/>
+                                                </LinearGradientBrush>
+                                            </Border.BorderBrush>
+                                            <ContentControl ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" Foreground="White" FontWeight="Normal" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" IsTabStop="False" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                        </Border>
+                                    </Border>
+                                    <ItemsPresenter Margin="2,1,1,1" Grid.Row="1"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="KeyboardNavigation.TabNavigation" Value="Once"/>
+        <Setter Property="KeyboardNavigation.ControlTabNavigation" Value="Cycle"/>
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Validation.ErrorTemplate">
+            <Setter.Value>
+                <ControlTemplate/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="TooltipTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border CornerRadius="3" Margin="2">
+                        <Border BorderBrush="{x:Null}" BorderThickness="1" CornerRadius="2" Margin="-3">
+                            <Border.Background>
+                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                    <GradientStop Color="#FFE4E5F0" Offset="0"/>
+                                    <GradientStop Color="#FFE4E5F0" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border BorderBrush="#FF898C95" BorderThickness="1" CornerRadius="1">
+                                <ContentControl Content="{Binding}" Foreground="Black" Margin="5,2"/>
+                            </Border>
+                        </Border>
+                    </Border>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="BorderBrush" Value="#FF898C95"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontStyle" Value="Normal"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="MinHeight" Value="22"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="DateTimeWatermarkTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Opacity="1" Text="{Binding}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type telerik:RadDateTimePicker}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <vsm:VisualStateManager.VisualStateGroups>
+                            <vsm:VisualStateGroup x:Name="CommonStates">
+                                <vsm:VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="MouseOverVisual">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.15">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="MouseOverVisual">
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.15" Value="0"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="RenderEnabled" Storyboard.TargetName="ButtonChrome">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                                <vsm:VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="MouseOverVisual">
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.115" Value="1"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="MouseOverVisual">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Visible</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="RenderActive" Storyboard.TargetName="ButtonChrome">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground" Storyboard.TargetName="DropDownIcon">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <SolidColorBrush Color="#FF282828"/>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Background" Storyboard.TargetName="DropDownIcon">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <SolidColorBrush Color="Transparent"/>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="RenderEnabled" Storyboard.TargetName="ButtonChrome">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <sys:Boolean>True</sys:Boolean>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                                <vsm:VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush" Storyboard.TargetName="BackgroundVisual">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <SolidColorBrush Color="DarkGray"/>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="MouseOverVisual">
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.05" Value="0"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="MouseOverVisual">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.05">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="DropDownIcon">
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.15" Value="0.5"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="RenderEnabled" Storyboard.TargetName="ButtonChrome">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <sys:Boolean>False</sys:Boolean>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                            </vsm:VisualStateGroup>
+                            <vsm:VisualStateGroup x:Name="FocusStates">
+                                <vsm:VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="RenderFocused" Storyboard.TargetName="ButtonChrome">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <sys:Boolean>False</sys:Boolean>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="FocusVisual">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.115">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Visible</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                                <vsm:VisualState x:Name="Unfocused"/>
+                            </vsm:VisualStateGroup>
+                            <vsm:VisualStateGroup x:Name="InputTypeStates">
+                                <vsm:VisualState x:Name="DateTimePicker">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="BorderThickness" Storyboard.TargetName="TodayButtonBorder">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Thickness>1,0,0,1</Thickness>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                                <vsm:VisualState x:Name="DatePicker">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="PART_Clock">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="CloseButtonContainer">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                                <vsm:VisualState x:Name="TimePicker">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="PART_Calendar">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="CloseButtonContainer">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(Grid.Column)" Storyboard.TargetName="TodayButtonBorder">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <sys:Int32>1</sys:Int32>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </vsm:VisualState>
+                            </vsm:VisualStateGroup>
+                        </vsm:VisualStateManager.VisualStateGroups>
+                        <Border x:Name="BackgroundVisual" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Grid.ColumnSpan="2" CornerRadius="2"/>
+                        <Border x:Name="MouseOverVisual" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Grid.ColumnSpan="2" CornerRadius="2" IsHitTestVisible="False" Opacity="0" Visibility="Collapsed"/>
+                        <telerik:RadWatermarkTextBox x:Name="PART_DateTimeInput" BorderBrush="{x:Null}" BorderThickness="0" Background="{x:Null}" Grid.Column="0" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" IsReadOnly="{TemplateBinding IsReadOnly}" Margin="{TemplateBinding BorderThickness}" MinHeight="0" Padding="{TemplateBinding Padding}" SelectionOnFocus="{TemplateBinding SelectionOnFocus}" TextAlignment="{TemplateBinding TextAlignment}" TabIndex="0" VerticalAlignment="Stretch" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" WatermarkTemplate="{TemplateBinding DateTimeWatermarkTemplate}" WatermarkContent="{TemplateBinding DateTimeWatermarkContent}">
+                            <!--Text="{Binding DateTimeText, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"-->
+                            <!--CurrentText="{Binding CurrentDateTimeText, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"-->
+                            <telerik:RadWatermarkTextBox.Text>
+                                <MultiBinding Converter="{StaticResource RadRangeDateTimePickerConverter}" Mode="TwoWay">
+                                    <Binding Path="SelectedDate" RelativeSource="{RelativeSource TemplatedParent}" Mode="TwoWay"/>
+                                    <Binding Path="SelectedTime" RelativeSource="{RelativeSource TemplatedParent}" Mode="TwoWay"/>
+                                    <Binding Path="SelectedTime2" RelativeSource="{RelativeSource TemplatedParent}" Mode="TwoWay"/>
+                                </MultiBinding>
+                            </telerik:RadWatermarkTextBox.Text>
+                            <telerik:StyleManager.Theme>
+                                <telerik:Office_BlackTheme/>
+                            </telerik:StyleManager.Theme>
+                        </telerik:RadWatermarkTextBox>
+                        <Border x:Name="FocusVisual" BorderBrush="#FF3C7FB1" BorderThickness="{TemplateBinding BorderThickness}" Grid.ColumnSpan="2" CornerRadius="2" IsHitTestVisible="False" Visibility="Collapsed">
+                            <Border BorderBrush="#FF99DEFD" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="1"/>
+                        </Border>
+                        <telerik:RadDropDownButton x:Name="PART_DropDownButton" CloseOnEnter="True" Grid.Column="2" DropDownIndicatorVisibility="Collapsed" Focusable="False" telerik:DateTimePickerExtensions.FocusContentOnOpen="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsTabStop="False" IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" InnerCornerRadius="0" Margin="-1,0,0,0" Padding="0" PopupPlacementTarget="{Binding ElementName=PART_DateTimeInput}" TabIndex="1" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch">
+                            <telerik:RadDropDownButton.DropDownContent>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <telerik:RadCalendar x:Name="PART_Calendar" BlackoutDates="{Binding BlackoutDates, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Culture="{TemplateBinding Culture}" Grid.Column="0" DisplayDateEnd="{Binding DisplayDateEnd, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" DateSelectionMode="{TemplateBinding DateSelectionMode}" DisplayDateStart="{Binding DisplayDateStart, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" DisplayDate="{Binding DisplayDate, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" IsReadOnly="{TemplateBinding IsReadOnly}" Grid.Row="0" Style="{TemplateBinding CalendarStyle}" SelectableDateEnd="{Binding SelectableDateEnd, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" SelectionMode="Single" SelectedDate="{Binding SelectedDate, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" SelectableDateStart="{Binding SelectableDateStart, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    <userControls:RadRangeClock x:Name="PART_Clock" 
+                                        Culture="{TemplateBinding Culture}" Grid.Column="1" EndTime="{TemplateBinding EndTime}" IsTabStop="False" IsReadOnly="{TemplateBinding IsReadOnly}" IsTextSearchEnabled="True" Grid.Row="0" Style="{TemplateBinding ClockStyle}"
+                                        SelectedItem="{Binding SelectedTime, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                        SelectedItem2="{Binding SelectedTime2, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                        SelectedValueBinding="{x:Null}" StartTime="{TemplateBinding StartTime}" TimeInterval="{Binding TimeInterval, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" TextBinding="{x:Null}" >
+                                        <telerik:StyleManager.Theme>
+                                            <telerik:Office_BlackTheme/>
+                                        </telerik:StyleManager.Theme>
+                                    </userControls:RadRangeClock>
+                                    <Border x:Name="CloseButtonContainer" BorderBrush="#FF9CB6C5" BorderThickness="1,0,1,1" Background="White" Grid.ColumnSpan="2" Grid.Row="1" telerik:TouchManager.TouchMode="None">
+                                        <Border BorderBrush="Transparent" BorderThickness="1,0,1,1">
+                                            <telerik:RadToggleButton x:Name="PART_Close" Content="Close" HorizontalAlignment="Right" IsThreeState="False" IsBackgroundVisible="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" InnerCornerRadius="0" Margin="2" Padding="8,3" telerik:LocalizationManager.ResourceKey="Close">
+                                                <telerik:RadToggleButton.Style>
+                                                    <Style TargetType="{x:Type telerik:RadToggleButton}">
+                                                        <Setter Property="IsTabStop" Value="True"/>
+                                                        <Setter Property="TabIndex" Value="2"/>
+                                                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                                        <Setter Property="KeyboardNavigation.TabNavigation" Value="Once"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="{x:Type telerik:RadToggleButton}">
+                                                                    <Grid>
+                                                                        <Chromes:ButtonChrome RenderNormal="False" RenderMouseOver="{TemplateBinding IsMouseOver}" RenderPressed="{TemplateBinding IsPressed}" RenderFocused="{TemplateBinding IsFocused}"/>
+                                                                        <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" Margin="{TemplateBinding Padding}"/>
+                                                                    </Grid>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </telerik:RadToggleButton.Style>
+                                            </telerik:RadToggleButton>
+                                        </Border>
+                                    </Border>
+                                    <Border x:Name="TodayButtonBorder" BorderBrush="#FF9CB6C5" BorderThickness="1,0,1,1" Background="White" Grid.Row="1" Visibility="{TemplateBinding TodayButtonVisibility}">
+                                        <telerik:RadButton x:Name="TodayButton" Content="{TemplateBinding TodayButtonContent}" Command="telerik:RadDateTimePickerCommands.SetToday" IsBackgroundVisible="False" InnerCornerRadius="0" Margin="3,2,3,3"/>
+                                    </Border>
+                                </Grid>
+                            </telerik:RadDropDownButton.DropDownContent>
+                            <telerik:RadDropDownButton.Template>
+                                <ControlTemplate TargetType="{x:Type telerik:RadDropDownButton}">
+                                    <Grid>
+                                        <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                        <Popup x:Name="DropDownPopup" AllowsTransparency="True" Focusable="False" IsOpen="{Binding IsOpen, RelativeSource={RelativeSource TemplatedParent}}" Placement="Bottom" StaysOpen="False">
+                                            <ContentPresenter x:Name="DropDownPopupContent" ContentTemplate="{TemplateBinding DropDownContentTemplate}" Content="{TemplateBinding DropDownContent}"/>
+                                        </Popup>
+                                    </Grid>
+                                </ControlTemplate>
+                            </telerik:RadDropDownButton.Template>
+                            <Grid>
+                                <Chromes:ButtonChrome x:Name="ButtonChrome" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="0,2,2,0" RenderMouseOver="{Binding IsMouseOver, ElementName=PART_DropDownButton}" RenderFocused="{TemplateBinding IsKeyboardFocusWithin}" RenderActive="{TemplateBinding IsMouseOver}" RenderEnabled="{TemplateBinding IsEnabled}"/>
+                                <ContentControl x:Name="DropDownIcon" Background="Transparent" Foreground="#FF282828" IsTabStop="False">
+                                    <ContentControl.Template>
+                                        <ControlTemplate TargetType="{x:Type ContentControl}">
+                                            <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" Margin="3.1,3.1,2.9,2.9" Stretch="None" SnapsToDevicePixels="True">
+                                                <Image.Source>
+                                                    <BitmapImage UriSource="pack://application:,,,/Telerik.Windows.Controls.Input;component/Themes/CalendarIcon-Blue.png"/>
+                                                </Image.Source>
+                                            </Image>
+                                        </ControlTemplate>
+                                    </ContentControl.Template>
+                                </ContentControl>
+                            </Grid>
+                        </telerik:RadDropDownButton>
+                        <Popup x:Name="PART_InputPopup" AllowsTransparency="True" telerik:PopupExtensions.IsOpen="{Binding IsTooltipOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" telerik:PopupExtensions.Owner="{Binding RelativeSource={RelativeSource TemplatedParent}}" Placement="Top" telerik:PopupExtensions.Placement="Top" telerik:PopupExtensions.PlacementTarget="{Binding ElementName=PART_DateTimeInput}" StaysOpen="False">
+                            <ContentPresenter ContentTemplate="{TemplateBinding TooltipTemplate}" Content="{TemplateBinding TooltipContent}"/>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
+</ResourceDictionary>

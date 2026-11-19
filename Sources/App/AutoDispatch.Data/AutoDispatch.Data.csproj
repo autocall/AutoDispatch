@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Как AutoCall.Data V3: сессия (UserSession.Current) и HTTP-клиенты к серверу (Api/*: BaseApi — Bearer, X-Request-Id, Settings.WebUrl).
+       Из V1 — только UserSession; IUserSession и AutoDispatch.Data.Contracts убраны (DI без интерфейсов, AI/wiki/plan.md).
+       Новый код V3 — с ImplicitUsings -->
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Remove="AutoMapper" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCall.Common\AutoCall.Common.csproj" />
+  </ItemGroup>
+
+</Project>

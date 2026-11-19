@@ -1,0 +1,199 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.DatBrokersDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+        xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+        xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+        Title="Brokers" Height="600" Width="950" 
+        Icon="/AutoDispatch;component/Resources/icon.ico" 
+        WindowStartupLocation="CenterScreen"
+        Loaded="DatCompaniesDialog_OnLoaded"
+        Closed="DatCompaniesDialog_OnClosed"
+        Background="{x:Static SystemColors.ControlBrush}">
+    <dialogs:BaseDispatchDialog.Resources>
+        <c:NotEmptyStringToBoolConverter x:Key="NotEmptyStringToBoolConverter" />
+        <c:ToStringConverter x:Key="ToStringConverter"/>
+        <c:EnumToDescriptionsConverter x:Key="enumToDescriptionsConverter"/>
+        <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <telerik:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
+        <dispatch:DatCompaniesDialog_IdToActualCompanyLogoSmallConverter x:Key="IdToActualCompanyLogoSmallConverter"/>
+        <c:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+        <!--Loads collection source-->
+        <!-- Use in codebehind -->
+        <CollectionViewSource x:Key="DatCompaniesViewSource" Source="{Binding DatCompanies}" IsLiveFilteringRequested="True" Filter="DatCompaniesViewSource_OnFilter"/>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <!--Loading control-->
+        <userControls:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="Visible" Grid.RowSpan="10" />
+
+        <!--Toolbar-->
+        <Border Grid.Row="0" BorderThickness="1,0" Margin="5,0" Background="{x:Static SystemColors.ControlBrush}">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <!--Create button-->
+                    <Button x:Name="btnCreate" 
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Create_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/add.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Find</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <!--Edit button-->
+                    <Button x:Name="btnEdit" 
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Edit_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/edit.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Edit</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <!--Delete button-->
+                    <Button x:Name="btnDelete" 
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Delete_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/delete.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Delete</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <telerik:RadToolBarSeparator/>
+                    <!--Export button-->
+                    <Button x:Name="btnExpot" 
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Export_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/Excel_2003.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Export</TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <!--Filter-->
+                <telerik:RadWatermarkTextBox Name="tbLoadSearch"
+                    FontSize="12" 
+                    HorizontalAlignment="Right" Width="120" Height="24" Margin="5"
+                    WatermarkContent="Search"
+                    Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanged="tbFilter_OnTextChanged" />
+            </Grid>
+        </Border>
+
+        <!--Dat Companies grid-->
+        <telerik:RadGridView Grid.Row="1"
+            Name="gridCompanies"
+            AutoGenerateColumns="False" 
+            SelectionMode="Single" SelectionUnit="FullRow"
+            ShowGroupPanel="False" AutoExpandGroups="False" IsFilteringAllowed="False"
+            RowIndicatorVisibility="Collapsed" IsTabStop="False"
+            CanUserReorderColumns="True" CanUserFreezeColumns="False" IsReadOnly="True" CanUserSortColumns="True"
+            ShowColumnFooters="True" ShowGroupFooters="False"
+            MouseDoubleClick="gridCompanies_OnMouseDoubleClick"
+            SelectedItem="{Binding SelectedDatCompany, Mode=OneWayToSource}"
+            Background="{x:Static SystemColors.ControlBrush}">
+            <telerik:RadGridView.Columns>
+                <userControls:RowNumberColumn IsResizable="False" IsSortable="False" Width="Auto" Header="" DataMemberBinding="{Binding CreatedDate}" UniqueName="Row"/>
+                <telerik:GridViewImageColumn IsResizable="False" Width="Auto" Header="" ImageHeight="20" ImageWidth="20"
+                    DataMemberBinding="{Binding ActualCompanyId, Converter={StaticResource IdToActualCompanyLogoSmallConverter}}" />
+                <telerik:GridViewDataColumn IsResizable="False" Header="Rating" DataMemberBinding="{Binding Rating}">
+                    <telerik:GridViewDataColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid Visibility="{Binding DoNotUse, Converter={StaticResource InvertedBooleanToVisibilityConverter}}">
+                                    <telerik:RadRating Value="{Binding Rating, Mode=OneWay}" IsReadOnly="True"
+                                        Visibility="{Binding RatingVisibility}" />
+                                </Grid>
+                                <TextBlock Visibility="{Binding DoNotUse, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                                           FontWeight="Bold" Foreground="Red" Margin="5">Do Not Use</TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </telerik:GridViewDataColumn.CellTemplate>
+                    <telerik:GridViewDataColumn.CellStyle>
+                        <Style TargetType="telerik:GridViewCell">
+                            <Setter Property="Padding" Value="0"/>
+                        </Style>
+                    </telerik:GridViewDataColumn.CellStyle>
+                </telerik:GridViewDataColumn>
+                <telerik:GridViewDataColumn Width="150" Header="Comments" DataMemberBinding="{Binding CommentsText}">
+                    <telerik:GridViewDataColumn.CellStyle>
+                        <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                            <Setter Property="Background" Value="{Binding CommentsBackground}"/>
+                            <Setter Property="Foreground" Value="{Binding CommentsForeground}"/>
+                            <Setter Property="ToolTipService.IsEnabled" Value="{Binding CommentsText, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+                        </Style>
+                    </telerik:GridViewDataColumn.CellStyle>
+                    <telerik:GridViewDataColumn.ToolTipTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                                    Xaml="{Binding Comments, Mode=OneWay}" 
+                                    RichTextBox="{Binding ElementName=richTextBox}" 
+                                    SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                                <telerik:RadRichTextBox x:Name="richTextBox"/>
+                            </Grid>
+                        </DataTemplate>
+                    </telerik:GridViewDataColumn.ToolTipTemplate>
+                </telerik:GridViewDataColumn>
+                <telerik:GridViewDataColumn IsResizable="False" Width="Auto" Header="Created" DataMemberBinding="{Binding CreatedDate, StringFormat=d}"/>
+                <telerik:GridViewDataColumn IsResizable="False" Width="Auto" Header="MC#" DataMemberBinding="{Binding McNumber}"/>
+                <telerik:GridViewDataColumn IsResizable="False" Width="Auto" Header="DOT#" DataMemberBinding="{Binding DotNumber}"/>
+                <telerik:GridViewDataColumn Width="2*" Header="Legal Name" DataMemberBinding="{Binding Name}"/>
+                <telerik:GridViewDataColumn IsResizable="True" Width="70" IsSortable="False" Header="Entry Type" DataMemberBinding="{Binding EntityType, Converter={StaticResource enumToDescriptionsConverter}}" />
+                <telerik:GridViewHyperlinkColumn IsSortable="False" Width="1*" Header="Contacts" DataMemberBinding="{Binding Contacts, Converter={StaticResource ToStringConverter}}">
+                    <telerik:GridViewHyperlinkColumn.CellStyle>
+                        <Style TargetType="telerik:GridViewCell">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <EventSetter Event="PreviewMouseLeftButtonUp" Handler="Phone_OnClick"></EventSetter>
+                        </Style>
+                    </telerik:GridViewHyperlinkColumn.CellStyle>
+                </telerik:GridViewHyperlinkColumn>
+                <telerik:GridViewDataColumn IsResizable="False" IsSortable="True" Width="Auto" Header="SaferSnap" DataMemberBinding="{Binding CarrierViewLink}">
+                    <telerik:GridViewDataColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Visibility="{Binding CarrierViewLink, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                <Hyperlink Click="Link_Click" Focusable="False" ToolTip="SaferSnap">
+                                    <Run Text="link"/>
+                                </Hyperlink>
+                            </TextBlock>
+                        </DataTemplate>
+                    </telerik:GridViewDataColumn.CellTemplate>
+                </telerik:GridViewDataColumn>
+            </telerik:RadGridView.Columns>
+            <telerik:RadGridView.Resources>
+                <Style TargetType="{x:Type telerik:GridViewRow}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsNew}" Value="True">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsNew}" Value="False">
+                            <Setter Property="FontWeight" Value="Normal"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </telerik:RadGridView.Resources>
+        </telerik:RadGridView>
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="3" Style="{StaticResource OkButtonStyle}" Visibility="Collapsed">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>
+
+
+
+
+
+
+

@@ -23,6 +23,14 @@ public class AdUser : IdentityUser<Guid> {
     [Column(TypeName = "varchar(64)")]
     public string Signature { get; set; }
 
+    /// <summary>
+    ///     Учётка SIP софтфона App (V1 Users.MicroSIPLogin/MicroSIPPassword), как SipLogin/SipPassword AutoCall V3;
+    ///     уходит клиенту в ответе входа открытым текстом. Новые колонки IdentityUsers — нужна миграция (AI/wiki/plan.md) </summary>
+    [Column(TypeName = "varchar(10)")]
+    public string SipLogin { get; set; }
+    [Column(TypeName = "varchar(50)")]
+    public string SipPassword { get; set; }
+
     [Required]
     [Column(TypeName = "smalldatetime")]
     public DateTime CreatedDateTime { get; set; }

@@ -1,0 +1,63 @@
+﻿<dialogs:FileBaseDialog 
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.FileConfirmationDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    mc:Ignorable="d" 
+    d:DesignWidth="300"
+    Title="Attach Confirmation" Width="300" SizeToContent="Height"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+    Background="{x:Static SystemColors.ControlBrush}"
+    AllowDrop="True" PreviewDragOver="file_PreviewDragOver"
+    Drop="file_Drop" DragEnter="file_DragEnter">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0"
+            Style="{StaticResource titleTextBlock}" 
+            Text="Pro#"/>
+
+        <TextBlock Grid.Row="1"
+            Style="{StaticResource titleTextBlock}" 
+            Text="Confirmation File"/>
+
+        <TextBox Grid.Row="0" Grid.Column="1"
+            Name="tbProId"
+            Style="{StaticResource fieldTextBox}"/>
+
+        <DockPanel Grid.Column="1" Grid.Row="1">
+            <telerik:RadButton Click="browse_OnClick" ToolTip="Browse" Margin="5,0" VerticalAlignment="Center" >
+                <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="20"/>
+            </telerik:RadButton>
+            <telerik:RadButton Click="scan_OnClick" ToolTip="Scan" Margin="0" VerticalAlignment="Center" >
+                <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/Scan-icon.png" Height="20"/>
+            </telerik:RadButton>
+            <TextBox Name="tbFile"
+                IsReadOnly="True" Margin="5"
+                Style="{StaticResource fieldTextBox}"/>
+        </DockPanel>
+        
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Hidden" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.ColumnSpan="2" Grid.Row="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="3" Grid.ColumnSpan="2"  Style="{StaticResource OkButtonStyle}"  Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Grid.ColumnSpan="2"  Style="{StaticResource CloseButtonStyle}">Close</Button>
+    </Grid>
+</dialogs:FileBaseDialog>
+

@@ -1,0 +1,1253 @@
+﻿<ucBoards:DispatchBoardBase
+        x:Class="AutoCall.WPF.UserControls.Boards.DispatchAccountBoard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:uc="clr-namespace:AutoCall.WPF.UserControls"
+        xmlns:core="clr-namespace:AutoCall.WPF.Core"
+        xmlns:ucBoards="clr-namespace:AutoCall.WPF.UserControls.Boards"
+        xmlns:enums="clr-namespace:AutoDispatch.Dtos.Enums;assembly=AutoDispatch.Dtos"
+        xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        xmlns:userControls="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:behaviors="clr-namespace:AutoCall.WPF.Behaviors"
+        xmlns:extensions="clr-namespace:AutoCall.WPF.Extensions"
+        xmlns:viewmodels="clr-namespace:AutoDispatch.Logic.ViewModels;assembly=AutoDispatch.Logic.Contracts"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:styleselector="clr-namespace:AutoCall.WPF.StyleSelector"
+        mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300">
+    <ucBoards:Board.Resources>
+        <!-- Converters -->
+        <c:AnyToBooleanConverter x:Key="AnyToBooleanConverter" />
+        <c:InverseBooleanConverter x:Key="InvertedBooleanConverter" />
+        <c:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True" />
+        <c:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter" />
+        <c:NotEmptyStringToBoolConverter x:Key="NotEmptyStringToBoolConverter" />
+        <c:NotNullToBoolConverter x:Key="ObjectToBoolConverter" />
+        <c:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter" />
+        <c:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True" />
+        <c:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+        <c:ToStringConverter x:Key="ToStringConverter" />
+        <c:BooleanToStringConverter x:Key="BooleanToLateConverter" TrueString="Yes" FalseString=""/>
+        <c:BooleanToBrushConverter x:Key="BooleanToBrushLateConverter" TrueBrush="Red" FalseBrush="Transparent"/>
+        <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <dispatch:DispatchBoard_AnyChildrenConverter x:Key="AnyChildrenConverter"/>
+        <dispatch:EditLoadDialog_PalletTypeToBrushConverter x:Key="palletTypeToBrushConverter"/>
+        <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter" />
+        <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToComment1NameConverter" Type="Comment1" />
+        <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToComment2NameConverter" Type="Comment2" />
+        <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToConsolidationNameConverter" Type="Consolidation" />
+        <dispatch:DispatchBoard_AddMonthToDateTimeConverter x:Key="AddMonthToDateTimeConverter" />
+        <dispatch:DispatchBoard_CustomStatusIdToNameConverter x:Key="CustomStatusIdToNameConverter"/>
+        <!-- Proxy -->
+        <core:BindingProxy x:Key="proxy" Data="{Binding}" />
+        <core:BindingProxy x:Key="sProxy" Data="{Binding SelectedItemsModel, RelativeSource={RelativeSource AncestorType={x:Type ucBoards:Board}, Mode=FindAncestor}}"/>
+        <core:BindingProxy x:Key="rootProxy" Data="{Binding RelativeSource={RelativeSource AncestorType={x:Type ucBoards:Board}, Mode=FindAncestor}}" />
+        <!-- Styles -->
+        <styleselector:GridViewCellStyleSelector x:Key="GridViewCellStyleSelector"/>
+        <Style TargetType="{x:Type telerik:GridViewDataColumn}">
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CellStyleSelector" Value="{StaticResource GridViewCellStyleSelector}"/>
+        </Style>
+        <Style TargetType="{x:Type uc:SumDataColumn}">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="CellStyleSelector" Value="{StaticResource GridViewCellStyleSelector}"/>
+        </Style>
+        <Style TargetType="{x:Type telerik:GridViewHyperlinkColumn}">
+            <Setter Property="IsReadOnly" Value="True" />
+        </Style>
+        <!-- Context Menu with repeating splitterns -->
+        <Style TargetType="telerik:RadMenuSeparatorItem">
+            <Setter Property="Margin" Value="0,-5,0,-5" />
+        </Style>
+        <!--Loads collection source-->
+        <!-- Use in codebehind -->
+        <CollectionViewSource x:Key="LoadsViewSource" Source="{Binding Wrappers}" IsLiveFilteringRequested="True" Filter="LoadsViewSource_OnFilter">
+            <CollectionViewSource.LiveFilteringProperties>
+                <system:String>DatCompany</system:String>
+                <system:String>DatDriver</system:String>
+                <system:String>Driver</system:String>
+                <system:String>Truck</system:String>
+                <system:String>Trailer</system:String>
+                <system:String>Warehouse</system:String>
+                <system:String>Yard</system:String>
+                <system:String>HistoryDatCompany</system:String>
+                <system:String>HistoryDatDriver</system:String>
+                <system:String>HistoryDriver</system:String>
+                <system:String>HistoryTruck</system:String>
+                <system:String>HistoryTrailer</system:String>
+                <system:String>HistoryWarehouse</system:String>
+                <system:String>ActualCompany</system:String>
+                <system:String>Load.ContainerType</system:String>
+                <system:String>Load.BoardType</system:String>
+            </CollectionViewSource.LiveFilteringProperties>
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Load.Age" Direction="Ascending"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+        <Style TargetType="telerik:RadRichTextBox" BasedOn="{StaticResource fieldRadRichTextBox}">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+            <Setter Property="IsSpellCheckingEnabled" Value="False" />
+            <Setter Property="IsContextMenuEnabled" Value="False" />
+            <Setter Property="IsSelectionMiniToolBarEnabled" Value="False" />
+            <Setter Property="IsImageMiniToolBarEnabled" Value="False" />
+        </Style>
+        <DataTemplate x:Key="HistoryDatCompanyNameColumnTemplate">
+            <TextBlock Text="{Binding HistoryDriverCarrier_Name}" Margin="0,0,5,0"/>
+        </DataTemplate>
+    </ucBoards:Board.Resources>
+    <Grid>
+        <Grid>
+            <Grid.LayoutTransform>
+                <ScaleTransform x:Name="scaleTransform" CenterX="0" CenterY="0" />
+            </Grid.LayoutTransform>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="25" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!--Board title-->
+            <Border CornerRadius="5,5,0,0" Height="Auto" Name="borderTitle"
+              Background="{Binding EngineState, Converter={StaticResource EngineStateToBackgroundConverter}}">
+                <Grid>
+                    <TextBlock
+                  FontWeight="Bold" Foreground="White"
+                  VerticalAlignment="Center" HorizontalAlignment="Center"
+                  Text="{Binding Data.Title, Source={StaticResource rootProxy}, Converter={StaticResource TextToUpperConverter}}" />
+                    <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,10,0">
+                        <TextBlock Name="tbEngineQueueCount"  Margin="2" />
+                        <Image gif:ImageBehavior.RepeatBehavior="3x" Name="imEngineState" Width="16" Height="16"
+                    gif:ImageBehavior.AnimatedSource="{Binding EngineState, Converter={StaticResource EngineStateToUriConverter}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <!--Loading control-->
+            <uc:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="{Binding Loading, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Grid.RowSpan="10" />
+            <!--Toolbar-->
+            <Border Grid.Row="1" BorderThickness="1,0" BorderBrush="DarkGray" Background="{x:Static SystemColors.ControlBrush}" Padding="3">
+                <Grid>
+                    <!-- Title -->
+                    <TextBlock
+                  FontSize="12" FontWeight="Bold" Foreground="DimGray"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Text="{Binding Data.DispatchBoardType, Source={StaticResource rootProxy}, Converter={StaticResource EnumToDescriptionConverter}}" />
+                    <!-- Filter -->
+                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                        <userControls:FilterColumnsControl x:Name="itemsFilterRecords" />
+                        <Button ToolTip="Open Filters"
+                    Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                    Click="FiltersRecords_Clicked">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/filter.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></uc:AutoGreyableImage>
+                            </StackPanel>
+                        </Button>
+                        <telerik:RadToolBarSeparator />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <telerik:RadComboBox Name="historyFilter"
+                  AllowMultipleSelection="False"
+                  ClearSelectionButtonVisibility="Visible" ClearSelectionButtonContent="Clear Selection"
+                  SelectedValuePath="Key" Height="24" Width="190"
+                  SelectionChanged="HistoryFilter_OnSelectionChanged">
+                                <telerik:RadComboBox.EmptySelectionBoxTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="History" Foreground="Gray" FontStyle="Italic" />
+                                    </DataTemplate>
+                                </telerik:RadComboBox.EmptySelectionBoxTemplate>
+                                <telerik:RadComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock HorizontalAlignment="Left" >
+                            <Run Text="{Binding Key, StringFormat={}{0:M/d/yyyy}, Mode=OneWay}"/>
+                            <Run>-</Run>
+                            <Run Text="{Binding Key, StringFormat={}{0:M/d/yyyy}, Converter={StaticResource AddMonthToDateTimeConverter}, ConverterParameter=3, Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Value, StringFormat={}({0})}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </telerik:RadComboBox.ItemTemplate>
+                            </telerik:RadComboBox>
+                            <Grid>
+                                <telerik:RadWatermarkTextBox Name="tbLoadsSearch"
+                        FontSize="12"
+                        Width="120" Height="24" Margin="5"
+                        WatermarkContent="Search" />
+                                <Image
+                        Visibility="{Binding Text, ElementName=tbLoadsSearch, Converter={StaticResource StringToVisibilityConverter}}"
+                        Width="16" Height="16" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand"
+                        MouseLeftButtonUp="gridLoads_ClearFilter_MouseLeftButtonUp"
+                        Source="/AutoDispatch;component/Resources/close.png" />
+                            </Grid>
+                        </StackPanel>
+                        <Image Style="{StaticResource HelpFilterStyle}" />
+                    </StackPanel>
+                    <!-- ToolBar -->
+                    <!-- CARRIER TOOLBAR -->
+                    <StackPanel Orientation="Horizontal" Background="{x:Static SystemColors.ControlBrush}" HorizontalAlignment="Left"
+                  Visibility="{Binding
+                                Data.DispatchBoardType,
+                                Source={StaticResource rootProxy},
+                                Converter={StaticResource BorderTypeToVisibilityConverter},
+                                ConverterParameter={x:Static enums:DispatchBoardType.Carrier}}">
+                        <!--Refresh-->
+                        <Button
+                    Click="Refresh_Clicked"
+                    Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/load.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></uc:AutoGreyableImage>
+                                <TextBlock VerticalAlignment="Center" Margin="3">Refresh</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Export excel-->
+                        <Button
+                    Click="Export_Clicked"
+                    Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Excel_2003.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Export</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <telerik:RadToolBarSeparator />
+                        <!-- My Brokers -->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Click="MyBrokers_Clicked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock VerticalAlignment="Center" Margin="3">My Brokers</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!-- All Brokers -->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Click="AllBrokers_Clicked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock VerticalAlignment="Center" Margin="3">All Brokers</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <telerik:RadToolBarSeparator />
+                        <!--Factoring Company-->
+                        <Button Click="Factoring_Company_OnClick"
+                        Focusable="False" Style="{StaticResource ToolBarButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/coins.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Factoring Company</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <telerik:RadToolBarSeparator />
+                        <!--Create Invoice-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.CreateInvoiceCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Document.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Create Invoice</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Send Invoice-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.SendInvoiceCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Document.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Send Invoice</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Issues-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.IssuesCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/warning_yellow.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Issues</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Bond-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.BondCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Document_bill.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Bond</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Paid-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.PaidCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/currency_paid.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Paid</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Unpaid-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.UnpaidCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/currency_unpaid.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Unpaid</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Attach Check-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.AttachCheckCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Document_checked.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Attach Check</TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <!-- BROKER TOOLBAR -->
+                    <StackPanel Orientation="Horizontal" Background="{x:Static SystemColors.ControlBrush}" HorizontalAlignment="Left"
+                  Visibility="{Binding
+                                Data.DispatchBoardType,
+                                Source={StaticResource rootProxy},
+                                Converter={StaticResource BorderTypeToVisibilityConverter},
+                                ConverterParameter={x:Static enums:DispatchBoardType.Broker}}">
+                        <!--Refresh-->
+                        <Button
+                    Click="Refresh_Clicked"
+                    Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/load.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></uc:AutoGreyableImage>
+                                <TextBlock VerticalAlignment="Center" Margin="3">Refresh</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Export excel-->
+                        <Button
+                    Click="Export_Clicked"
+                    Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Excel_2003.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Export</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <telerik:RadToolBarSeparator />
+                        <!-- My Carriers -->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Click="MyCarriers_Clicked">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Visibility="{Binding IsNewDatCompany, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        gif:ImageBehavior.AnimatedSource="/AutoDispatch;component/Resources/new.gif" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">My Carriers</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!-- All Carriers -->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Click="AllCarriers_Clicked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock VerticalAlignment="Center" Margin="3">All Carriers</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <telerik:RadToolBarSeparator />
+                        <!--Paid-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.PaidCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/currency_paid.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Paid</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Unpaid-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.UnpaidCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/currency_unpaid.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Unpaid</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <!--Attach Check-->
+                        <Button Focusable="False" Style="{StaticResource ToolBarButtonStyle}"
+                    Command="{Binding Data.dc.AttachCheckCommand, Source={StaticResource rootProxy}}"
+                    CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}">
+                            <StackPanel Orientation="Horizontal">
+                                <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/Document_checked.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}" />
+                                <TextBlock VerticalAlignment="Center" Margin="3">Attach Check</TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <!--Records grid-->
+            <telerik:RadGridView x:Name="gridLoads" Grid.Row="2"
+              AutoGenerateColumns="False" IsReadOnly="False" IsTabStop="False"
+              SelectionMode="Extended" SelectionUnit="FullRow"
+              IsFilteringAllowed="False"
+              ShowColumnFooters="True" ShowGroupFooters="False"
+              ShowGroupPanel="False" AutoExpandGroups="True"
+              RowIndicatorVisibility="Collapsed"
+              CanUserFreezeColumns="False" CanUserReorderColumns="True" CanUserSortColumns="True"
+              ColumnReordering="gridLoads_ColumnReordering"
+              SelectionChanged="grid_SelectionChanged"
+              PreviewMouseLeftButtonUp="grid_PreviewMouseLeftButtonUp"
+              PreparedCellForEdit="grid_PreparedCellForEdit"
+              CellEditEnded="grid_CellEditEnded"
+              CellValidating="grid_CellValidating"
+              SearchPanelVisibilityChanged="grid_SearchPanelVisibilityChanged"
+              CopyingCellClipboardContent="grid_CopyingCellClipboardContent"
+              IsExpandableBinding="{Binding Converter={StaticResource AnyChildrenConverter}, Mode=OneWay}"
+              Background="{x:Static SystemColors.ControlBrush}"
+              Style="{StaticResource showHideGroupColumnsRadGridViewStyle}"
+              ItemsSource="{Binding PagedSource, ElementName=dataPager}">
+                <telerik:RadGridView.ColumnGroups>
+                    <telerik:GridViewColumnGroup Name="Documents" Header="Documents" />
+                    <telerik:GridViewColumnGroup Name="Customer" Header="Customer" />
+                    <telerik:GridViewColumnGroup Name="Carrier" Header="Carrier" />
+                    <telerik:GridViewColumnGroup Name="Load" Header="Load" />
+                    <telerik:GridViewColumnGroup Name="Expenses" Header="Expenses" />
+                    <telerik:GridViewColumnGroup Name="Accessorial" Header="Accessorial" />
+                    <telerik:GridViewColumnGroup Name="Rate" Header="Rate" />
+                </telerik:RadGridView.ColumnGroups>
+                <telerik:RadGridView.ChildTableDefinitions>
+                    <telerik:GridViewTableDefinition />
+                </telerik:RadGridView.ChildTableDefinitions>
+                <i:Interaction.Behaviors>
+                    <!-- NOTE: REMEMBE, THE BEHAVIOR MUST BE PUBLIC -->
+                    <behaviors:RadGridViewMultiSelectBehavior SelectedItems="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" />
+                </i:Interaction.Behaviors>
+                <telerik:RadGridView.HierarchyChildTemplate>
+                    <DataTemplate>
+                        <telerik:RadGridView
+                    Margin="0,0,0,-1" BorderThickness="0"
+                    AutoGenerateColumns="False" ShowColumnHeaders="False"
+                    SelectionMode="Extended" SelectionUnit="FullRow"
+                    RowIndicatorVisibility="Collapsed"
+                    ShowGroupPanel="False" ShowColumnFooters="False" ShowColumnSortIndexes="False" ShowGroupFooters="False" ShowSearchPanel="False"
+                    CanUserReorderColumns="True" CanUserFreezeColumns="False" CanUserSortColumns="True" IsReadOnly="True"
+                    Background="{x:Static SystemColors.ControlBrush}"
+                    Loaded="ChildGridLoads_OnLoaded"
+                    CellEditEnded="grid_CellEditEnded"
+                    GroupRenderMode="Flat"
+                    IsSynchronizedWithCurrentItem="True">
+                            <telerik:RadGridView.ChildTableDefinitions>
+                                <telerik:GridViewTableDefinition />
+                            </telerik:RadGridView.ChildTableDefinitions>
+                            <i:Interaction.Behaviors>
+                                <!-- NOTE: REMEMBE, THE BEHAVIOR MUST BE PUBLIC -->
+                                <behaviors:RadGridViewMultiSelectBehavior SelectedItems="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" />
+                            </i:Interaction.Behaviors>
+                            <telerik:RadGridView.Resources>
+                                <!--Loads collection source-->
+                                <!-- Use in codebehind, NOTE: Use Static Event -->
+                                <CollectionViewSource x:Key="SubLoadsViewSource" Source="{Binding Children}"
+                        IsLiveFilteringRequested="True">
+                                    <CollectionViewSource.LiveFilteringProperties>
+                                        <system:String>DatCompany</system:String>
+                                        <system:String>DatDriver</system:String>
+                                        <system:String>Driver</system:String>
+                                        <system:String>Truck</system:String>
+                                        <system:String>Trailer</system:String>
+                                        <system:String>Warehouse</system:String>
+                                        <system:String>ActualCompany</system:String>
+                                        <system:String>Load.ContainerType</system:String>
+                                        <system:String>Load.BoardType</system:String>
+                                    </CollectionViewSource.LiveFilteringProperties>
+                                </CollectionViewSource>
+                            </telerik:RadGridView.Resources>
+                        </telerik:RadGridView>
+                    </DataTemplate>
+                </telerik:RadGridView.HierarchyChildTemplate>
+                <!-- Groups -->
+                <telerik:RadGridView.Resources>
+                    <!-- Context Menu for Carrier Accounting -->
+                    <telerik:RadContextMenu x:Key="rowContextMenuCarrier" Opened="RadContextMenu_Opened" Opening="RadContextMenu_Opening">
+                        <telerik:RadContextMenu.Resources>
+                            <Style TargetType="{x:Type telerik:RadMenuItem}">
+                                <Setter Property="helpers:TextDecorationHelper.TextDecoration" Value="None" />
+                            </Style>
+                        </telerik:RadContextMenu.Resources>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Create Invoice"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.CreateInvoiceCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Send Invoice"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.SendInvoiceCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Resend Invoice"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ResendInvoiceCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Invoice"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditInvoiceCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Attach Confirmation"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.AttachConfirmationCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Attach POD"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.AttachPODCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Attach Check"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.AttachCheckCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Issues"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.IssuesCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Load"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditLoadCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Expenses"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditExpensesCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Accessorial"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditGainsCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit External Comment"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditComments1Command}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Internal Comment"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditComments2Command}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Consolidation"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditConsolidationCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Copy Summary"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.CopySummaryCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View History"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ViewHistoryChangesCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View Location History"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ViewHistoryLocationsCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Show Trip"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ShowTripCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Preview Images"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PreviewImagesCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Go To Linked Load"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.GoToLinkedWrapperCommand}"/>
+                        <telerik:RadMenuSeparatorItem />
+                        <!-- paid / canceled2 -->
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Move to history"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PaidCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Move to history (unpaid)"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.UnpaidCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Delete Confirmation"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.DeleteConfirmationCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Delete POD"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.DeletePODCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Delete"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.DeleteLoadCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Undo"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.UndoCommand}" />
+                    </telerik:RadContextMenu>
+                    <!-- Context Menu for Broker Accounting -->
+                    <telerik:RadContextMenu x:Key="rowContextMenuBroker" Opened="RadContextMenu_Opened">
+                        <telerik:RadContextMenu.Resources>
+                            <Style TargetType="{x:Type telerik:RadMenuItem}">
+                                <Setter Property="helpers:TextDecorationHelper.TextDecoration" Value="None" />
+                            </Style>
+                        </telerik:RadContextMenu.Resources>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Attach Invoice"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.AttachInvoiceCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Attach Check"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.AttachCheckCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Load"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditLoadCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Expenses"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditExpensesCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Accessorial"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditGainsCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Comments for Dispatcher"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditComments1Command}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Comments for Broker"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditComments2Command}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Edit Consolidation"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditConsolidationCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Copy Summary"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.CopySummaryCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View Carrier"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditCarrierCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View History"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ViewHistoryChangesCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View Location History"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ViewHistoryLocationsCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Show Trip"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ShowTripCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Preview Images"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PreviewImagesCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Go To Linked Load"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.GoToLinkedWrapperCommand}"/>
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Sync Tracker"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.SyncCarrierViewTrackerCommand}"/>
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Move to history"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PaidCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Delete"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.DeleteLoadCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Undo"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.UndoCommand}" />
+                    </telerik:RadContextMenu>
+                    <!-- Context Menu for SubLoads -->
+                    <telerik:RadContextMenu x:Key="rowContextMenuSubLoad" Opened="RadContextMenu_Opened">
+                        <telerik:RadContextMenu.Resources>
+                            <Style TargetType="{x:Type telerik:RadMenuItem}">
+                                <Setter Property="helpers:TextDecorationHelper.TextDecoration" Value="None" />
+                            </Style>
+                        </telerik:RadContextMenu.Resources>
+                        <!-- paid / canceled2 -->
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Move to history"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PaidCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View History"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ViewHistoryChangesCommand}" />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="View Location History"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ViewHistoryLocationsCommand}" />
+                        <telerik:RadMenuSeparatorItem />
+                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Undo"
+                    Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.UndoCommand}" />
+                    </telerik:RadContextMenu>
+                    <c:ContextMenuSwitcherConverter x:Key="ContextMenuSwitcherConverter"
+                  BrokerMenu="{StaticResource rowContextMenuBroker}"
+                  CarrierMenu="{StaticResource rowContextMenuCarrier}"
+                  SubLoadMenu="{StaticResource rowContextMenuSubLoad}" />
+                    <Style TargetType="telerik:GridViewCell">
+                        <EventSetter Event="CellDoubleClick" Handler="gridLoads_CellDoubleClick" />
+                    </Style>
+                </telerik:RadGridView.Resources>
+                <telerik:RadGridView.RowStyle>
+                    <!-- Completed decaration -->
+                    <Style TargetType="{x:Type telerik:GridViewRow}" BasedOn="{StaticResource GridViewRowStyle2}">
+                        <EventSetter Event="MouseRightButtonUp" Handler="gridRow_MouseRightButtonUp" />
+                        <EventSetter Event="MouseDoubleClick" Handler="gridLoads_RowDoubleClick" />
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                        <Setter Property="telerik:RadContextMenu.ContextMenu"
+                    Value="{Binding Load, Converter={StaticResource ContextMenuSwitcherConverter}, Mode=OneTime}" />
+                        <Setter Property="IsEnabled" Value="{Binding Load.Saving, Converter={StaticResource InvertedBooleanConverter}}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Load.Status}" Value="{x:Static enums:LoadStatus.Completed}">
+                                <Setter Property="TextBlock.Foreground" Value="#A0A0A0" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Load.Status}" Value="{x:Static enums:LoadStatus.Canceled2}">
+                                <Setter Property="TextBlock.Foreground" Value="#A0A0A0" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Load.Status}" Value="{x:Static enums:LoadStatus.Unpaid}">
+                                <Setter Property="TextBlock.Foreground" Value="#A0A0A0" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </telerik:RadGridView.RowStyle>
+                <!-- Columns -->
+                <telerik:RadGridView.Columns>
+                    <uc:RowNumberColumn Width="40" Header="" ColumnGroupName="Load"
+                  IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="0"
+                  DataMemberBinding="{Binding Load.CreatedDate}" UniqueName="Row"
+                  PageIndex="{Binding PageIndex, ElementName=dataPager, Mode=OneWay}"
+                  PageSize="{Binding PageSize, ElementName=dataPager, Mode=OneWay}"/>
+                    <telerik:GridViewDataColumn Width="45" Header="Load#" ColumnGroupName="Load" UniqueName="Load.Index" Name="gridLoads_IndexCol"
+                  IsResizable="True" extensions:PropertyExtensions.RelativeDisplayIndex="2"
+                  DataMemberBinding="{Binding Load.IndexString}" SortMemberPath="Load.IndexSort"/>
+                    <telerik:GridViewDataColumn Width="40" Header="Age" ColumnGroupName="Load" GroupMemberPath="Load.Age.Days"
+                  IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="3"
+                  DataMemberBinding="{Binding Load.Age, StringFormat={}%d}" />
+                    <telerik:GridViewDataColumn Width="80" Header="Date" ColumnGroupName="Load" GroupMemberPath="Load.BookedDate.Date"
+                  IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="4"
+                  DataMemberBinding="{Binding Load.BookedDate, StringFormat=d}" />
+                    <telerik:GridViewDataColumn Width="90" Header="Status" ColumnGroupName="Load" UniqueName="Load.Status"
+                      IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="5"
+                      DataMemberBinding="{Binding Load.StatusString}" />
+                    <telerik:GridViewDataColumn Width="70" Header="Custom Status" IsReadOnly="False" ColumnGroupName="Load"
+                        IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="6"
+                        DataMemberBinding="{Binding Load.CustomStatusId, Converter={StaticResource CustomStatusIdToNameConverter}}" >
+                        <telerik:GridViewDataColumn.CellEditTemplate>
+                            <DataTemplate>
+                                <ComboBox
+                                ItemsSource="{Binding Path=Data.CustomStatuses, Source={StaticResource proxy}}"
+                                SelectedValue="{Binding Load.CustomStatusId, Mode=TwoWay}"
+                                SelectedValuePath="Key" DisplayMemberPath="Value">
+                                </ComboBox>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellEditTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="70" Header="Pro#" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.RecordId}" />
+                    <telerik:GridViewDataColumn Width="150" Name="pComment1Col" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Comment1Text}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding Load.Comment1Background}" />
+                                <Setter Property="Foreground" Value="{Binding Load.Comment1Foreground}" />
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.Comment1Text, Converter={StaticResource NotEmptyStringToBoolConverter}}" />
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                          Xaml="{Binding Load.Comments, Mode=OneWay}"
+                          RichTextBox="{Binding ElementName=richTextBox}"
+                          SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}" />
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="150" Name="pComment2Col" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Comment2Text}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding Load.Comment2Background}" />
+                                <Setter Property="Foreground" Value="{Binding Load.Comment2Foreground}" />
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.Comment2Text, Converter={StaticResource NotEmptyStringToBoolConverter}}" />
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                          Xaml="{Binding Load.Comments2, Mode=OneWay}"
+                          RichTextBox="{Binding ElementName=richTextBox}"
+                          SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}" />
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="150" Name="pConsolidationCol" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.ConsolidationText}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding Load.ConsolidationBackground}" />
+                                <Setter Property="Foreground" Value="{Binding Load.ConsolidationForeground}" />
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.ConsolidationText, Converter={StaticResource NotEmptyStringToBoolConverter}}" />
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                          Xaml="{Binding Load.Consolidation, Mode=OneWay}"
+                          RichTextBox="{Binding ElementName=richTextBox}"
+                          SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}" />
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="40" Header="Equipment" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Equipment, Converter={StaticResource EquipmentTypeToCodeConverter}}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Origin" ColumnGroupName="Load" UniqueName="Load.OriginCity"
+                  DataMemberBinding="{Binding OriginCity}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Origin Address" ColumnGroupName="Load" UniqueName="Load.OriginAddress"
+                  DataMemberBinding="{Binding OriginAddress}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Destination" ColumnGroupName="Load" UniqueName="Load.DestinationCity"
+                  DataMemberBinding="{Binding DestinationCity}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Destination Address" ColumnGroupName="Load" UniqueName="Load.DestinationAddress"
+                  DataMemberBinding="{Binding DestinationAddress}" />
+                    <telerik:GridViewDataColumn Width="60" Header="Distance" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Distance}" />
+                    <telerik:GridViewDataColumn Width="80" Header="Shipper" ColumnGroupName="Load" UniqueName="Load.ShipperCompany"
+                  DataMemberBinding="{Binding ShipperCompany}" />
+                    <telerik:GridViewDataColumn Width="80" Header="Receiver" ColumnGroupName="Load" UniqueName="Load.ReceiverCompany"
+                  DataMemberBinding="{Binding ReceiverCompany}" />
+                    <telerik:GridViewDataColumn Width="125" Header="Pickup" ColumnGroupName="Load" UniqueName="Load.PickupDate"
+                  DataMemberBinding="{Binding PickupDate, StringFormat=d}" SortMemberPath="Load.PickupDate" />
+                    <telerik:GridViewDataColumn Width="125" Header="Delivery" ColumnGroupName="Load" UniqueName="Load.DeliveryDate"
+                  DataMemberBinding="{Binding DeliveryDate, StringFormat=d}" SortMemberPath="Load.DeliveryDate" />
+                    <telerik:GridViewDataColumn Width="45" Header="Late" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Late, Converter={StaticResource BooleanToLateConverter}}"/>
+                    <telerik:GridViewDataColumn Width="130" Header="New Scheduled Appointment" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.NewScheduledAppointment, StringFormat='{}{0:M/d/yyyy h:mm tt}'}" />
+                    <uc:SumDataColumn Width="40" Header="Weight" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.WeightString}" UniqueName="Load.Weight" SumMemberPath="Load.WeightValue"/>
+                    <telerik:GridViewDataColumn Width="40" Header="Length" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Length}" />
+                    <uc:SumDataColumn Width="35" Header="Pallets" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Pallets, Converter={StaticResource ToStringConverter}}" />
+                    <telerik:GridViewDataColumn Width="35" Header="Pallet Type" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.PalletType, Converter={StaticResource EnumToDescriptionConverter}}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Foreground" Value="{Binding Load.PalletType, Converter={StaticResource palletTypeToBrushConverter}, ConverterParameter={x:Static dispatch:PalletTypeConverterParameter.Foreground}}"/>
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                    </telerik:GridViewDataColumn>
+                    <uc:SumDataColumn x:Name="r06" Width="35" Header="Spots" ColumnGroupName="Load" IsReadOnly="False" IsVisible="False"
+                  DataMemberBinding="{Binding Load.Spots}"/>
+                    <telerik:GridViewDataColumn x:Name="r07" Width="50" Header="Commodity" ColumnGroupName="Load" IsReadOnly="False" IsVisible="False"
+                  DataMemberBinding="{Binding Load.Commodity}"/>
+                    <uc:SumDataColumn Width="60" Header="Line Haul" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.LineHaul, StringFormat=C2}"/>
+                    <uc:SumDataColumn Width="60" Header="Rate" ColumnGroupName="Rate"
+                  DataMemberBinding="{Binding Load.Rate, StringFormat=C2}"/>
+                    <telerik:GridViewDataColumn Width="50" Header="Rate Change" ColumnGroupName="Rate"
+                  DataMemberBinding="{Binding Load.LastRateChangedString}"/>
+                    <telerik:GridViewDataColumn Width="90" Header="Quick Pay" ColumnGroupName="Load"
+                  IsReadOnly="False" IsVisible="False"
+                  DataMemberBinding="{Binding Load.QuikPay, StringFormat=d}">
+                        <telerik:GridViewDataColumn.CellEditTemplate>
+                            <DataTemplate>
+                                <telerik:RadDatePicker SelectedValue="{Binding Load.QuikPay, Mode=TwoWay}" />
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellEditTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="180" Header="Created" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.Created}" SortMemberPath="Load.CreatedDate" />
+                    <telerik:GridViewDataColumn Width="180" Header="Last Modified" ColumnGroupName="Load"
+                  DataMemberBinding="{Binding Load.LastModified}" SortMemberPath="Load.LastModifiedDate" />
+                    <telerik:GridViewDataColumn Width="200" Header="Customer" ColumnGroupName="Customer" extensions:PropertyExtensions.RelativeDisplayIndex="0"
+                  DataMemberBinding="{Binding Load.Company}" />
+                    <userControls:GridViewPhoneColumn Width="100" Header="Phone" ColumnGroupName="Customer" extensions:PropertyExtensions.RelativeDisplayIndex="1"
+                  DataMemberBinding="{Binding Load.Contacts}" />
+                    <!-- Factoring Company -->
+                    <telerik:GridViewDataColumn Width="200" Header="Factoring Company" ColumnGroupName="Carrier" Name="facComCol" extensions:PropertyExtensions.RelativeDisplayIndex="2"
+                  DataMemberBinding="{Binding SetupPacket.MailingCompanyLegalName}" IsReadOnly="True">
+                        <!--IsReadOnly="False"-->
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding SetupPacket, Converter={StaticResource NotNullToVisibilityConverter}}">
+                      <Run Text="{Binding SetupPacket.MailingCompanyLegalName}" />
+                      <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenWebSetupPacketCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                        <Run Text="edit" />
+                      </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                        <!--<telerik:GridViewDataColumn.CellEditTemplate>
+                                <DataTemplate>
+                                    <telerik:RadComboBox
+                                        Loaded="cbFactoringCompany_Loaded"
+                                        SelectedValue="{Binding SetupPacket.FactoringCompanyId}"
+                                        SelectedValuePath="EntityId"
+                                        DisplayMemberPath="Name" />
+                                </DataTemplate>
+                            </telerik:GridViewDataColumn.CellEditTemplate>-->
+                    </telerik:GridViewDataColumn>
+                    <!-- Photo -->
+                    <telerik:GridViewDataColumn Width="80" Header="Photo" Name="gridPatterns_photo" IsReadOnly="True"
+                  DataMemberBinding="{Binding Load.PhotoFileView}" ColumnGroupName="Documents">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.PhotoFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                      <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPhotoCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                        <Run Text="open" />
+                      </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Invoice -->
+                    <telerik:GridViewDataColumn Width="80" Name="col" Header="Invoice" ColumnGroupName="Documents" IsReadOnly="False"
+                  DataMemberBinding="{Binding Load.InvoiceNumber}">
+                        <telerik:GridViewDataColumn.Resources>
+                            <!-- it is resource with key! uses in codebehind in DispatchCarrierAccountBoard. -->
+                            <DataTemplate x:Key="carrierLoadDataTemplate">
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding Load.ParentId, Converter={StaticResource NullToVisibilityConverter}}">
+                                    <!-- Invoice Number -->
+                                    <TextBlock Visibility="{Binding Load.InvoiceNumber, Converter={StaticResource NotNullToVisibilityConverter}}">
+                        <Hyperlink
+                            IsEnabled="{Binding Load.InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="{Binding Load.InvoiceNumber}" />
+                        </Hyperlink>
+                                    </TextBlock>
+                                    <!-- Create -->
+                                    <TextBlock Visibility="{Binding Load.InvoiceNumber, Converter={StaticResource NullToVisibilityConverter}}">
+                        <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.CreateInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="create" />
+                        </Hyperlink>
+                                    </TextBlock>
+                                    <!-- Edit -->
+                                    <TextBlock Visibility="{Binding Load.InvoiceNumber, Converter={StaticResource NotNullToVisibilityConverter}}" Margin="5,0,0,0">
+                        <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.EditInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="edit" />
+                        </Hyperlink>
+                                    </TextBlock>
+                                    <!-- Send and Resend -->
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding Load.InvoiceFile, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                        <!-- Send -->
+                                        <TextBlock Visibility="{Binding Load.EmailInvoiceSentDate, Converter={StaticResource NullToVisibilityConverter}}" Margin="5,0,0,0">
+                          <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.SendInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                            <Run Text="send" />
+                          </Hyperlink>
+                                        </TextBlock>
+                                        <!-- Resend -->
+                                        <Grid Visibility="{Binding Load.InvoiceDate, Converter={StaticResource NullToVisibilityConverter}}">
+                                            <TextBlock Visibility="{Binding Load.EmailInvoiceSentDate, Converter={StaticResource NotNullToVisibilityConverter}}" Margin="5,0,0,0">
+                            <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ResendInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                              <Run Text="resend" />
+                            </Hyperlink>
+                                            </TextBlock>
+                                        </Grid>
+                                        <!-- Date of Sent -->
+                                        <TextBlock Visibility="{Binding Load.EmailInvoiceSentDate, Converter={StaticResource NotNullToVisibilityConverter}}" Margin="5,0,0,0">
+                          <Run Text="{Binding Load.EmailInvoiceSentDate, StringFormat=d}" ToolTip="Date of sent the email"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.Resources>
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                      <Hyperlink
+                          IsEnabled="{Binding Load.InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                          Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                        <Run Text="{Binding Load.InvoiceNumber}" />
+                        <Run Text="{Binding Load.InvoiceDate, StringFormat=d}" ToolTip="Date of uploaded" />
+                      </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                        <telerik:GridViewDataColumn.CellEditTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding Load}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1" Margin="-1,0,0,0" Click="browse_OnClick" Focusable="False"
+                          IsEnabled="{Binding InvoiceNumber, Converter={StaticResource AnyToBooleanConverter}}">
+                                        <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellEditTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Check -->
+                    <telerik:GridViewDataColumn Width="80" Header="Check" ColumnGroupName="Documents" IsReadOnly="False"
+                  DataMemberBinding="{Binding Load.CheckNumber}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                      <Hyperlink
+                          IsEnabled="{Binding Load.CheckFile, Converter={StaticResource ObjectToBoolConverter}}"
+                          Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenCheckCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                        <Run Text="{Binding Load.CheckNumber}" />
+                      </Hyperlink>
+                      <Run Text="{Binding Load.CheckDate, StringFormat=d}" ToolTip="Date of uploaded" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                        <telerik:GridViewDataColumn.CellEditTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding Load}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding CheckNumber, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1" Margin="-1,0,0,0" Click="browse_OnClick" Focusable="False"
+                          IsEnabled="{Binding CheckNumber, Converter={StaticResource AnyToBooleanConverter}}">
+                                        <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellEditTemplate>
+                    </telerik:GridViewDataColumn>
+                    <uc:SumDataColumn Width="50" Header="Payout" ColumnGroupName="Documents" IsReadOnly="False"
+                  DataMemberBinding="{Binding Load.Payout, StringFormat=C2}">
+                    </uc:SumDataColumn>
+                    <!-- Confirmation -->
+                    <telerik:GridViewDataColumn Width="85" Header="Confirmation" ColumnGroupName="Documents"
+                  SortMemberPath="Load.ConfirmationDateView"
+                  DataMemberBinding="{Binding Load.ConfirmationFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding Load.ConfirmationFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <TextBlock>
+                        <Hyperlink Command="{Binding Data.dc.OpenConfirmationCommand, Source={StaticResource rootProxy}}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="open"/>
+                        </Hyperlink>
+                        <Run />
+                                    </TextBlock>
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding Load.EmailConfirmationSentDateView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding Load.EmailConfirmationSentDateView, StringFormat=M/d/yyyy h:mm, TargetNullValue=?, Mode=OneWay}" ToolTip="Sent"/>
+                                        <TextBlock>→</TextBlock>
+                                        <TextBlock Text="{Binding Load.ConfirmedDateView, StringFormat=M/d/yyyy h:mm, TargetNullValue=?, Mode=OneWay}" ToolTip="Confirmed"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- BOL -->
+                    <telerik:GridViewDataColumn Width="85" Header="BOL" ColumnGroupName="Documents" IsReadOnly="True" Name="bolColumn"
+                  SortMemberPath="Load.BOLDateView"
+                  DataMemberBinding="{Binding Load.BOLFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.BOLFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                      <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenBOLCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                        <Run Text="open" />
+                      </Hyperlink>
+                      <Run Text="{Binding Load.BOLDateView, StringFormat=d, Mode=OneWay}"  ToolTip="Date of uploaded" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- POD -->
+                    <telerik:GridViewDataColumn Width="85" Header="POD" ColumnGroupName="Documents" IsReadOnly="False" Name="podColumn"
+                  SortMemberPath="Load.PODDateView"
+                  DataMemberBinding="{Binding Load.PODFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.PODFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                      <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPODCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                        <Run Text="open" />
+                      </Hyperlink>
+                      <Run Text="{Binding Load.PODDateView, StringFormat=d, Mode=OneWay}" ToolTip="Date of uploaded" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                        <telerik:GridViewDataColumn.CellEditTemplate>
+                            <DataTemplate>
+                                <Button DataContext="{Binding Load}" Click="browse_OnClick" Focusable="False">
+                                    <uc:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16" />
+                                </Button>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellEditTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Paperwork -->
+                    <telerik:GridViewDataColumn Width="85" Header="Paperwork" ColumnGroupName="Documents" IsReadOnly="False" Name="paperworkColumn"
+                                                SortMemberPath="Load.PaperworkDateView"
+                                                DataMemberBinding="{Binding Load.PaperworkFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.PaperworkFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPaperworkCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="open" />
+                                    </Hyperlink>
+                                    <Run Text="{Binding Load.PaperworkDateView, StringFormat=d, Mode=OneWay}" ToolTip="Date of uploaded" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- +++++++++++++ LinkedWrapper +++++++++++++ -->
+                    <telerik:GridViewDataColumn Name="lc15" IsVisible="False" Width="45" Header="*Load#" ColumnGroupName="LinkedWrapper" UniqueName="LinkedWrapper.Load.IndexString" IsResizable="True"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.IndexString}" SortMemberPath="LinkedWrapper.Load.IndexSort" CellTemplate="{StaticResource LinkWrapperLoadIndexStringColumnTemplate}"/>
+
+                    <telerik:GridViewDataColumn Name="lc0" IsVisible="False" Width="125" Header="*Pickup" ColumnGroupName="LinkedWrapper" UniqueName="LinkedWrapper.Load.PickupDate"
+                  DataMemberBinding="{Binding LinkedWrapper.PickupDate, StringFormat=d}" SortMemberPath="LinkedWrapper.Load.PickupDate" />
+                    <telerik:GridViewDataColumn Name="lc1" IsVisible="False" Width="125" Header="*Delivery" ColumnGroupName="LinkedWrapper" UniqueName="LinkedWrapper.Load.DeliveryDate"
+                  DataMemberBinding="{Binding LinkedWrapper.DeliveryDate, StringFormat=d}" SortMemberPath="LinkedWrapper.Load.DeliveryDate" />
+                    <!-- Comment1 -->
+                    <telerik:GridViewDataColumn Name="lc13" IsVisible="False" Width="150" ColumnGroupName="LinkedWrapper" Header="*External Comments"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.Comment1Text}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding LinkedWrapper.Load.Comment1Background}"/>
+                                <Setter Property="Foreground" Value="{Binding LinkedWrapper.Load.Comment1Foreground}"/>
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding LinkedWrapper.Load.Comment1Text, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                          Xaml="{Binding LinkedWrapper.Load.Comments, Mode=OneWay}"
+                          RichTextBox="{Binding ElementName=richTextBox}"
+                          SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                                    <telerik:RadRichTextBox x:Name="richTextBox"/>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Comment2 -->
+                    <telerik:GridViewDataColumn Name="lc14" IsVisible="False" Width="150" ColumnGroupName="LinkedWrapper" Header="*Internal Comments"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.Comment2Text}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding LinkedWrapper.Load.Comment2Background}"/>
+                                <Setter Property="Foreground" Value="{Binding LinkedWrapper.Load.Comment2Foreground}"/>
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding LinkedWrapper.Load.Comment2Text, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                          Xaml="{Binding LinkedWrapper.Load.Comments2, Mode=OneWay}"
+                          RichTextBox="{Binding ElementName=richTextBox}"
+                          SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Consolidation -->
+                    <telerik:GridViewDataColumn Name="lc16" IsVisible="False" Width="150" ColumnGroupName="LinkedWrapper" Header="*Internal Comments"
+                        DataMemberBinding="{Binding LinkedWrapper.Load.ConsolidationText}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding LinkedWrapper.Load.ConsolidationBackground}"/>
+                                <Setter Property="Foreground" Value="{Binding LinkedWrapper.Load.ConsolidationForeground}"/>
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding LinkedWrapper.Load.ConsolidationText, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                                        Xaml="{Binding LinkedWrapper.Load.Consolidation, Mode=OneWay}"
+                                        RichTextBox="{Binding ElementName=richTextBox}"
+                                        SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Name="lc2" IsVisible="False" Width="60" Header="*Line Haul" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.LineHaul, StringFormat=C2}"/>
+                    <telerik:GridViewDataColumn Name="lc3" IsVisible="False" Width="60" Header="*Rate" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.Rate, StringFormat=C2}"/>
+                    <telerik:GridViewDataColumn Name="lc4" IsVisible="False" Width="200" Header="*Customer" ColumnGroupName="LinkedWrapper" extensions:PropertyExtensions.RelativeDisplayIndex="0"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.Company}" />
+                    <userControls:GridViewPhoneColumn x:Name="lc5" IsVisible="False" Width="100" Header="*Phone" ColumnGroupName="LinkedWrapper" extensions:PropertyExtensions.RelativeDisplayIndex="1"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.Contacts}" />
+                    <!-- LinkedWrapper Photo -->
+                    <telerik:GridViewDataColumn Name="lc6" IsVisible="False" Width="80" Header="*Photo"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.PhotoFileView}" ColumnGroupName="LinkedWrapper">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding LinkedWrapper}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <TextBlock Visibility="{Binding Load.PhotoFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                        <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPhotoCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="open" />
+                        </Hyperlink>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- LinkedWrapper Invoice -->
+                    <telerik:GridViewDataColumn Name="lc7" IsVisible="False" Width="80" Header="*Invoice" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.InvoiceNumber}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding LinkedWrapper}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <TextBlock>
+                        <Hyperlink
+                            IsEnabled="{Binding Load.InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="{Binding Load.InvoiceNumber}" />
+                          <Run Text="{Binding Load.InvoiceDate, StringFormat=d}" ToolTip="Date of uploaded" />
+                        </Hyperlink>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- LinkedWrapper Check -->
+                    <telerik:GridViewDataColumn Name="lc8" IsVisible="False" Width="80" Header="*Check" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.CheckNumber}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding LinkedWrapper}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <TextBlock>
+                        <Hyperlink
+                            IsEnabled="{Binding Load.CheckFile, Converter={StaticResource ObjectToBoolConverter}}"
+                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenCheckCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="{Binding Load.CheckNumber}" />
+                        </Hyperlink>
+                        <Run Text="{Binding Load.CheckDate, StringFormat=d}" ToolTip="Date of uploaded" />
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Name="lc9" IsVisible="False" Width="50" Header="*Payout" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.Payout, StringFormat=C2}">
+                    </telerik:GridViewDataColumn>
+                    <!-- LinkedWrapper Confirmation -->
+                    <telerik:GridViewDataColumn Name="lc10" IsVisible="False" Width="85" Header="*Confirmation" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.ConfirmationFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding LinkedWrapper}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding Load.ConfirmationFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                        <TextBlock IsEnabled="True">
+                          <Hyperlink Command="{Binding Data.dc.OpenConfirmationCommand, Source={StaticResource rootProxy}}" helpers:UIHelper.CommandParameter="{Binding}">
+                            <Run Text="open"/>
+                          </Hyperlink>
+                          <Run />
+                                        </TextBlock>
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding Load.EmailConfirmationSentDateView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Load.EmailConfirmationSentDateView, StringFormat=M/d/yyyy h:mm, TargetNullValue=?, Mode=OneWay}" ToolTip="Sent"/>
+                                            <TextBlock>→</TextBlock>
+                                            <TextBlock Text="{Binding Load.ConfirmedDateView, StringFormat=M/d/yyyy h:mm, TargetNullValue=?, Mode=OneWay}" ToolTip="Confirmed"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- LinkedWrapper BOL -->
+                    <telerik:GridViewDataColumn Name="lc11" IsVisible="False" Width="85" Header="*BOL" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.BOLFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding LinkedWrapper}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <TextBlock Visibility="{Binding Load.BOLFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                        <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenBOLCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="open" />
+                        </Hyperlink>
+                        <Run Text="{Binding Load.BOLDateView, StringFormat=d, Mode=OneWay}"  ToolTip="Date of uploaded" />
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- LinkedWrapper POD -->
+                    <telerik:GridViewDataColumn Name="lc12" IsVisible="False" Width="85" Header="*POD" ColumnGroupName="LinkedWrapper"
+                  DataMemberBinding="{Binding LinkedWrapper.Load.PODFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding LinkedWrapper}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <TextBlock Visibility="{Binding Load.PODFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                        <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPODCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                          <Run Text="open" />
+                        </Hyperlink>
+                        <Run Text="{Binding Load.PODDateView, StringFormat=d, Mode=OneWay}" ToolTip="Date of uploaded" />
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- +++++++++++++ LinkedWrapper +++++++++++++ -->
+                </telerik:RadGridView.Columns>
+            </telerik:RadGridView>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="3">
+                <TextBlock VerticalAlignment="Center" Margin="0,0,10,0"
+                       Text="{Binding ItemCount, StringFormat='Total: {0}', ElementName=dataPager}"></TextBlock>
+                <telerik:RadDataPager x:Name="dataPager"
+                HorizontalAlignment="Center" Background="Transparent" BorderThickness="0"
+                Margin="0" Padding="0" FontSize="12" PageSize="{Binding SelectedValue, ElementName=pageSizeCb}"/>
+                <telerik:RadComboBox x:Name="pageSizeCb" SelectedIndex="0" DisplayMemberPath="Key" SelectedValuePath="Value"
+                Width="70" Margin="3" FontSize="12" SelectionChanged="PageSize_SelectionChanged">
+                    <viewmodels:KeyValueType Key="All" Value="2147483647"/>
+                    <viewmodels:KeyValueType Key="1000" Value="1000"/>
+                    <viewmodels:KeyValueType Key="500" Value="500"/>
+                    <viewmodels:KeyValueType Key="100" Value="100"/>
+                </telerik:RadComboBox>
+            </StackPanel>
+        </Grid>
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" BorderThickness="1"
+            BorderBrush="{x:Static SystemColors.ActiveBorderBrush}" Background="{x:Static SystemColors.ControlBrush}">
+            <Border.Style>
+                <Style TargetType="{x:Type Border}">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="False">
+                            <Setter Property="Opacity" Value=".7" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="-" Margin="2" Width="20" Height="20" Padding="0" Click="ZoomOutButtonClicked" />
+                <TextBox IsEnabled="False" HorizontalContentAlignment="Right" Width="40" Margin="2"
+                 Text="{Binding Value, ElementName=uiScaleSlider, Mode=OneWay, Converter={StaticResource PercentConterter}, StringFormat={}{0}%}" />
+                <Slider x:Name="uiScaleSlider" MouseDoubleClick="RestoreScalingFactor"
+                Margin="2" Width="150"
+                ToolTipService.ShowDuration="60000" ToolTip="
+    CTRL + Wheel up - Scale up (i.e. zoom in)&#x0a;
+    CTRL + Wheel down - Scale down (i.e. zoom out)&#x0a;
+    CTRL + Wheel click - Restore scaling factor to 100%" Minimum="1" Maximum="2" />
+                <Button Content="+" Margin="2" Width="20" Height="20" Padding="0" Click="ZoomInButtonClicked" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</ucBoards:DispatchBoardBase>

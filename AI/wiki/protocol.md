@@ -98,9 +98,11 @@ JWT Bearer, ответ — данные как есть через `JsonSuccess`
 | `Api/ActualCompany` | GET | `ActualCompanyDto[]` компании из токена | `ActualCompany/ActualCompaniesByUserId` |
 | `Api/Census/Search` | POST `CensusCompanySearchDto` | `CensusCompanyDto[]` | `Home/SearchCensusCompanies` |
 | `Api/SetupPacket/FactoringCompanies` | GET | `SetupPacketFactoringCompanyDto[]` по имени | `CarrierRegistration/FactoringCompanies` |
-| `Api/Account/SignIn` | POST `{email, password}` | `SessionDto` + `hasBnsfRailway`, `customStatuses` (как OAuth V1) | `Api/Token` |
+| `Api/Account/SignIn` | POST `{email, password}` | `SessionDto` + `hasBnsfRailway`, `customStatuses` (как OAuth V1), `sipLogin`, `sipPassword` (софтфон, 2026-11-19) | `Api/Token` + `MicroSIPLogin/Password` из входа AutoCall |
 | `Api/Account/Session` | GET | `SessionDto` без токена | `Api/Account/Check` (на сервере V1 не было) |
-| `Api/Settings` (этап 7, не сделан) | GET; `PUT Api/Settings/{section}`, тело — JSON секции | все секции одним объектом или `null` ([[user-settings]]) | WCF `svc/SettingsService` |
+| `Api/Settings` (этап 7) | GET; `PUT Api/Settings/{section}`, тело — JSON секции | все секции одним объектом или `null` ([[user-settings]]) | WCF `svc/SettingsService` |
+
+Клиентская сторона (этап 7) — data-сервисы App на `BaseApi` V3 ([[app]]).
 
 Не переносятся: `api/DatCompany/SendSetupPocket` (на сервере V1 отсутствует), `Api/Account/Logout` (JWT без серверной сессии).
 `/Temp/{guid}.png` — статика из `AppSettings.TempPath` без авторизации, как `Web/Temp` V1 (OpenAI забирает картинки по URL).

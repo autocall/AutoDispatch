@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <title>TruckCall route</title>
+    <style>
+        html, body, #map-canvas {
+            overflow: hidden;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.22&sensor=false"></script>
+    <script src="https://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.1.9/src/markerwithlabel.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        // Google API Directions service
+        var directionsService = new google.maps.DirectionsService();
+        // Google map instance
+        var map;
+        // Map bounds to see all markers
+        var bounds;
+        //Total distance between red/green markers
+        var total_distance = 0;
+        // Route requests
+        var requests = [];
+        // Route renders
+        var renders = [];
+        // Route coordinates data
+        var routeData = {
+            InitialOrigin: new google.maps.LatLng([InitialOriginX], [InitialOriginY]),
+            Origin: new google.maps.LatLng([OriginX], [OriginY]),
+            Destination: new google.maps.LatLng([DestinationX], [DestinationY]),
+            InitialDestination: new google.maps.LatLng([InitialDestinationX], [InitialDestinationY])
+        }
+
+        // Check is initial origin and origin points are the same
+        function isOriginTheSame() {
+            return routeData.InitialOrigin.lat() == routeData.Origin.lat() && routeData.InitialOrigin.lng() == routeData.Origin.lng();
+        }
+
+        // Check is initial destination and destination points are the same
+        function isDestinationTheSame() {
+            return routeData.InitialDestination.lat() == routeData.Destination.lat() && routeData.InitialDestination.lng() == routeData.Destination.lng();
+        }
+
+        // Generates requests to get routes
+        function generateRequests() {
+            requests = [];
+
+            if (!isOriginTheSame()) {
+                requests.push({
+                    request: createRequest(routeData.InitialOrigin, routeData.Origin),
+                    isIntermediate: true
+                });
+            }
+
+            requests.push({
+                request: createRequest(routeData.Origin, routeData.Destination),
+                isIntermediate: false
+            });
+
+            if (!isDestinationTheSame()) {
+                requests.push({
+                    request: createRequest(routeData.Destination, routeData.InitialDestination),
+                    isIntermediate: true
+                });
+            }
+
+            processRequests();
+        }
+
+        // Create route request
+        function createRequest(start, finish) {
+            var request = {
+                origin: start,
+                destination: finish,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+
+            return request;
+        }
+
+        // Requests process
+        function processRequests() {
+            // Counter to track request submission and process one at a time;
+            var i = 0;
+
+            // Used to submit the request 'i'
+            function submitRequest() {
+                directionsService.route(requests[i].request, directionResults);
+            }
+
+            // Used as callback for the above request for current 'i'
+            function directionResults(result, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    // Create a unique DirectionsRenderer 'i'
+                    renders[i] = new google.maps.DirectionsRenderer();
+                    renders[i].setMap(map);
+                    renders[i].setOptions({
+                        preserveViewport: true,
+                        suppressInfoWindows: true,
+                        suppressMarkers: true
+                    });
+
+                    if (requests[i].isIntermediate) {
+                        var lineSymbol = {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            fillOpacity: 1,
+                            scale: 2
+                        };
+
+                        renders[i].setOptions({
+                            polylineOptions: {
+                                strokeWeight: 4,
+                                strokeOpacity: 0,
+                                strokeColor: 'red',
+                                icons: [{
+                                    icon: lineSymbol,
+                                    offset: '0',
+                                    repeat: '10px'
+                                }]
+                            }
+                        });
+
+                    } else {
+                        renders[i].setOptions({
+                            polylineOptions: {
+                                strokeWeight: 4,
+                                strokeOpacity: 0.8,
+                                strokeColor: 'green'
+                            }
+                        });
+                    }
+                    total_distance += parseInt(result.routes[0].legs[0].distance.text
+                        .replace(String.fromCharCode(160), '')
+                        .match(/[0-9,]+/)[0]
+                        .replace(',', ''));
+                    var elem = document.getElementById('map-distance');
+                    elem.innerHTML = total_distance;
+                    // NOTE: to show route distance
+                    //alert(result.routes[0].legs[0].distance.text + " " + result.routes[0].legs[0].distance.text.match(/[0-9,]+/)[0].replace(',', ''));
+
+                    // Use this new renderer with the result
+                    renders[i].setDirections(result);
+                    // and start the next request
+                    nextRequest();
+                }
+            }
+
+            function nextRequest() {
+                // Increase the counter
+                i++;
+                // Make sure we are still waiting for a request
+                if (i >= requests.length) {
+                    // No more to do
+                    return;
+                }
+                // Submit another request
+                submitRequest();
+            }
+
+            // This request is just to kick start the whole process
+            submitRequest();
+        }
+
+        // Called Onload
+        function init() {
+            bounds = new google.maps.LatLngBounds();
+
+            // Some basic map setup (from the API docs)
+            var mapOptions = {
+                center: routeData.InitialOrigin,
+                zoom: 8,
+                mapTypeControl: false,
+                streetViewControl: false,
+                zoomControl: true,
+                zoomControlOptions: {
+                    style: google.maps.ZoomControlStyle.LARGE,
+                    position: google.maps.ControlPosition.LEFT_CENTER
+                },
+                scrollwheel: true,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+            // Start the request making
+            generateRequests();
+
+            // Create markers in routes
+            if (!isOriginTheSame()) {
+                createMarker(routeData.InitialOrigin, "http://maps.google.com/mapfiles/markerA.png");
+            }
+
+            createMarker(routeData.Origin, "http://maps.google.com/mapfiles/marker_greenA.png");
+            createMarker(routeData.Destination, "http://maps.google.com/mapfiles/marker_greenB.png");
+
+            if (!isDestinationTheSame()) {
+                createMarker(routeData.InitialDestination, "http://maps.google.com/mapfiles/markerB.png");
+            }
+
+            // Fit map to markers
+            map.fitBounds(bounds);
+        }
+
+        // Create Google marker
+        function createMarker(coordinates, markerImageUrl) {
+            var marker = new google.maps.Marker({
+                position: coordinates,
+                map: map,
+                icon: markerImageUrl
+            });
+
+            bounds.extend(marker.position);
+        }
+
+        // Get the ball rolling and trigger our init() on 'load'
+        google.maps.event.addDomListener(window, 'load', init);
+        // Fit map to markers bounds on window resize
+        google.maps.event.addDomListener(window, 'resize', function () {
+            map.fitBounds(bounds);
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <div id="map-canvas" style="position: absolute; width: 100%; bottom:0;">
+        </div>
+        <div style="position: relative; border: solid 2px red; border-radius: 5px; float: right; background: white; margin: 5px">
+            <span style="font-weight: bold; font-size: 20pt; color: red; margin: 5px;" id="map-distance"></span>
+        </div>
+    </div>
+</body>
+</html>

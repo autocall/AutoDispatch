@@ -1,0 +1,929 @@
+﻿<Application
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:uc="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:toUri="clr-namespace:AutoCall.WPF.Converters.ToUri"
+    xmlns:autoCall="clr-namespace:AutoCall.WPF.Converters.AutoCall"
+    xmlns:behaviors="clr-namespace:AutoCall.WPF.Behaviors"
+    xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:extensions="clr-namespace:AutoCall.WPF.Extensions"
+    xmlns:styleselector="clr-namespace:AutoCall.WPF.StyleSelector"
+    xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs" 
+    xmlns:svg="https://github.com/dotnetprojects/SVGImage" xmlns:system="clr-namespace:System;assembly=mscorlib"
+    x:Class="AutoCall.WPF.App"
+    Startup="Application_Startup"
+    Exit="Application_Exit"
+    DispatcherUnhandledException="App_OnDispatcherUnhandledException">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/AddRoundButton.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/CrossCheckBoxStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/ExpanderHorizontal.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/ExpanderVertical.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/FixedGridSplitterStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/GridViewCellStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/GridViewRowStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/GridViewRowStyle2.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/OneStarRadRatingItemStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/RadButtonControlTemplate.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/RadPaneGroupStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/RadPaneStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/RadRangeDateTimePickerStyle.xaml" />
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/RadTreeViewItemStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!--Converters-->
+            <!-- V1: App_WorkerStateToBackgroundConverter, SourceTypeToUriConverter — борды DatPower модуля AutoCall -->
+            <autoCall:Board_EquipmentTypeToCodeConverter x:Key="EquipmentTypeToCodeConverter"/>
+            <c:BooleanToBrushConverter x:Key="BoolToBlackGrayConverter" TrueBrush="Black" FalseBrush="Gray"/>
+            <c:ColumnsToMenuItemsConverter x:Key="ColumnsToMenuItemsConverter"/>
+            <c:EmptyConverter x:Key="EmptyConverter"/>
+            <c:GroupColumnsToMenuItemsConverter x:Key="GroupColumnsToMenuItemsConverter"/>
+            <c:PercentConterter x:Key="PercentConterter"/>
+            <c:TextToUpperConverter x:Key="TextToUpperConverter" />
+            <dispatch:App_EngineStateToBackgroundConverter x:Key="EngineStateToBackgroundConverter" />
+            <dispatch:ExpensePaidDateToStringConverter x:Key="ExpensePaidDateToStringConverter"/>
+            <dispatch:ExpensePaidDateToStringConverter x:Key="GainPaidDateToStringConverter"/>
+            <telerik:BooleanToVisibilityConverter x:Key="BoolToVisibilityConterter"/>
+            <toUri:EngineStateToUriConverter x:Key="EngineStateToUriConverter"/>
+            <c:StringToPhoneConverter x:Key="StringToPhoneConverter"/>
+            <c:SingleLineTextConverter x:Key="SingleLineTextConverter"/>
+
+            <SolidColorBrush x:Key="DragColor" Color="#441E90FF"/>
+
+            <LinearGradientBrush x:Key="borderControlBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FFAEB0B6" Offset="0"/>
+                <GradientStop Color="#FFE3E9EF" Offset="1"/>
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="GridViewRowOverBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FFFFFBA3" Offset="1"/>
+                <GradientStop Color="#FFFFFBDA" Offset="0"/>
+            </LinearGradientBrush>
+
+            <telerik:Windows8Theme x:Key="Windows8Theme" />
+            <telerik:VistaTheme x:Key="Theme" />
+            <telerik:Office_BlackTheme x:Key="Office_BlackTheme" />
+            <telerik:TransparentTheme x:Key="TransparentTheme" />
+            <telerik:SummerTheme x:Key="SummerTheme" />
+            <telerik:MaterialTheme x:Key="MaterialTheme" />
+
+            <!-- Styles -->
+            <Style x:Key="valueTextBox" TargetType="{x:Type TextBox}">
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="IsReadOnly" Value="True"/>
+                <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
+            </Style>
+            <!-- V1: стиль locationTextBox (Copy Locations — DatPowerRecordViewModel карточки записи лоадборда AutoCall) нигде в dispatch не используется -->
+            <!--            <Style x:Key="locationTextBox" BasedOn="{StaticResource valueTextBox}" TargetType="{x:Type TextBox}">
+                <Setter Property="telerik:RadContextMenu.ContextMenu">
+                    <Setter.Value>
+                        <telerik:RadContextMenu>
+                            <telerik:RadMenuItem Header="Copy Locations" Click="{x:Static dialogs:RecordBaseDetailsDialog.CopyLocations_OnClick}"/>
+                        </telerik:RadContextMenu>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            -->
+            <Style x:Key="valueTextBlock" TargetType="{x:Type TextBlock}">
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="3,0,0,0"/>
+            </Style>
+            <Style x:Key="valueRichTextBox" TargetType="{x:Type RichTextBox}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="IsReadOnly" Value="True"/>
+                <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
+            </Style>
+            <Style x:Key="valueBindableTextBlock" BasedOn="{StaticResource valueTextBlock}" TargetType="{x:Type TextBlock}">
+                <EventSetter Event="MouseUp" Handler="valueBindableTextBlock_Comment_OnMouseUp"/>
+                <Setter Property="Cursor" Value="{x:Static Cursors.IBeam}"/>
+                <Setter Property="telerik:RadContextMenu.ContextMenu">
+                    <Setter.Value>
+                        <telerik:RadContextMenu>
+                            <telerik:RadMenuItem Header="Copy" Click="{x:Static helpers:CopyMenuHelper.Copy_OnClick}"/>
+                        </telerik:RadContextMenu>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="titleGroupBox" TargetType="{x:Type GroupBox}" BasedOn="{StaticResource {x:Type GroupBox}}">
+                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="BorderBrush" Value="Silver"/>
+            </Style>
+            <Style x:Key="titleTextBlock" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="Gray"/>
+            </Style>
+            <Style x:Key="errorTextBlock" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="Red"/>
+            </Style>
+
+            <Style x:Key="ButtonInDetailsStyle" TargetType="Button">
+                <Setter Property="Visibility" Value="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolToVisibilityConterter}}"/>
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="Margin" Value="0,0,5,5"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+            </Style>
+            <Style x:Key="ToolBarButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                <Setter Property="Visibility" Value="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolToVisibilityConterter}}"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:RadButton}">
+                <Setter Property="Template" Value="{DynamicResource RadButtonControlTemplate}" />
+            </Style>
+            <Style TargetType="{x:Type Button}">
+            </Style>
+            <Style TargetType="{x:Type TextBox}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Theme}"/>
+                <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
+            </Style>
+            <Style TargetType="{x:Type PasswordBox}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Theme}"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:RadRating}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Value, RelativeSource={RelativeSource Self}}" Value="1">
+                        <Setter Property="ItemContainerStyle" Value="{StaticResource OneStarRadRatingItem}"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="attachedRadButton" TargetType="{x:Type telerik:RadButton}">
+                <Setter Property="Template" Value="{StaticResource RadButtonControlTemplate}" />
+                <Setter Property="Cursor" Value="{x:Static Cursors.Hand}"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="Margin" Value="-1,5,5,5"/>
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Theme}"/>
+            </Style>
+            <Style x:Key="fieldRadButton" TargetType="{x:Type telerik:RadButton}">
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Template" Value="{DynamicResource RadButtonControlTemplate}" />
+            </Style>
+            <Style x:Key="fieldTextBlock" TargetType="{x:Type TextBlock}">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="fieldTextBox" TargetType="{x:Type TextBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+                <Setter Property="BorderBrush" Value="#898C95"/>
+                <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#e6e6e6"/>
+                        <Setter Property="Foreground" Value="Black"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldPasswordBox" TargetType="{x:Type PasswordBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Theme}"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#e6e6e6"/>
+                        <Setter Property="Foreground" Value="Black"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldComboBox" TargetType="{x:Type ComboBox}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="5"/>
+            </Style>
+            <Style x:Key="fieldRadAutoCompleteBox" TargetType="{x:Type telerik:RadAutoCompleteBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4,1,4,4"/>
+                <Setter Property="behaviors:RadAutoCompleteBoxBehavior.TripleClickSelectAll" Value="True" />
+            </Style>
+            <Style x:Key="fieldRadComboBox" TargetType="{x:Type telerik:RadComboBox}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="10, 0"/>
+                <Setter Property="Height" Value="26"/>
+            </Style>
+            <Style x:Key="fieldRadWatermarkTextBox" TargetType="{x:Type telerik:RadWatermarkTextBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+                <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#ECECEC"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldRadMaskedTextInput" TargetType="{x:Type telerik:RadMaskedTextInput}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#EAEAEA"/>
+                        <Setter Property="Foreground" Value="#5e5e5e"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldRadMaskedNumericInput" TargetType="{x:Type telerik:RadMaskedNumericInput}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+            </Style>
+            <!--*Skip! it doesn't good control <Style x:Key="fieldRadMaskedCurrencyInput" TargetType="{x:Type telerik:RadMaskedCurrencyInput}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+            </Style>-->
+            <Style x:Key="fieldRadSlider" TargetType="{x:Type telerik:RadSlider}">
+                <Setter Property="Margin" Value="0,5,5,5"/>
+            </Style>
+            <!-- V1: SliderControl — диалоги паттернов DatPower (модуль AutoCall) -->
+            <!--            <Style x:Key="fieldSliderControl" TargetType="{x:Type uc:SliderControl}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+            </Style>
+            -->
+            <Style x:Key="fieldRadNumericUpDown" TargetType="{x:Type telerik:RadNumericUpDown}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Height" Value="26"/>
+            </Style>
+            <Style x:Key="fieldRadDateTimePicker" TargetType="{x:Type telerik:RadDateTimePicker}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#e6e6e6"/>
+                        <Setter Property="Foreground" Value="#5e5e5e"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldRadDatePicker" TargetType="{x:Type telerik:RadDatePicker}" BasedOn="{StaticResource fieldRadDateTimePicker}"/>
+            <Style x:Key="fieldRadRangeDateTimePicker" TargetType="{x:Type uc:RadRangeDateTimePicker}" BasedOn="{StaticResource RadRangeDateTimePickerStyle}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#e6e6e6"/>
+                        <Setter Property="Foreground" Value="#5e5e5e"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldRadDropDownButton" TargetType="{x:Type telerik:RadDropDownButton}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Height" Value="26"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+            </Style>
+            <Style x:Key="fieldRadRichTextBox" TargetType="{x:Type telerik:RadRichTextBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="4"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="BorderBrush" Value="#000000"/>
+                        <Setter Property="Background" Value="#CBCBCB"/>
+                        <Setter Property="Foreground" Value="#5e5e5e"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldListView" TargetType="{x:Type ListView}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="0"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Foreground" Value="#5e5e5e"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="fieldListBox" TargetType="{x:Type ListBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Padding" Value="0"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Foreground" Value="#5e5e5e"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style TargetType="telerik:RadProgressBar">
+                <Setter Property="MinHeight" Value="16"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:RadGridView}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:GridViewDataColumn}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+                <Setter Property="IsFilterable" Value="False"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:CommonHeaderPresenter}">
+                <Setter Property="Background" Value="#FF3B3B3B"/>
+                <Setter Property="Foreground" Value="White"/>
+                <!-- Style does not work -->
+                <!--<Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>-->
+            </Style>
+            <Style TargetType="{x:Type telerik:CommonColumnHeader}">
+                <Setter Property="Background" Value="#FF3B3B3B"/>
+                <Setter Property="Foreground" Value="White"/>
+                <!-- Style does not work -->
+                <!--<Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>-->
+            </Style>
+            <Style TargetType="{x:Type telerik:GridViewHyperlinkColumn}">
+                <Setter Property="IsFilterable" Value="False"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:GridViewHeaderCell}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:GridViewHeaderRow}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+            </Style>
+            <Style TargetType="{x:Type telerik:RadContextMenu}">
+                <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+            </Style>
+            <!-- don't use -->
+            <!--<Style TargetType="{x:Type telerik:RadToolBar}"/>-->
+            <!-- show/hide columns -->
+            <Style x:Key="showHideGroupColumnsRadGridViewStyle" TargetType="{x:Type telerik:RadGridView}" BasedOn="{StaticResource {x:Type telerik:RadGridView}}">
+                <Setter Property="EnableRowVirtualization" Value="True"/>
+                <Setter Property="EnableColumnVirtualization" Value="True"/>
+                <Setter Property="EnableColumnGroupsVirtualization" Value="True"/>
+                <Setter Property="telerik:RadContextMenu.ContextMenu">
+                    <Setter.Value>
+                        <telerik:RadContextMenu StaysOpen="True" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                            ItemsSource="{Binding UIElement.Columns, Mode=OneWay, RelativeSource={RelativeSource Self}, Converter={StaticResource GroupColumnsToMenuItemsConverter}}"
+                            Opening="{x:Static extensions:GridViewExtensions.RadContextMenu_OnOpening}">
+                            <telerik:RadContextMenu.Style>
+                                <Style TargetType="{x:Type telerik:RadContextMenu}">
+                                    <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+                                </Style>
+                            </telerik:RadContextMenu.Style>
+                            <telerik:RadContextMenu.ItemContainerStyleSelector>
+                                <styleselector:GridViewColumnsContextMenuStyleSelector/>
+                            </telerik:RadContextMenu.ItemContainerStyleSelector>
+                            <telerik:RadContextMenu.Resources>
+                                <Style x:Key="group" TargetType="{x:Type telerik:RadMenuItem}">
+                                    <Setter Property="Header" Value="{Binding Header, Mode=OneWay}" />
+                                    <Setter Property="ItemsSource" Value="{Binding Columns, Mode=OneWay}" />
+                                </Style>
+                                <Style x:Key="item" TargetType="{x:Type telerik:RadMenuItem}">
+                                    <Setter Property="IsCheckable" Value="True" />
+                                    <Setter Property="IsChecked" Value="{Binding IsVisible, Mode=TwoWay}" />
+                                    <Setter Property="Header" Value="{Binding Header, Mode=OneWay}" />
+                                    <EventSetter Event="Click" Handler="RadMenuItem_Click"/>
+                                </Style>
+                            </telerik:RadContextMenu.Resources>
+                        </telerik:RadContextMenu>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <!-- show/hide columns -->
+            <Style x:Key="showHideColumnsRadGridViewStyle" TargetType="{x:Type telerik:RadGridView}" BasedOn="{StaticResource {x:Type telerik:RadGridView}}">
+                <Setter Property="EnableRowVirtualization" Value="True"/>
+                <Setter Property="EnableColumnVirtualization" Value="True"/>
+                <Setter Property="EnableColumnGroupsVirtualization" Value="True"/>
+                <Setter Property="telerik:RadContextMenu.ContextMenu">
+                    <Setter.Value>
+                        <telerik:RadContextMenu StaysOpen="True" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                            ItemsSource="{Binding UIElement.Columns, Mode=OneWay, RelativeSource={RelativeSource Self}, Converter={StaticResource ColumnsToMenuItemsConverter}}"
+                            Opening="{x:Static extensions:GridViewExtensions.RadContextMenu_OnOpening}">
+                            <telerik:RadContextMenu.Style>
+                                <Style TargetType="{x:Type telerik:RadContextMenu}">
+                                    <Setter Property="telerik:StyleManager.Theme" Value="{StaticResource Office_BlackTheme}"/>
+                                </Style>
+                            </telerik:RadContextMenu.Style>
+                            <telerik:RadContextMenu.ItemContainerStyle>
+                                <Style TargetType="{x:Type telerik:RadMenuItem}">
+                                    <Setter Property="IsCheckable" Value="True" />
+                                    <Setter Property="IsChecked" Value="{Binding IsVisible, Mode=TwoWay}" />
+                                    <Setter Property="Header" Value="{Binding Header, Mode=OneWay}" />
+                                    <EventSetter Event="Click" Handler="RadMenuItem_Click"/>
+                                </Style>
+                            </telerik:RadContextMenu.ItemContainerStyle>
+                        </telerik:RadContextMenu>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="BaseButtonStyle" TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="0,5,5,5"/>
+                <Setter Property="Width" Value="120"/>
+            </Style>
+            <Style x:Key="OkButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Content" Value="OK"/>
+                <Setter Property="IsDefault" Value="True"/>
+                <Setter Property="ContentTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/AutoDispatch;component/Resources/check.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="MapButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="IsDefault" Value="True"/>
+                <Setter Property="ContentTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/AutoDispatch;component/Resources/map-pointer-icon.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="AddButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Content" Value="Add"/>
+                <Setter Property="ContentTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/AutoDispatch;component/Resources/add.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="DeleteButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Content" Value="Delete"/>
+            </Style>
+            <Style x:Key="CancelButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
+                <Setter Property="IsCancel" Value="True"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+                <Setter Property="Content" Value="Cancel"/>
+                <Setter Property="ContentTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/AutoDispatch;component/Resources/small_delete.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="CloseButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+                <Setter Property="Content" Value="Close"/>
+                <Setter Property="IsCancel" Value="True"/>
+                <Setter Property="ContentTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/AutoDispatch;component/Resources/small_delete.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="TextBlockTitleStyle" TargetType="{x:Type TextBlock}">
+                <Setter Property="Margin" Value="7,5,3,5"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+            </Style>
+
+            <Style x:Key="TextBlockValueStyle" TargetType="{x:Type TextBlock}">
+                <Setter Property="Margin" Value="3,5,7,5"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!--Toggle button image-->
+            <Style x:Key="ToggleButtonImageStyle" TargetType="{x:Type Image}">
+                <Setter Property="Width" Value="32"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant"/>
+                <Setter Property="Stretch" Value="Uniform"/>
+            </Style>
+
+            <!--Board toolbar button image-->
+            <Style x:Key="BoardButtonImageStyle" TargetType="{x:Type Image}">
+                <Setter Property="Width" Value="24"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant"/>
+                <Setter Property="Stretch" Value="Fill"/>
+            </Style>
+
+            <LinearGradientBrush x:Key="ActiveButtonBrush" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#EAF6FD" Offset="0.15" />
+                <GradientStop Color="#D9F0FC" Offset=".5" />
+                <GradientStop Color="#BEE6FD" Offset=".5" />
+                <GradientStop Color="#A7D9F5" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="ActiveBorderBrush" Color="DarkBlue" />
+
+            <!-- Style for a ListBoxItem displayed inside the embedded list box, to make it a check box when mode = multiple. -->
+            <Style x:Key="CheckBoxedItemStyleKey" TargetType="{x:Type ListBoxItem}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                            <Border Background="Transparent">
+                                <CheckBox Focusable="false" 
+                                      Foreground="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"
+                                      BorderBrush="{Binding Foreground, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Control}}}"                                           
+                                      Content="{TemplateBinding ContentPresenter.Content}"  
+                                      IsChecked="{Binding IsSelected, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Style for a ListBoxItem displayed inside the embedded list box, when mode = single -->
+            <Style x:Key="NormalItemStyleKey" TargetType="{x:Type ListBoxItem}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                            <Border x:Name="border" 
+                                Margin="0,-1"
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="1"
+                                SnapsToDevicePixels="true">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="BorderBrush" Value="{x:Static SystemColors.HighlightBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
+                                    <Setter Property="Foreground" Value="{x:Static SystemColors.HighlightTextBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ListViewItem -->
+            <Style x:Key="LoadsListViewItemStyle" TargetType="{x:Type ListViewItem}">
+                <!-- http://stackoverflow.com/questions/3111763/wpf-how-to-change-the-listbox-selected-item-text-color-when-the-list-box-loses-f -->
+                <Style.Resources>
+                    <!--SelectedItem with focus-->
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#D9EDFF"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black"/>
+                </Style.Resources>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            </Style>
+            <!-- RadTreeViewItem -->
+            <Style x:Key="LoadsRadTreeViewItemStyle" TargetType="{x:Type telerik:RadTreeViewItem}" BasedOn="{StaticResource RadTreeViewItemStyle}">
+                <Style.Resources>
+                    <!--SelectedItem with focus-->
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#D9EDFF"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black"/>
+                </Style.Resources>
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            </Style>
+
+            <Style x:Key="LoadsListViewStyle" TargetType="{x:Type ListView}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListView}">
+                            <Border BorderBrush="{TemplateBinding Border.BorderBrush}" BorderThickness="{TemplateBinding Border.BorderThickness}" x:Name="Bd" Background="{TemplateBinding Panel.Background}" SnapsToDevicePixels="True" Padding="0">
+                                <ScrollViewer Focusable="False" Padding="{TemplateBinding Padding}">
+                                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </ScrollViewer>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="LoadsListView2Style" TargetType="{x:Type ListView}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListView}">
+                            <Border BorderBrush="{TemplateBinding Border.BorderBrush}" BorderThickness="{TemplateBinding Border.BorderThickness}" x:Name="Bd" Background="{TemplateBinding Panel.Background}" SnapsToDevicePixels="True" Padding="0">
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="LoadsRadTreeView2Style" TargetType="{x:Type telerik:RadTreeView}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type telerik:RadTreeView}">
+                            <Border BorderBrush="{TemplateBinding Border.BorderBrush}" BorderThickness="{TemplateBinding Border.BorderThickness}" x:Name="Bd" Background="{TemplateBinding Panel.Background}" SnapsToDevicePixels="True" Padding="0">
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="FocusVisualStyle">
+                <Setter Property="Control.Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Border>
+                                <Rectangle 
+                                Margin="2"
+                                StrokeThickness="1"
+                                Stroke="#b0000000"
+                                StrokeDashArray="1 2"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="CreateNewItemButtonStyle" TargetType="{x:Type Button}">
+                <Setter Property="OverridesDefaultStyle" Value="True" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualStyle}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="TextBlock.FontSize" Value="10" />
+                <Setter Property="BorderBrush" Value="{x:Static SystemColors.WindowTextBrush}" />
+                <Setter Property="Template" >
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border Padding="3,0" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}"
+                                SnapsToDevicePixels="True">
+                                <ContentPresenter Content="{TemplateBinding Content}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{StaticResource ActiveButtonBrush}"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource ActiveBorderBrush}"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="{StaticResource ActiveButtonBrush}"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource ActiveBorderBrush}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Template for the toggle button which is the main view of the control -->
+            <ControlTemplate x:Key="MultiSelectComboBoxToggleButtonTemplate" TargetType="{x:Type ToggleButton}">
+                <Border BorderThickness="{TemplateBinding BorderThickness}"
+                        Background="{TemplateBinding Background}" 
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        SnapsToDevicePixels="true">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ContentPresenter Content="{TemplateBinding Content}" />
+
+                        <Border x:Name="arrowBorder" Grid.Column="1" Width="16" BorderBrush="{TemplateBinding BorderBrush}">
+                            <Path HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                Fill="{TemplateBinding BorderBrush}" Data="M 0 0 L 7 0 L 3.5 4 Z" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="arrowBorder" Property="Background" Value="{StaticResource ActiveButtonBrush}" />
+                        <Setter TargetName="arrowBorder" Property="BorderThickness" Value="1,0,0,0" />
+                    </Trigger>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter TargetName="arrowBorder" Property="Background" Value="{StaticResource ActiveButtonBrush}" />
+                        <Setter TargetName="arrowBorder" Property="BorderThickness" Value="1,0,0,0" />
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+
+            <Style x:Key="HelpFilterStyle" TargetType="Image" BasedOn="{StaticResource ResourceKey=BoardButtonImageStyle}">
+                <Setter Property="Source" Value="/AutoDispatch;component/Resources/info_blue.png"/>
+                <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+                <Setter Property="ToolTip">
+                    <Setter.Value>
+                        <StackPanel>
+                            <TextBlock HorizontalAlignment="Center" Margin="0,0,0,10"><Bold>Special Filters:</Bold></TextBlock>
+                            <TextBlock><Bold>origin ILWI</Bold> - filter by origin ('<Bold>origin</Bold>', '<Bold>or</Bold>')</TextBlock>
+                            <TextBlock><Bold>destination Z6Z5</Bold> - filter by destination ('<Bold>destin</Bold>', '<Bold>des</Bold>', '<Bold>de</Bold>')</TextBlock>
+                            <TextBlock><Bold>pickup 9/7</Bold> - filter by pickup ('<Bold>pickup</Bold>', '<Bold>pick</Bold>', '<Bold>pic</Bold>')</TextBlock>
+                            <TextBlock><Bold>delivery 9/7-9/8</Bold> - filter by delivery ('<Bold>delivery</Bold>', '<Bold>del</Bold>')</TextBlock>
+                        </StackPanel>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <!-- No selactable, I created default Template -->
+            <ControlTemplate x:Key="RadListBoxItemControlTemplate1" TargetType="{x:Type telerik:RadListBoxItem}">
+                <Grid>
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal"/>
+                            <VisualState x:Name="MouseOver">
+                                <Storyboard>
+                                    <DoubleAnimation Duration="0" To="1" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="MouseOverVisual"/>
+                                </Storyboard>
+                            </VisualState>
+                            <VisualState x:Name="Disabled">
+                                <Storyboard>
+                                    <DoubleAnimation Duration="0" To="0.5" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="contentPresenter"/>
+                                </Storyboard>
+                            </VisualState>
+                        </VisualStateGroup>
+                        <VisualStateGroup x:Name="SelectionStates">
+                            <VisualState x:Name="Unselected"/>
+                            <VisualState x:Name="Selected">
+                                <Storyboard>
+                                    <DoubleAnimation Duration="0" To="1" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="SelectedVisual"/>
+                                </Storyboard>
+                            </VisualState>
+                        </VisualStateGroup>
+                        <VisualStateGroup x:Name="FocusStates">
+                            <VisualState x:Name="Focused">
+                                <Storyboard>
+                                    <DoubleAnimation Duration="0" To="1" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="FocusVisual"/>
+                                </Storyboard>
+                            </VisualState>
+                            <VisualState x:Name="Unfocused"/>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="1" SnapsToDevicePixels="True"/>
+                    <Border x:Name="MouseOverVisual" BorderBrush="#FFFFC92B" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="1" Opacity="0" SnapsToDevicePixels="True">
+                        <Border BorderBrush="White" BorderThickness="1" CornerRadius="0" SnapsToDevicePixels="True">
+                            <Border.Background>
+                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                    <GradientStop Color="#FFFFFBDA" Offset="0"/>
+                                    <GradientStop Color="#FFFFFBA3" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </Border>
+                    <Border x:Name="SelectedVisual" BorderBrush="#FFFFC92B" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="1" Opacity="0" SnapsToDevicePixels="True">
+                        <Border BorderBrush="White" BorderThickness="1" CornerRadius="0" SnapsToDevicePixels="True">
+                            <Border.Background>
+                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                    <GradientStop Color="#FFFCE79F" Offset="1"/>
+                                    <GradientStop Color="#FFFDD3A8"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </Border>
+                    <ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    <Border x:Name="FocusVisual" BorderBrush="#FFFFC92B" BorderThickness="1" CornerRadius="1" Opacity="0" SnapsToDevicePixels="True"/>
+                </Grid>
+            </ControlTemplate>
+
+            <Style x:Key="UpperCaseTextBoxStyle" TargetType="{x:Type telerik:RadWatermarkTextBox}">
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="CharacterCasing" Value="Upper"/>
+                <Setter Property="Margin" Value="3 3 0 0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+            </Style>
+
+            <Style x:Key="ErrorGridViewCellStyle" TargetType="{x:Type telerik:GridViewCell}">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="#FFFCDCDC"/>
+                            <GradientStop Color="#F99A9A" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="WarningGridViewCellStyle" TargetType="{x:Type telerik:GridViewCell}">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="#FBFFB5"/>
+                            <GradientStop Color="#F2FF00" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <toUri:CarrierViewPositionStatusToUriMultiConverter x:Key="CarrierViewPositionToUriMultiConverter"/>
+            <toUri:CarrierViewStatusToUriConverter x:Key="CarrierViewStatusToUriConverter"/>
+            <toUri:CarrierViewStatusToVisibilityConverter x:Key="CarrierViewStatusToVisibilityConverter"/>
+            <c:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter" />
+            <DataTemplate x:Key="CarrierViewTrackerColumnTemplate">
+                <StackPanel Orientation="Horizontal" DataContext="{Binding Load}">
+                    <Grid Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                        <Grid Visibility="{Binding TrackerId, Converter={StaticResource NotNullToVisibilityConverter}}">
+                            <svg:SVGImage
+                                Height="16" Width="16" Margin="0,0,4,0" RenderOptions.BitmapScalingMode="Fant" Cursor="Hand"
+                                MouseLeftButtonDown="CarrierViewImage_MouseLeftButtonDown">
+                                <svg:SVGImage.UriSource>
+                                    <MultiBinding Converter="{StaticResource CarrierViewPositionToUriMultiConverter}">
+                                        <Binding Path="CarrierViewLate" Mode="OneWay"/>
+                                        <Binding Path="CarrierViewStatus" Mode="OneWay"/>
+                                        <Binding Path="CarrierViewStatuses" Mode="OneWay"/>
+                                    </MultiBinding>
+                                </svg:SVGImage.UriSource>
+                            </svg:SVGImage>
+                        </Grid>
+                    </Grid>
+                    <TextBlock Text="{Binding CarrierViewPhone, Converter={StaticResource StringToPhoneConverter}}"/>
+                    <TextBlock Text="{Binding CarrierViewLastUpdatedDateString}" Margin="4,0,0,0"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="CarrierViewStatus1ColumnTemplate">
+                <Grid DataContext="{Binding Load}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding CarrierViewStatuses1}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
+                                    <svg:SVGImage UriSource="{Binding Converter={StaticResource CarrierViewStatusToUriConverter}}"
+                                                  Visibility="{Binding Converter={StaticResource CarrierViewStatusToVisibilityConverter}}"
+                                                  Height="16" Width="16" Margin="2,0" RenderOptions.BitmapScalingMode="Fant"/>
+                                    <TextBlock Text="{Binding}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Grid>
+            </DataTemplate>
+            <DataTemplate x:Key="CarrierViewStatus2ColumnTemplate">
+                <Grid DataContext="{Binding Load}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding CarrierViewStatuses2}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
+                                    <svg:SVGImage UriSource="{Binding Converter={StaticResource CarrierViewStatusToUriConverter}}"
+                                                  Visibility="{Binding Converter={StaticResource CarrierViewStatusToVisibilityConverter}}"
+                                                  Height="16" Width="16" Margin="2,0" RenderOptions.BitmapScalingMode="Fant"/>
+                                    <TextBlock Text="{Binding}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Grid>
+            </DataTemplate>
+            <DataTemplate x:Key="CarrierViewPickupCommentColumnTemplate">
+                <TextBlock DataContext="{Binding Load}" Text="{Binding CarrierViewPickupComment, Converter={StaticResource SingleLineTextConverter}}" ToolTipService.ToolTip="{Binding CarrierViewPickupComment}"/>
+            </DataTemplate>
+            <DataTemplate x:Key="CarrierViewDeliveryCommentColumnTemplate">
+                <TextBlock DataContext="{Binding Load}" Text="{Binding CarrierViewDeliveryComment, Converter={StaticResource SingleLineTextConverter}}" ToolTipService.ToolTip="{Binding CarrierViewDeliveryComment}"/>
+            </DataTemplate>
+            <dispatch:DispatchBoard_Compare1ToVisibilityConverter x:Key="DispatchBoard_Compare1ToVisibilityConverter"/>
+            <dispatch:DispatchBoard_More1ToVisibilityConverter x:Key="DispatchBoard_More1ToVisibilityConverter"/>
+            <DataTemplate x:Key="LinkWrapperLoadIndexStringColumnTemplate">
+                <Grid>
+                    <TextBlock
+                        Visibility="{Binding LinkedWrapperCount, Converter={StaticResource DispatchBoard_Compare1ToVisibilityConverter}}"
+                        Text="{Binding LinkedWrapper.Load.IndexString}"/>
+                    <TextBlock
+                        Visibility="{Binding LinkedWrapperCount, Converter={StaticResource DispatchBoard_More1ToVisibilityConverter}}"
+                        Text="{Binding LinkedWrapperCount, StringFormat={}{0} loads}"/>
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

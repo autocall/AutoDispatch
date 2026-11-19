@@ -1,0 +1,647 @@
+﻿<ucBoards:DispatchBoardBase
+    x:Class="AutoCall.WPF.UserControls.Boards.DispatchCarrierHistoryBoard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:uc="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:core="clr-namespace:AutoCall.WPF.Core"
+    xmlns:ucBoards="clr-namespace:AutoCall.WPF.UserControls.Boards"
+    xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+    xmlns:gif="http://wpfanimatedgif.codeplex.com"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:behaviors="clr-namespace:AutoCall.WPF.Behaviors"
+    xmlns:extensions="clr-namespace:AutoCall.WPF.Extensions" 
+    xmlns:styleselector="clr-namespace:AutoCall.WPF.StyleSelector"
+    mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300"
+    Loaded="DispatchBoardBase_Loaded">
+    <ucBoards:Board.Resources>
+        <!-- Converters -->
+        <c:AnyToBooleanConverter x:Key="AnyToBooleanConverter" />
+        <c:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True" />
+        <c:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter" />
+        <c:EnumToDescriptionConverter x:Key="EnumToDescriptionOrToStringConverter" AllowToString="True"/>
+        <c:NotEmptyStringToBoolConverter x:Key="NotEmptyStringToBoolConverter" />
+        <c:NotNullToBoolConverter x:Key="ObjectToBoolConverter" />
+        <c:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter" />
+        <c:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True" />
+        <c:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+        <c:ToStringConverter x:Key="ToStringConverter" />
+        <dispatch:EditLoadDialog_PalletTypeToBrushConverter x:Key="palletTypeToBrushConverter"/>
+        <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter" />
+        <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <behaviors:ShowAllFilteringBehavior x:Key="ShowAllFilteringBehavior"/>
+        <!-- red for subloads -->
+        <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToComment1NameConverter" Type="Comment1" />
+        <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToComment2NameConverter" Type="Comment2" />
+        <!-- Proxy -->
+        <core:BindingProxy x:Key="proxy" Data="{Binding}" />
+        <core:BindingProxy x:Key="sProxy" Data="{Binding SelectedItemsModel, RelativeSource={RelativeSource AncestorType={x:Type ucBoards:Board}, Mode=FindAncestor}}"/>
+        <core:BindingProxy x:Key="rootProxy" Data="{Binding RelativeSource={RelativeSource AncestorType={x:Type ucBoards:Board}, Mode=FindAncestor}}" />
+        <!-- Styles -->
+        <styleselector:GridViewCellStyleSelector x:Key="GridViewCellStyleSelector"/>
+        <Style TargetType="{x:Type telerik:GridViewDataColumn}">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="CellStyleSelector" Value="{StaticResource GridViewCellStyleSelector}"/>
+        </Style>
+        <Style TargetType="{x:Type uc:SumDataColumn}">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="CellStyleSelector" Value="{StaticResource GridViewCellStyleSelector}"/>
+        </Style>
+        <Style x:Key="title" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource titleTextBlock}"/>
+        <Style TargetType="{x:Type telerik:GridViewHyperlinkColumn}">
+            <Setter Property="IsReadOnly" Value="True" />
+        </Style>
+        <!-- Context Menu with repeating splitterns -->
+        <Style TargetType="telerik:RadMenuSeparatorItem">
+            <Setter Property="Margin" Value="0,-5,0,-5" />
+        </Style>
+        <Style TargetType="{x:Type telerik:RadAutoCompleteBox}" BasedOn="{StaticResource fieldRadAutoCompleteBox}">
+            <Setter Property="TextSearchMode" Value="StartsWith"/>
+            <Setter Property="AutoCompleteMode" Value="Suggest"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="MaxDropDownHeight" Value="300"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <!--Loads collection source-->
+        <!-- Use in codebehind -->
+        <CollectionViewSource x:Key="LoadsViewSource" 
+                Source="{Binding Data.HistoryModel.ViewModel.Wrappers, Source={StaticResource rootProxy}}"
+                IsLiveFilteringRequested="True" Filter="LoadsViewSource_OnFilter">
+            <CollectionViewSource.LiveFilteringProperties>
+                <system:String>DatCompany</system:String>
+                <system:String>DatDriver</system:String>
+                <system:String>Driver</system:String>
+                <system:String>Truck</system:String>
+                <system:String>Trailer</system:String>
+                <system:String>Warehouse</system:String>
+                <system:String>Yard</system:String>
+                <system:String>HistoryDatCompany</system:String>
+                <system:String>HistoryDatDriver</system:String>
+                <system:String>HistoryDriver</system:String>
+                <system:String>HistoryTruck</system:String>
+                <system:String>HistoryTrailer</system:String>
+                <system:String>HistoryWarehouse</system:String>
+                <system:String>ActualCompany</system:String>
+                <system:String>Load.ContainerType</system:String>
+                <system:String>Load.BoardType</system:String>
+            </CollectionViewSource.LiveFilteringProperties>
+        </CollectionViewSource>
+        <DataTemplate x:Key="HistoryDatCompanyNameColumnTemplate">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding HistoryDriverCarrier_Name}" Margin="0,0,5,0"/>
+                <TextBlock Visibility="{Binding HistoryDatCompany.HyperlinkFile, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenHyperlinkFile_OnClick">
+                    <Run Text="link"/>
+                </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
+    </ucBoards:Board.Resources>
+    <Grid>
+        <Grid>
+            <Grid.LayoutTransform>
+                <ScaleTransform x:Name="scaleTransform" CenterX="0" CenterY="0" />
+            </Grid.LayoutTransform>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="25" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!--Board title-->
+            <Border CornerRadius="5,5,0,0" Height="Auto" Name="borderTitle"
+                Background="{Binding EngineState, Converter={StaticResource EngineStateToBackgroundConverter}}">
+                <Grid>
+                    <TextBlock
+                        FontWeight="Bold" Foreground="White"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Text="{Binding Data.Title, Source={StaticResource rootProxy}, Converter={StaticResource TextToUpperConverter}}" />
+                    <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,10,0">
+                        <TextBlock Name="tbEngineQueueCount" Margin="2" />
+                        <Image gif:ImageBehavior.RepeatBehavior="3x" Name="imEngineState" Width="16" Height="16"
+                            gif:ImageBehavior.AnimatedSource="{Binding EngineState, Converter={StaticResource EngineStateToUriConverter}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <!--Loading control-->
+            <uc:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="{Binding Loading, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Grid.RowSpan="10" />
+            <!--Toolbar-->
+            <Border Grid.Row="1" BorderThickness="1,0" BorderBrush="DarkGray" Background="{x:Static SystemColors.ControlBrush}" Padding="3">
+                <Grid HorizontalAlignment="Center" DataContext="{Binding Data.HistoryModel, Source={StaticResource rootProxy}}" Margin="5">
+                    <Grid.Resources>
+                        <Style TargetType="telerik:RadDatePicker">
+                            <Setter Property="Height" Value="26"/>
+                        </Style>
+                        <Style TargetType="telerik:RadAutoCompleteBox" BasedOn="{StaticResource {x:Type telerik:RadAutoCompleteBox}}">
+                            <Setter Property="Height" Value="26"/>
+                        </Style>
+                        <Style TargetType="telerik:RadWatermarkTextBox" BasedOn="{StaticResource fieldRadWatermarkTextBox}">
+                            <Setter Property="Height" Value="26"/>
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <!-- 0: label -->
+                        <ColumnDefinition Width="100"/>
+                        <!-- 1 control -->
+                        <ColumnDefinition Width="140"/>
+                        <!-- 2 control -->
+                        <ColumnDefinition Width="140"/>
+                        <!-- 3: label -->
+                        <ColumnDefinition Width="100"/>
+                        <!-- 4 control -->
+                        <ColumnDefinition Width="140"/>
+                        <!-- 5 control -->
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="40"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Pickup / Delivery -->
+                    <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource title}" Text="Pickup" />
+                    <TextBlock Grid.Column="3" Grid.Row="1" Style="{StaticResource title}" Text="Delivery" />
+
+                    <telerik:RadDatePicker Grid.Column="1" Grid.Row="1" DateTimeWatermarkContent="Min" Margin="5,0,0,5"
+                        SelectedDate="{Binding MinPickupDate, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+                    <telerik:RadDatePicker Grid.Column="2" Grid.Row="1" DateTimeWatermarkContent="Max" Margin="5,0,0,5"
+                        SelectedDate="{Binding MaxPickupDate, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <telerik:RadDatePicker Grid.Column="4" Grid.Row="1" DateTimeWatermarkContent="Min" Margin="5,0,0,5"
+                        SelectedDate="{Binding MinDeliveryDate, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+                    <telerik:RadDatePicker Grid.Column="5" Grid.Row="1" DateTimeWatermarkContent="Max" Margin="5,0,0,5"
+                        SelectedDate="{Binding MaxDeliveryDate, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <!-- Origin / Destination -->
+                    <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource title}" Text="Origin" />
+                    <TextBlock Grid.Column="3" Grid.Row="2" Style="{StaticResource title}" Text="Destination" />
+
+                    <telerik:RadAutoCompleteBox Name="acOrigin"
+                        Grid.Row="2" Grid.Column="1" Margin="5,0,0,5"
+                        WatermarkContent="City"
+                        SearchTextChanged="acLocation_SearchTextChanged"
+                        SelectedItem="{Binding Origin, Mode=TwoWay}">
+                        <telerik:RadAutoCompleteBox.FilteringBehavior>
+                            <behaviors:ZipFilteringBehavior />
+                        </telerik:RadAutoCompleteBox.FilteringBehavior>
+                    </telerik:RadAutoCompleteBox>
+
+                    <telerik:RadWatermarkTextBox Name="tbOriginRadius"
+                        Grid.Row="2" Grid.Column="2" Margin="5,0,0,5"
+                        WatermarkContent="Radius" MaxLength="4"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding OriginRadius, Mode=TwoWay, TargetNullValue='', FallbackValue=''}" />
+
+                    <telerik:RadAutoCompleteBox Name="acDestination"
+                        Grid.Row="2" Grid.Column="4"
+                        WatermarkContent="City" Margin="5,0,0,5"
+                        SearchTextChanged="acLocation_SearchTextChanged"
+                        SelectedItem="{Binding Destination, Mode=TwoWay}">
+                        <telerik:RadAutoCompleteBox.FilteringBehavior>
+                            <behaviors:ZipFilteringBehavior />
+                        </telerik:RadAutoCompleteBox.FilteringBehavior>
+                    </telerik:RadAutoCompleteBox>
+
+                    <telerik:RadWatermarkTextBox Name="tbDestinationRadius"
+                        Grid.Row="2" Grid.Column="5" Margin="5,0,0,5"
+                        WatermarkContent="Radius" MaxLength="4"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding DestinationRadius, Mode=TwoWay, TargetNullValue='', FallbackValue=''}" />
+
+                    <!-- Pallets / Line Haul -->
+                    <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource title}" Text="Pallets" />
+                    <TextBlock Grid.Column="3" Grid.Row="3" Style="{StaticResource title}" Text="Line Haul" />
+
+                    <telerik:RadWatermarkTextBox Grid.Column="1" Grid.Row="3" WatermarkContent="Min" Margin="5,0,0,5" MaxLength="3"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding MinPallets, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+                    <telerik:RadWatermarkTextBox Grid.Column="2" Grid.Row="3" WatermarkContent="Max" Margin="5,0,0,5" MaxLength="3"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding MaxPallets, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <telerik:RadWatermarkTextBox Grid.Column="4" Grid.Row="3" WatermarkContent="Min" Margin="5,0,0,5" MaxLength="5"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding MinLineHaul, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+                    <telerik:RadWatermarkTextBox Grid.Column="5" Grid.Row="3" WatermarkContent="Max" Margin="5,0,0,5" MaxLength="5"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding MaxLineHaul, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <!-- Weight -->
+                    <TextBlock Grid.Column="0" Grid.Row="4" Style="{StaticResource title}" Text="Weight" />
+                    <!-- Load# / Pro# -->
+                    <TextBlock Grid.Column="3" Grid.Row="4" Style="{StaticResource title}" Text="Load# / Pro#" />
+
+                    <telerik:RadWatermarkTextBox Grid.Column="1" Grid.Row="4" WatermarkContent="Min" Margin="5,0,0,5" MaxLength="3"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding MinWeight, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+                    <telerik:RadWatermarkTextBox Grid.Column="2" Grid.Row="4" WatermarkContent="Max" Margin="5,0,0,5" MaxLength="3"
+                        PreviewTextInput="{x:Static helpers:TextBoxHelper.NumberValidationTextBox}"
+                        Text="{Binding MaxWeight, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <telerik:RadWatermarkTextBox Name="tbLoadId"
+                        Grid.Row="4" Grid.Column="4" Margin="5,0,0,5"
+                        WatermarkContent="Load#"
+                        Text="{Binding LoadId, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+                    <telerik:RadWatermarkTextBox Name="tbProId"
+                        Grid.Row="4" Grid.Column="5" Margin="5,0,0,5"
+                        WatermarkContent="Pro#"
+                        Text="{Binding ProId, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+
+                    <!-- Equipment / Broker -->
+                    <TextBlock Grid.Column="0" Grid.Row="5" Style="{StaticResource title}" Text="Equipment" />
+                    <TextBlock Grid.Column="3" Grid.Row="5" Style="{StaticResource title}" Text="Broker" />
+
+                    <telerik:RadButton Grid.Column="1" Grid.Row="5" HorizontalAlignment="Stretch" Height="26" Margin="5,0,0,5"
+                        Style="{StaticResource fieldRadButton}"
+                        Click="Equipment_OnClicked"
+                        Content="{Binding Equipment, Converter={StaticResource EnumToDescriptionOrToStringConverter}, TargetNullValue=-}"/>
+                    <telerik:RadButton Grid.Column="2" Grid.Row="5" HorizontalAlignment="Stretch" Height="26" Margin="5,0,0,5"
+                        Style="{StaticResource fieldRadButton}"
+                        Click="LoadType_OnClicked"
+                        Content="{Binding LoadType, Converter={StaticResource EnumToDescriptionOrToStringConverter}, TargetNullValue=-}"/>
+
+                    <telerik:RadAutoCompleteBox Grid.Column="4" Grid.Row="5" Grid.ColumnSpan="2" WatermarkContent="Name" Margin="5,0,0,5"
+                        SearchText="{Binding BrokerName, Mode=TwoWay}"
+                        SearchTextChanged="brokerRadAutoCompleteBox_SearchTextChanged"
+                        SelectionChanged="brokerRadAutoCompleteBox_SelectionChanged"
+                        GotFocus="RadAutoCompleteBox_GotFocus"
+                        LostFocus="RadAutoCompleteBox_LostFocus"
+                        FilteringBehavior="{StaticResource ShowAllFilteringBehavior}">
+                        <telerik:RadAutoCompleteBox.DropDownItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="2" Text="{Binding Name}" />
+                            </DataTemplate>
+                        </telerik:RadAutoCompleteBox.DropDownItemTemplate>
+                    </telerik:RadAutoCompleteBox>
+                    
+                    <!-- Created By -->
+                    <TextBlock Grid.Column="3" Grid.Row="6" Style="{StaticResource title}" Text="Created By" />
+
+                    <telerik:RadWatermarkTextBox Grid.Column="4" Grid.Row="6" Grid.ColumnSpan="2" WatermarkContent="User Name or Email" Margin="5,0,0,5"
+                        Text="{Binding CreatedBy, Mode=TwoWay, TargetNullValue='', FallbackValue='', UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Button x:Name="btnSearch" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Style="{StaticResource OkButtonStyle}" Margin="5,5,0,5" Click="btnSearch_Clicked">Search</Button>
+                    <Button x:Name="btnClear" Grid.Row="10" Grid.Column="3" Grid.ColumnSpan="3" HorizontalAlignment="Left" Style="{StaticResource CloseButtonStyle}" Margin="5,5,0,5" Click="btnClear_Clicked">Clear</Button>
+                </Grid>
+            </Border>
+            <!--Records grid-->
+            <telerik:RadGridView x:Name="gridLoads" Grid.Row="2"
+                AutoGenerateColumns="False" IsReadOnly="True" IsTabStop="False"
+                SelectionMode="Extended" SelectionUnit="FullRow"
+                IsFilteringAllowed="False"
+                ShowColumnFooters="True" ShowGroupFooters="False"
+                ShowGroupPanel="False" AutoExpandGroups="True"
+                RowIndicatorVisibility="Collapsed"
+                CanUserFreezeColumns="False" CanUserReorderColumns="True" CanUserSortColumns="True"
+                ColumnReordering="gridLoads_ColumnReordering"
+                SelectionChanged="grid_SelectionChanged"
+                CopyingCellClipboardContent="grid_CopyingCellClipboardContent"
+                Background="{x:Static SystemColors.ControlBrush}"
+                Style="{StaticResource showHideGroupColumnsRadGridViewStyle}">
+                <telerik:RadGridView.ColumnGroups>
+                    <telerik:GridViewColumnGroup Name="Documents" Header="Documents" />
+                    <telerik:GridViewColumnGroup Name="Customer" Header="Customer" />
+                    <telerik:GridViewColumnGroup Name="Carrier" Header="Carrier" />
+                    <telerik:GridViewColumnGroup Name="Load" Header="Load" />
+                    <telerik:GridViewColumnGroup Name="Expenses" Header="Expenses" />
+                    <telerik:GridViewColumnGroup Name="Accessorial" Header="Accessorial" />
+                    <telerik:GridViewColumnGroup Name="Rate" Header="Rate" />
+                </telerik:RadGridView.ColumnGroups>
+                <telerik:RadGridView.ChildTableDefinitions>
+                    <telerik:GridViewTableDefinition />
+                </telerik:RadGridView.ChildTableDefinitions>
+                <i:Interaction.Behaviors>
+                    <!-- NOTE: REMEMBE, THE BEHAVIOR MUST BE PUBLIC -->
+                    <behaviors:RadGridViewMultiSelectBehavior SelectedItems="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" />
+                </i:Interaction.Behaviors>
+                <telerik:RadGridView.HierarchyChildTemplate>
+                    <DataTemplate>
+                        <telerik:RadGridView
+                            Margin="0,0,0,-1" BorderThickness="0"
+                            AutoGenerateColumns="False" ShowColumnHeaders="False"
+                            SelectionMode="Extended" SelectionUnit="FullRow"
+                            RowIndicatorVisibility="Collapsed"
+                            ShowGroupPanel="False" ShowColumnFooters="False" ShowColumnSortIndexes="False" ShowGroupFooters="False" ShowSearchPanel="False"
+                            CanUserReorderColumns="True" CanUserFreezeColumns="False" CanUserSortColumns="True" IsReadOnly="True"
+                            Background="{x:Static SystemColors.ControlBrush}"
+                            Loaded="ChildGridLoads_OnLoaded"
+                            CellEditEnded="grid_CellEditEnded"
+                            GroupRenderMode="Flat"
+                            IsSynchronizedWithCurrentItem="True">
+                            <telerik:RadGridView.ChildTableDefinitions>
+                                <telerik:GridViewTableDefinition />
+                            </telerik:RadGridView.ChildTableDefinitions>
+                            <i:Interaction.Behaviors>
+                                <!-- NOTE: REMEMBE, THE BEHAVIOR MUST BE PUBLIC -->
+                                <behaviors:RadGridViewMultiSelectBehavior SelectedItems="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" />
+                            </i:Interaction.Behaviors>
+                            <telerik:RadGridView.Resources>
+                                <!--Loads collection source-->
+                                <!-- Use in codebehind, NOTE: Use Static Event -->
+                                <CollectionViewSource x:Key="SubLoadsViewSource" Source="{Binding Children}"
+                                    IsLiveFilteringRequested="True">
+                                    <CollectionViewSource.LiveFilteringProperties>
+                                        <system:String>DatCompany</system:String>
+                                        <system:String>DatDriver</system:String>
+                                        <system:String>Driver</system:String>
+                                        <system:String>Truck</system:String>
+                                        <system:String>Trailer</system:String>
+                                        <system:String>Warehouse</system:String>
+                                        <system:String>ActualCompany</system:String>
+                                        <system:String>Load.ContainerType</system:String>
+                                        <system:String>Load.BoardType</system:String>
+                                    </CollectionViewSource.LiveFilteringProperties>
+                                </CollectionViewSource>
+                            </telerik:RadGridView.Resources>
+                        </telerik:RadGridView>
+                    </DataTemplate>
+                </telerik:RadGridView.HierarchyChildTemplate>
+                <telerik:RadGridView.RowStyle>
+                    <!-- Completed decaration -->
+                    <Style TargetType="{x:Type telerik:GridViewRow}" BasedOn="{StaticResource GridViewRowStyle2}">
+                        <EventSetter Event="MouseRightButtonUp" Handler="gridRow_MouseRightButtonUp" />
+                        <EventSetter Event="MouseDoubleClick" Handler="gridLoads_RowDoubleClick" />
+                        <Setter Property="IsExpandable" Value="{Binding Children, Converter={StaticResource AnyToBooleanConverter}}" />
+                    </Style>
+                </telerik:RadGridView.RowStyle>
+                <!-- Columns -->
+                <telerik:RadGridView.Columns>
+                    <uc:RowNumberColumn Width="40" Header="" ColumnGroupName="Load"
+                        IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="0"
+                        DataMemberBinding="{Binding Load.CreatedDate}" UniqueName="Row" />
+                    <telerik:GridViewDataColumn Width="45" Header="Load#" ColumnGroupName="Load" UniqueName="Load.Index"
+                        IsResizable="True" extensions:PropertyExtensions.RelativeDisplayIndex="2"
+                        DataMemberBinding="{Binding Load.IndexString}" SortMemberPath="Load.IndexSort" />
+                    <telerik:GridViewDataColumn Width="40" Header="Age" ColumnGroupName="Load" GroupMemberPath="Load.Age.Days"
+                        IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="3"
+                        DataMemberBinding="{Binding Load.Age, StringFormat={}%d}" />
+                    <telerik:GridViewDataColumn Width="80" Header="Date" ColumnGroupName="Load" GroupMemberPath="Load.BookedDate.Date"
+                        IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="4"
+                        DataMemberBinding="{Binding Load.BookedDate, StringFormat=d}" />
+                    <telerik:GridViewDataColumn Width="70" Header="Status" ColumnGroupName="Load" UniqueName="Load.Status"
+                        IsResizable="False" extensions:PropertyExtensions.RelativeDisplayIndex="5"
+                        DataMemberBinding="{Binding Load.StatusString}" />
+                    <telerik:GridViewDataColumn Width="70" Header="Pro#" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.RecordId}" />
+                    <telerik:GridViewDataColumn Width="150" Header="{Binding Data.DispatchBoardType, Source={StaticResource rootProxy}, Converter={StaticResource BoardToComment1NameConverter}, Mode=OneWay}" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Comment1Text}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding Load.Comment1Background}" />
+                                <Setter Property="Foreground" Value="{Binding Load.Comment1Foreground}" />
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.Comment1Text, Converter={StaticResource NotEmptyStringToBoolConverter}}" />
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                                        Xaml="{Binding Load.Comments, Mode=OneWay}"
+                                        RichTextBox="{Binding ElementName=richTextBox}"
+                                        SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}" />
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="150" Header="{Binding Data.DispatchBoardType, Source={StaticResource rootProxy}, Converter={StaticResource BoardToComment2NameConverter}, Mode=OneWay}" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Comment2Text}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Background" Value="{Binding Load.Comment2Background}" />
+                                <Setter Property="Foreground" Value="{Binding Load.Comment2Foreground}" />
+                                <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.Comment2Text, Converter={StaticResource NotEmptyStringToBoolConverter}}" />
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                        <telerik:GridViewDataColumn.ToolTipTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                                        Xaml="{Binding Load.Comments2, Mode=OneWay}"
+                                        RichTextBox="{Binding ElementName=richTextBox}"
+                                        SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}" />
+                                    <telerik:RadRichTextBox x:Name="richTextBox" />
+                                </Grid>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.ToolTipTemplate>
+                    </telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="40" Header="Equipment" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Equipment, Converter={StaticResource EquipmentTypeToCodeConverter}}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Origin" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.OriginCity}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Origin Address" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.OriginAddress}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Destination" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.DestinationCity}" />
+                    <telerik:GridViewDataColumn Width="140" Header="Destination Address" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.DestinationAddress}" />
+                    <telerik:GridViewDataColumn Width="60" Header="Distance" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Distance}" />
+                    <telerik:GridViewDataColumn Width="80" Header="Shipper" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.ShipperCompany}" />
+                    <telerik:GridViewDataColumn Width="80" Header="Receiver" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.ReceiverCompany}" />
+                    <telerik:GridViewDataColumn Width="125" Header="Pickup" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.PickupDate, StringFormat=d}" SortMemberPath="Load.PickupDate" />
+                    <telerik:GridViewDataColumn Width="125" Header="Delivery" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.DeliveryDate, StringFormat=d}" SortMemberPath="Load.DeliveryDate" />
+                    <uc:SumDataColumn Width="40" Header="Weight" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Weight}"/>
+                    <telerik:GridViewDataColumn Width="40" Header="Length" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Length}" />
+                    <uc:SumDataColumn Width="35" Header="Pallets" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Pallets, Converter={StaticResource ToStringConverter}}" />
+                    <telerik:GridViewDataColumn Width="35" Header="Pallet Type" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.PalletType, Converter={StaticResource EnumToDescriptionConverter}}">
+                        <telerik:GridViewDataColumn.CellStyle>
+                            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+                                <Setter Property="Foreground" Value="{Binding Load.PalletType, Converter={StaticResource palletTypeToBrushConverter}, ConverterParameter={x:Static dispatch:PalletTypeConverterParameter.Foreground}}"/>
+                            </Style>
+                        </telerik:GridViewDataColumn.CellStyle>
+                    </telerik:GridViewDataColumn>
+                    <uc:SumDataColumn Width="55" Header="Line Haul" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.LineHaul, StringFormat=C2}"/>
+                    <uc:SumDataColumn Width="55" Header="Rate" ColumnGroupName="Rate"
+                        DataMemberBinding="{Binding Load.Rate, StringFormat=C2}"/>
+                    <telerik:GridViewDataColumn Width="50" Header="Rate Change" ColumnGroupName="Rate" 
+                        DataMemberBinding="{Binding Load.LastRateChangedString}"/>
+                    <telerik:GridViewDataColumn Width="90" Header="Quick Pay" ColumnGroupName="Load"
+                        IsReadOnly="True" IsVisible="False"
+                        DataMemberBinding="{Binding Load.QuikPay, StringFormat=d}"/>
+                    <telerik:GridViewDataColumn Width="180" Header="Created" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.Created}" SortMemberPath="Load.CreatedDate" />
+                    <telerik:GridViewDataColumn Width="180" Header="Last Modified" ColumnGroupName="Load"
+                        DataMemberBinding="{Binding Load.LastModified}" SortMemberPath="Load.LastModifiedDate" />
+                    <telerik:GridViewDataColumn Width="200" Header="Customer" ColumnGroupName="Customer" extensions:PropertyExtensions.RelativeDisplayIndex="0"
+                        DataMemberBinding="{Binding Load.Company}" />
+                    <userControls:GridViewPhoneColumn Width="100" Header="Phone" ColumnGroupName="Customer" extensions:PropertyExtensions.RelativeDisplayIndex="1"
+                        DataMemberBinding="{Binding Load.Contacts}" />
+                    <!-- Factoring Company -->
+                    <telerik:GridViewDataColumn Width="200" Header="Factoring Company" ColumnGroupName="Carrier" Name="facComCol" extensions:PropertyExtensions.RelativeDisplayIndex="2"
+                        DataMemberBinding="{Binding SetupPacket.MailingCompanyLegalName}" IsReadOnly="True">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding SetupPacket, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <Run Text="{Binding SetupPacket.MailingCompanyLegalName}" />
+                                    <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenWebSetupPacketCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="link" />
+                                    </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Photo -->
+                    <telerik:GridViewDataColumn Width="80" Header="Photo" Name="gridPatterns_photo" IsReadOnly="True"
+                        DataMemberBinding="{Binding Load.PhotoFileView}" ColumnGroupName="Documents">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.PhotoFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPhotoCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="open" />
+                                    </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Invoice -->
+                    <telerik:GridViewDataColumn Width="80" Name="col" Header="Invoice" ColumnGroupName="Documents" IsReadOnly="True"
+                        DataMemberBinding="{Binding Load.InvoiceNumber}">
+                        <telerik:GridViewDataColumn.Resources>
+                            <!-- it is resource with key! uses in codebehind in DispatchCarrierAccountBoard. -->
+                            <DataTemplate x:Key="carrierLoadDataTemplate">
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding Load.ParentId, Converter={StaticResource NullToVisibilityConverter}}">
+                                    <!-- Invoice Number -->
+                                    <TextBlock Visibility="{Binding Load.InvoiceNumber, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                        <Hyperlink
+                                            IsEnabled="{Binding Load.InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                            <Run Text="{Binding Load.InvoiceNumber}" />
+                                        </Hyperlink>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.Resources>
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <Hyperlink
+                                        IsEnabled="{Binding Load.InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                                        Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="{Binding Load.InvoiceNumber}" />
+                                        <Run Text="{Binding Load.InvoiceDate, StringFormat=d}" ToolTip="Date of uploaded" />
+                                    </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- Check -->
+                    <telerik:GridViewDataColumn Width="80" Header="Check" ColumnGroupName="Documents" IsReadOnly="True"
+                        DataMemberBinding="{Binding Load.CheckNumber}"></telerik:GridViewDataColumn>
+                    <telerik:GridViewDataColumn Width="50" Header="Payout" ColumnGroupName="Documents" IsReadOnly="True"
+                        DataMemberBinding="{Binding Load.Payout, StringFormat=C2}">
+                        <telerik:GridViewDataColumn.AggregateFunctions>
+                            <telerik:SumFunction ResultFormatString="{}{0:C2}" />
+                        </telerik:GridViewDataColumn.AggregateFunctions>
+                    </telerik:GridViewDataColumn>
+                    <!-- Confirmation -->
+                    <telerik:GridViewDataColumn Width="85" Header="Confirmation" ColumnGroupName="Documents"
+                        DataMemberBinding="{Binding Load.ConfirmationFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.ConfirmationFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenConfirmationCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="open" />
+                                    </Hyperlink>
+                                    <Run Text="{Binding Load.ConfirmationDateView, StringFormat=d, Mode=OneWay}" ToolTip="Date of sent the email" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- BOL -->
+                    <telerik:GridViewDataColumn Width="85" Header="BOL" ColumnGroupName="Documents" IsReadOnly="True" Name="bolColumn"
+                        DataMemberBinding="{Binding Load.BOLFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.BOLFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenBOLCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="open" />
+                                    </Hyperlink>
+                                    <Run Text="{Binding Load.BOLDateView, StringFormat=d, Mode=OneWay}"  ToolTip="Date of uploaded" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                    <!-- POD -->
+                    <telerik:GridViewDataColumn Width="85" Header="POD" ColumnGroupName="Documents" IsReadOnly="True" Name="podColumn"
+                        DataMemberBinding="{Binding Load.PODFileView}">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding Load.PODFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                    <Hyperlink Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.OpenPODCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                                        <Run Text="open" />
+                                    </Hyperlink>
+                                    <Run Text="{Binding Load.PODDateView, StringFormat=d, Mode=OneWay}" ToolTip="Date of uploaded" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
+                </telerik:RadGridView.Columns>
+            </telerik:RadGridView>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="3">
+                <TextBlock VerticalAlignment="Center" Margin="0,0,10,0"
+                           Text="{Binding Data.HistoryModel.ItemCount, StringFormat='Total: {0}', Source={StaticResource rootProxy}}"></TextBlock>
+                <telerik:RadDataPager x:Name="dataPager" Source="{Binding Data.HistoryModel, Source={StaticResource rootProxy}}"
+                    HorizontalAlignment="Center" Background="Transparent" BorderThickness="0"
+                    Margin="0" Padding="0" FontSize="12"/>
+                <telerik:RadComboBox 
+                    Width="70" Margin="3" FontSize="12" SelectionChanged="PageSize_SelectionChanged"
+                    Text="{Binding Data.HistoryModel.PageSize, Mode=TwoWay, Source={StaticResource rootProxy}}" >
+                    <telerik:RadComboBoxItem>1000</telerik:RadComboBoxItem>
+                    <telerik:RadComboBoxItem>500</telerik:RadComboBoxItem>
+                    <telerik:RadComboBoxItem>100</telerik:RadComboBoxItem>
+                </telerik:RadComboBox>
+            </StackPanel>
+        </Grid>
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" BorderThickness="1"
+            BorderBrush="{x:Static SystemColors.ActiveBorderBrush}" Background="{x:Static SystemColors.ControlBrush}">
+            <Border.Style>
+                <Style TargetType="{x:Type Border}">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="False">
+                            <Setter Property="Opacity" Value=".4" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="-" Margin="2" Width="20" Height="20" Padding="0" Click="ZoomOutButtonClicked" />
+                <TextBox IsEnabled="False" HorizontalContentAlignment="Right" Width="40" Margin="2"
+                     Text="{Binding Value, ElementName=uiScaleSlider, Mode=OneWay, Converter={StaticResource PercentConterter}, StringFormat={}{0}%}" />
+                <Slider x:Name="uiScaleSlider" MouseDoubleClick="RestoreScalingFactor"
+                    Margin="2" Width="150"
+                    ToolTipService.ShowDuration="60000" ToolTip="
+CTRL + Wheel up - Scale up (i.e. zoom in)&#x0a;
+CTRL + Wheel down - Scale down (i.e. zoom out)&#x0a;
+CTRL + Wheel click - Restore scaling factor to 100%" Minimum="1" Maximum="2" />
+                <Button Content="+" Margin="2" Width="20" Height="20" Padding="0" Click="ZoomInButtonClicked" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</ucBoards:DispatchBoardBase>

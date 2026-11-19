@@ -1,0 +1,115 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.ShipperReceiverCompaniesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+        xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        Title="Shippers / Receivers" Height="600"  Width="700" 
+        Icon="/AutoDispatch;component/Resources/icon.ico" 
+        WindowStartupLocation="CenterScreen"
+        Loaded="ShipperReceiverCompaniesDialog_OnLoaded"
+        Closed="ShipperReceiverCompaniesDialog_OnClosed"
+        Background="{x:Static SystemColors.ControlBrush}">
+    <dialogs:BaseDispatchDialog.Resources>
+        <c:EnumToDescriptionConverter x:Key="enumToDescriptionConverter"/>
+        <c:ToStringConverter x:Key="ToStringConverter"/>
+        <!--Loads collection source-->
+        <!-- Use in codebehind -->
+        <CollectionViewSource x:Key="ShipperReceiverCompaniesViewSource" Source="{Binding ShipperReceiverCompanies}" IsLiveFilteringRequested="True" Filter="ShipperReceiverCompaniesViewSource_OnFilter"/>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <!--Loading control-->
+        <userControls:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="Visible" Grid.RowSpan="10" />
+
+        <!--Toolbar-->
+        <Border Grid.Row="0" BorderThickness="1,0" Margin="5,0" Background="{x:Static SystemColors.ControlBrush}">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <!--Create button-->
+                    <Button x:Name="btnCreate" Visibility="Collapsed"
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Create_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/add.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Find</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <!--Edit button-->
+                    <Button x:Name="btnEdit" Visibility="Collapsed" 
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Edit_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/edit.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Edit</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <!--Delete button-->
+                    <Button x:Name="btnDelete" Visibility="Collapsed" 
+                        IsEnabled="True" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="Delete_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/delete.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"></userControls:AutoGreyableImage>
+                            <TextBlock VerticalAlignment="Center" Margin="3">Delete</TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <!--Filter-->
+                <telerik:RadWatermarkTextBox Name="tbLoadSearch"
+                    FontSize="12" 
+                    HorizontalAlignment="Right" Width="120" Height="24" Margin="5"
+                    WatermarkContent="Search"
+                    Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanged="tbFilter_OnTextChanged" />
+            </Grid>
+        </Border>
+
+        <!--Dat Companies grid-->
+        <telerik:RadGridView Grid.Row="1"
+            Name="gridCompanies"
+            AutoGenerateColumns="False" 
+            SelectionMode="Single" SelectionUnit="FullRow"
+            ShowGroupPanel="False" AutoExpandGroups="False" IsFilteringAllowed="False"
+            RowIndicatorVisibility="Collapsed" IsTabStop="False"
+            CanUserReorderColumns="True" CanUserFreezeColumns="False" IsReadOnly="True" CanUserSortColumns="True"
+            ShowColumnFooters="True" ShowGroupFooters="False"
+            MouseDoubleClick="gridCompanies_OnMouseDoubleClick"
+            SelectedItem="{Binding SelectedShipperReceiverCompany, Mode=OneWayToSource}"
+            Background="{x:Static SystemColors.ControlBrush}">
+            <telerik:RadGridView.Columns>
+                <userControls:RowNumberColumn Header="Line#" DataMemberBinding="{Binding CreatedDate}" UniqueName="Line"/>
+                <telerik:GridViewDataColumn Header="Created" DataMemberBinding="{Binding CreatedDate, StringFormat=d}" />
+                <telerik:GridViewDataColumn Header="Name" DataMemberBinding="{Binding Name}" />
+                <telerik:GridViewHyperlinkColumn Header="Phone" DataMemberBinding="{Binding Contacts, Converter={StaticResource ToStringConverter}}">
+                    <telerik:GridViewHyperlinkColumn.CellStyle>
+                        <Style TargetType="telerik:GridViewCell">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <EventSetter Event="PreviewMouseLeftButtonUp" Handler="Phone_OnClick"></EventSetter>
+                        </Style>
+                    </telerik:GridViewHyperlinkColumn.CellStyle>
+                </telerik:GridViewHyperlinkColumn>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+        <Button x:Name="btnOk" Grid.Row="3" Style="{StaticResource OkButtonStyle}" Visibility="Collapsed">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="3" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>
+
+
+
+
+
+
+

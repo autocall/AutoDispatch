@@ -1,0 +1,235 @@
+﻿<dialogs:BaseDispatchDialog 
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.EditLoadDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:core="clr-namespace:AutoCall.WPF.Core"
+    xmlns:items="clr-namespace:AutoDispatch.Logic.ViewModels.Items;assembly=AutoDispatch.Logic.Contracts"
+    xmlns:userControls1="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+    xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    mc:Ignorable="d" 
+    Title="New Load" SizeToContent="Height" MinHeight="400"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+    Background="{x:Static SystemColors.ControlBrush}"
+    d:DesignHeight="600" d:DesignWidth="400">
+    <!-- Resources -->
+    <dialogs:BaseDispatchDialog.Resources>
+        <!-- Proxy -->
+        <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
+        <!-- Converters -->
+        <converters:CompareConverter x:Key="InvertedCompareContainerTypeConverter" Inverted="True" />
+        <converters:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InvertableBooleanToVisibilityConverter x:Key="InvertableBooleanToVisibilityConverter"/>
+        <dispatch:BookLoadDialog_HeaderMultiConverter x:Key="ToLoadHeaderMultiConverter"/>
+        <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
+        <converters:SubSizeConverter x:Key="SubSizeConverter"/>
+        <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter"/>
+        <dispatch:LocationDetailsMultiConverter x:Key="LocationDetailsMultiConverter"/>
+        <dispatch:EditBookLoad_ToTrailerNumberConverter x:Key="ToTrailerNumberConverter"/>
+        <converters:NotNullToStringConverter x:Key="NotNullToStringConverter"/>
+        <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
+        <system:Int32 x:Key="SubSizeValue">5</system:Int32>
+    </dialogs:BaseDispatchDialog.Resources>
+    <!-- Root -->
+    <Grid Name="rootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <!-- Left Panel -->
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <!--Toolbar-->
+            <Border Grid.Row="0" BorderThickness="0" BorderBrush="LightGray" Padding="0" Margin="0,0,0,5" VerticalAlignment="Top" Height="38">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Actual Company -->
+                    <telerik:RadComboBox Name="cbActualCompany"
+                        Grid.RowSpan="2"
+                        IsEnabled="False"
+                        Width="50" Height="32" Margin="2,2,0,0"
+                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                        SelectedValuePath="EntityId"
+                        SelectedValue="{Binding Load.ActualCompanyId}"
+                        ItemsSource="{Binding ActualCompanies}"
+                        SelectionChanged="cbActualCompany_SelectionChanged">
+                        <telerik:RadComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                                    <TextBlock Text="{Binding LegalName}" VerticalAlignment="Center" Margin="5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </telerik:RadComboBox.ItemTemplate>
+                        <telerik:RadComboBox.SelectionBoxTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                            </DataTemplate>
+                        </telerik:RadComboBox.SelectionBoxTemplate>
+                    </telerik:RadComboBox>
+                    <!-- Expander -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                        Visibility="{Binding Load.Container, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock Text="Multiple" VerticalAlignment="Center"/>
+                        <Expander 
+                            Name="expander" ExpandDirection="Right"
+                            Margin="4" VerticalAlignment="Center"
+                            IsEnabled="False"
+                            IsExpanded="{Binding Load.Container, Mode=OneWay}" 
+                            Template="{StaticResource StretchyExpanderHorizontalTemp}"
+                            Expanded="Expander_OnExpanded" 
+                            Collapsed="Expander_OnCollapsed">
+                        </Expander>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <!-- Root Load, DataContext will be set in Loaded -->
+            <userControls1:EditContainerLoadControl x:Name="rootLoad" Grid.Row="0" Grid.Column="0" 
+                IsEnabled="{Binding Load.ActualCompanyId, Converter={StaticResource NotNullToBoolConverter}}"
+                Loaded="EditRootLoadControl_OnLoaded" DataContext="{x:Null}" />
+        </Grid>
+        <!-- Loads -->
+        <StackPanel Grid.Row="0" Grid.Column="1"
+            Orientation="Vertical"
+            IsEnabled="{Binding Load.ActualCompanyId, Converter={StaticResource NotNullToBoolConverter}}"
+            Visibility="{Binding IsExpanded, ElementName=expander, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ItemsControl Name="isLoads"
+                ItemsSource="{Binding Loads}"
+                HorizontalContentAlignment="Stretch" 
+                BorderThickness="0,1,0,0" BorderBrush="Gray" Margin="5,5,5,0">
+                <ItemsControl.Resources>
+                    <!-- Row of Load Template -->
+                    <DataTemplate DataType="{x:Type items:WrapperLoadViewModel}">
+                        <Border BorderThickness="1" BorderBrush="LightGray" Margin="0,-1,0,0"
+                            Visibility="{Binding Load.IsDeleted, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Inverted}">
+                            <Expander 
+                                IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                                ExpandDirection="Down"
+                                Focusable="False" 
+                                HorizontalContentAlignment="Stretch"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,5"
+                                Template="{StaticResource StretchyExpanderVerticalTemp}"
+                                Expanded="SubExpander_OnExpanded">
+                                <Expander.Header>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Used Company Selector in ToolBar -->
+                                        <WrapPanel Orientation="Horizontal" Grid.Column="0">
+                                            <telerik:RadComboBox 
+                                                Width="50" Height="32"
+                                                IsEnabled="False"
+                                                SelectedValuePath="EntityId"
+                                                SelectedValue="{Binding Load.ActualCompanyId}"
+                                                ItemsSource="{Binding Data.ActualCompanies, Source={StaticResource proxy}}" 
+                                                Loaded="SubComboBox_Loaded">
+                                                <telerik:RadComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                                                            <TextBlock Text="{Binding LegalName}" VerticalAlignment="Center" Margin="5,0"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </telerik:RadComboBox.ItemTemplate>
+                                                <telerik:RadComboBox.SelectionBoxTemplate>
+                                                    <DataTemplate>
+                                                        <Image Source="{Binding LogoSmall}" RenderOptions.BitmapScalingMode="Fant" Width="24" Height="24"/>
+                                                    </DataTemplate>
+                                                </telerik:RadComboBox.SelectionBoxTemplate>
+                                            </telerik:RadComboBox>
+                                            <userControls:BindableTextBlock
+                                                VerticalAlignment="Center" Margin="5,0">
+                                                <userControls:BindableTextBlock.InlineList>
+                                                    <MultiBinding Converter="{StaticResource ToLoadHeaderMultiConverter}">
+                                                        <Binding Path="Load"/>
+                                                        <Binding Path="Data.Trailers"     Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                        <Binding Path="Data.Trucks"       Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                        <Binding Path="Data.Drivers"      Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                        <Binding Path="Data.DatCompanies" Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                        <Binding Path="Data.DatDrivers"   Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                        <Binding Path="Data.Warehouses"   Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                    </MultiBinding>
+                                                </userControls:BindableTextBlock.InlineList>
+                                            </userControls:BindableTextBlock>
+                                            <TextBlock 
+                                                DataContext="{Binding Load}" 
+                                                VerticalAlignment="Center" FontWeight="Bold">
+                                                <Run Text="{Binding IndexString, StringFormat='#{0},', Mode=OneWay}"/>
+                                                <Run Text="{Binding Direction, Mode=OneWay}" FontWeight="Bold"/>
+                                            </TextBlock>
+                                            <TextBlock 
+                                                DataContext="{Binding Load}" 
+                                                VerticalAlignment="Center" FontWeight="Normal">
+                                                <Run Text=" ("/><Run>
+                                                    <Run.Text>
+                                                    <MultiBinding Converter="{StaticResource ToTrailerNumberConverter}">
+                                                        <Binding Mode="OneWay"/>
+                                                        <Binding Path="Data.Trailers" Source="{StaticResource proxy}" Mode="OneTime"/>
+                                                    </MultiBinding>
+                                                     </Run.Text>
+                                                 </Run><Run Text="{Binding Status, StringFormat={}{0}, Converter={StaticResource EnumToDescriptionConverter}, Mode=OneWay}"/><Run Text=")"/>
+                                            </TextBlock>
+                                        </WrapPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" >
+                                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/black_down.png"
+                                                MouseLeftButtonUp="Down_MouseLeftButtonUp" Width="16" Height="16" Margin="5,10,5,10" Cursor="Hand"/>
+                                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/black_up.png"
+                                                MouseLeftButtonUp="Up_MouseLeftButtonUp" Width="16" Height="16" Margin="5,10,5,10" Cursor="Hand"/>
+                                            <userControls:AutoGreyableImage Source="/AutoDispatch;component/Resources/Close.png" 
+                                                MouseLeftButtonUp="Delete_MouseLeftButtonUp" Width="16" Height="16" Margin="5,10,10,10" Cursor="Hand"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Expander.Header>
+                                <Grid>
+                                    <!-- Child Load, DataContext will be set in Loaded -->
+                                    <userControls1:EditChildLoadControl 
+                                        DataContext="{x:Null}"
+                                        Loaded="EditChildLoadControl_OnLoaded"
+                                        Width="{Binding ActualWidth, ElementName=isLoads, Converter={StaticResource SubSizeConverter}, ConverterParameter={StaticResource SubSizeValue}, Mode=OneWay}"/>
+                                </Grid>
+                            </Expander>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.Resources>
+            </ItemsControl>
+            <Button x:Name="btnAddSubload" Height="30" HorizontalAlignment="Center" Click="AddSubload_Clicked" Style="{StaticResource BaseButtonStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <userControls:AutoGreyableImage Margin="3,0,0,0" Source="/AutoDispatch;component/Resources/add.png" Style="{StaticResource ResourceKey=BoardButtonImageStyle}"/>
+                    <TextBlock VerticalAlignment="Center" Margin="3,0,0,0">Add</TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="1" Grid.ColumnSpan="4" Margin="5" TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Right" Visibility="Hidden" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="1" Grid.ColumnSpan="4" Margin="5" IsIndeterminate="True" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="2" Grid.ColumnSpan="4" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="2" Grid.ColumnSpan="4" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+
+    </Grid>
+</dialogs:BaseDispatchDialog>
+

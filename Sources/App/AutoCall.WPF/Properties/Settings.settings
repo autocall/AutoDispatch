@@ -1,0 +1,45 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AutoCall.WPF.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="RequestDelayInSeconds" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">30000</Value>
+    </Setting>
+    <Setting Name="DispatchCommentTemplate" Type="System.String" Scope="User">
+      <Value Profile="(Default)">&lt;t:RadDocument xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:t="clr-namespace:Telerik.Windows.Documents.Model;assembly=Telerik.Windows.Documents" xmlns:s="clr-namespace:Telerik.Windows.Documents.Model.Styles;assembly=Telerik.Windows.Documents" xmlns:r="clr-namespace:Telerik.Windows.Documents.Model.Revisions;assembly=Telerik.Windows.Documents" xmlns:n="clr-namespace:Telerik.Windows.Documents.Model.Notes;assembly=Telerik.Windows.Documents" xmlns:th="clr-namespace:Telerik.Windows.Documents.Model.Themes;assembly=Telerik.Windows.Documents" xmlns:sdt="clr-namespace:Telerik.Windows.Documents.Model.StructuredDocumentTags;assembly=Telerik.Windows.Documents" version="1.4" LayoutMode="Flow" LineSpacing="1" LineSpacingType="Auto" ParagraphDefaultSpacingAfter="0.2" ParagraphDefaultSpacingBefore="0" SelectedBibliographicStyleName="\APA.XSL" StyleName="defaultDocumentStyle"&gt;
+  &lt;t:RadDocument.Captions&gt;
+    &lt;t:CaptionDefinition IsDefault="True" IsLinkedToHeading="False" Label="Figure" LinkedHeadingLevel="0" NumberingFormat="Arabic" SeparatorType="Hyphen" /&gt;
+    &lt;t:CaptionDefinition IsDefault="True" IsLinkedToHeading="False" Label="Table" LinkedHeadingLevel="0" NumberingFormat="Arabic" SeparatorType="Hyphen" /&gt;
+  &lt;/t:RadDocument.Captions&gt;
+  &lt;t:RadDocument.ProtectionSettings&gt;
+    &lt;t:DocumentProtectionSettings EnableDocumentProtection="False" Enforce="False" HashingAlgorithm="None" HashingSpinCount="0" ProtectionMode="ReadOnly" /&gt;
+  &lt;/t:RadDocument.ProtectionSettings&gt;
+  &lt;t:RadDocument.Styles&gt;
+    &lt;s:StyleDefinition DisplayName="Document Default Style" IsCustom="False" IsDefault="False" IsPrimary="True" Name="defaultDocumentStyle" Type="Default"&gt;
+      &lt;s:StyleDefinition.ParagraphStyle&gt;
+        &lt;s:ParagraphProperties LineSpacing="1" SpacingAfter="0.2" /&gt;
+      &lt;/s:StyleDefinition.ParagraphStyle&gt;
+      &lt;s:StyleDefinition.SpanStyle&gt;
+        &lt;s:SpanProperties FontFamily="Calibri" FontSize="14" FontStyle="Normal" FontWeight="Normal" /&gt;
+      &lt;/s:StyleDefinition.SpanStyle&gt;
+    &lt;/s:StyleDefinition&gt;
+    &lt;s:StyleDefinition DisplayName="Normal" IsCustom="False" IsDefault="True" IsPrimary="True" Name="Normal" Type="Paragraph" UIPriority="0" /&gt;
+    &lt;s:StyleDefinition DisplayName="Table Normal" IsCustom="False" IsDefault="True" IsPrimary="False" Name="TableNormal" Type="Table" UIPriority="59"&gt;
+      &lt;s:StyleDefinition.TableStyle&gt;
+        &lt;s:TableProperties CellPadding="5,0,5,0"&gt;
+          &lt;s:TableProperties.TableLook&gt;
+            &lt;t:TableLook /&gt;
+          &lt;/s:TableProperties.TableLook&gt;
+        &lt;/s:TableProperties&gt;
+      &lt;/s:StyleDefinition.TableStyle&gt;
+    &lt;/s:StyleDefinition&gt;
+  &lt;/t:RadDocument.Styles&gt;
+  &lt;t:Section&gt;
+    &lt;t:Paragraph&gt;
+      &lt;t:Span FontWeight="Bold" ForeColor="$FOREGROUND" HighlightColor="$BACKGROUND" Text="$TEXT" /&gt;
+    &lt;/t:Paragraph&gt;
+  &lt;/t:Section&gt;
+&lt;/t:RadDocument&gt;</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

@@ -1,0 +1,257 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.HistoryLoadChangesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:AutoCall.WPF.Converters"
+        xmlns:userControls="clr-namespace:AutoCall.WPF.UserControls"
+        xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+        xmlns:helpers="clr-namespace:AutoCall.WPF.Helpers"
+        xmlns:core="clr-namespace:AutoCall.WPF.Core"
+        Title="View History" Height="600"  Width="1400"
+        Icon="/AutoDispatch;component/Resources/icon.ico"
+        WindowStartupLocation="CenterScreen"
+        Loaded="HistoryLoadChangesDialog_OnLoaded"
+        Closed="HistoryLoadChangesDialog_OnClosed"
+        Background="{x:Static SystemColors.ControlBrush}">
+  <dialogs:BaseDispatchDialog.Resources>
+    <c:EnumToDescriptionConverter x:Key="enumToDescriptionConverter"/>
+    <c:NotEmptyStringToBoolConverter x:Key="NotEmptyStringToBoolConverter" />
+    <c:NotNullToBoolConverter x:Key="ObjectToBoolConverter" />
+    <c:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter" />
+    <c:ToStringConverter x:Key="ToStringConverter"/>
+    <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToComment1NameConverter" Type="Comment1" />
+    <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToComment2NameConverter" Type="Comment2" />
+    <dispatch:DispatchBoard_BoardToCommentNameConverter x:Key="BoardToConsolidationNameConverter" Type="Consolidation" />
+    <dispatch:RtfToTextConverter x:Key="RtfToTextConverter"/>
+    <c:BooleanToYesNoConverter x:Key="BooleanToYesNoConverter" />
+    <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
+  </dialogs:BaseDispatchDialog.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="40" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="40"/>
+    </Grid.RowDefinitions>
+
+    <!--Loading control-->
+    <userControls:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="Visible" Grid.RowSpan="10" />
+
+    <!--Toolbar-->
+    <Border Grid.Row="0" BorderThickness="1,0" Margin="5,0" Background="{x:Static SystemColors.ControlBrush}">
+      <Grid>
+        <StackPanel Orientation="Horizontal">
+          <!--Create button-->
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!--Dat Companies grid-->
+    <telerik:RadGridView Grid.Row="1"
+        Name="gridHistories"
+        AutoGenerateColumns="False"
+        SelectionMode="Single" SelectionUnit="FullRow"
+        ShowGroupPanel="False" AutoExpandGroups="False" IsFilteringAllowed="False"
+        RowIndicatorVisibility="Collapsed" IsTabStop="False"
+        CanUserReorderColumns="True" CanUserFreezeColumns="False" IsReadOnly="True" CanUserSortColumns="True"
+        ShowColumnFooters="True" ShowGroupFooters="False"
+        MouseDoubleClick="gridHistories_OnMouseDoubleClick"
+        ItemsSource="{Binding Wrappers}"
+        Background="{x:Static SystemColors.ControlBrush}">
+      <telerik:RadGridView.Columns>
+        <telerik:GridViewImageColumn Header="" ImageWidth="20" ImageHeight="20" DataMemberBinding="{Binding ActualCompany.LogoSmall}" />
+        <telerik:GridViewDataColumn Header="Id" DataMemberBinding="{Binding Load.IndexString}" />
+        <telerik:GridViewDataColumn Header="Pro#" DataMemberBinding="{Binding Load.RecordId}" />
+        <telerik:GridViewDataColumn Header="Last Modified" DataMemberBinding="{Binding Load.LastModifiedDate}" />
+        <telerik:GridViewDataColumn Header="User" DataMemberBinding="{Binding Load.LastModifiedByName}" />
+        <telerik:GridViewDataColumn Header="Status" DataMemberBinding="{Binding Load.Status, Converter={StaticResource enumToDescriptionConverter}}" />
+        <telerik:GridViewDataColumn Header="Container Type" DataMemberBinding="{Binding Load.ContainerType}" />
+        <telerik:GridViewDataColumn Header="Line Haul" DataMemberBinding="{Binding Load.LineHaul, StringFormat=C2}" />
+        <telerik:GridViewDataColumn Header="Rate" DataMemberBinding="{Binding Load.Rate, StringFormat=C2}" />
+        <telerik:GridViewDataColumn Header="Payout" DataMemberBinding="{Binding Load.Payout, StringFormat=C2}" />
+        <telerik:GridViewDataColumn Header="Gains" DataMemberBinding="{Binding Load.GainsTotal, StringFormat=C2}" />
+        <telerik:GridViewDataColumn Header="Expenses" DataMemberBinding="{Binding Load.ExpensesTotal, StringFormat=C2}" />
+        <telerik:GridViewDataColumn Header="Origin" DataMemberBinding="{Binding Load.OriginCity}" />
+        <telerik:GridViewDataColumn Header="Destination" DataMemberBinding="{Binding Load.DestinationCity}" />
+        <telerik:GridViewDataColumn Header="Pickup" DataMemberBinding="{Binding Load.Pickup}" />
+        <telerik:GridViewDataColumn Header="Delivery" DataMemberBinding="{Binding Load.Delivery}" />
+        <telerik:GridViewDataColumn Header="Trailer" DataMemberBinding="{Binding Trailer.Number}">
+          <telerik:GridViewDataColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock Visibility="{Binding Trailer, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Command="{Binding Source={StaticResource proxy}, Path=Data.dc.OpenTrailerCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                  <Run Text="{Binding Trailer.Number}"/>
+                </Hyperlink>
+              </TextBlock>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.CellTemplate>
+        </telerik:GridViewDataColumn>
+        <telerik:GridViewDataColumn Header="Scheme" DataMemberBinding="{Binding Load.TrailerSchemeFile}">
+          <telerik:GridViewDataColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock Visibility="{Binding Load.TrailerSchemeFile, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Command="{Binding Source={StaticResource proxy}, Path=Data.dc.OpenTrailerSchemeCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                  <Run Text="open"/>
+                </Hyperlink>
+                <Run Text="{Binding Load.TrailerSchemeDate, StringFormat=d, Mode=OneWay}"/>
+              </TextBlock>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.CellTemplate>
+        </telerik:GridViewDataColumn>
+        <telerik:GridViewDataColumn Header="Warehouse" DataMemberBinding="{Binding Warehouse.Name}" />
+        <!-- Confirmation -->
+        <telerik:GridViewDataColumn Header="Confirmation" DataMemberBinding="{Binding Load.ConfirmationFileView}">
+          <telerik:GridViewDataColumn.CellTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Visibility="{Binding Load.ConfirmationFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <TextBlock>
+                  <Hyperlink Command="{Binding Data.dc.OpenConfirmationCommand, Source={StaticResource proxy}}" helpers:UIHelper.CommandParameter="{Binding}">
+                    <Run Text="open"/>
+                  </Hyperlink>
+                </TextBlock>
+                <TextBlock Margin="5,0" Foreground="Gray"
+                    Text="{Binding Load.EmailConfirmationSentDateView, StringFormat=Sent {0:d}}"
+                    Visibility="{Binding Load.EmailConfirmationSentDateView, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                <TextBlock Margin="5,0" Foreground="Gray"
+                    Text="{Binding Load.ConfirmedDateView, StringFormat=Signed {0:d}}"
+                    Visibility="{Binding Load.ConfirmedDateView, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+              </StackPanel>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.CellTemplate>
+        </telerik:GridViewDataColumn>
+        <!-- BOL -->
+        <telerik:GridViewDataColumn Header="BOL" DataMemberBinding="{Binding Load.BOLFileView}">
+          <telerik:GridViewDataColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock Visibility="{Binding Load.BOLFileView, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Command="{Binding Source={StaticResource proxy}, Path=Data.dc.OpenBOLCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                  <Run Text="open"/>
+                </Hyperlink>
+                <Run Text="{Binding Load.BOLDateView, StringFormat=d, Mode=OneWay}"/>
+              </TextBlock>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.CellTemplate>
+        </telerik:GridViewDataColumn>
+        <!-- Invoice -->
+        <telerik:GridViewDataColumn Header="Invoice" DataMemberBinding="{Binding Load.InvoiceNumber}">
+          <telerik:GridViewDataColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock Visibility="{Binding Load.InvoiceNumber, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink
+                    IsEnabled="{Binding Load.InvoiceFile, Converter={StaticResource ObjectToBoolConverter}}"
+                    Command="{Binding Source={StaticResource proxy}, Path=Data.dc.OpenInvoiceCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                  <Run Text="{Binding Load.InvoiceNumber}"/>
+                </Hyperlink>
+                <TextBlock Margin="5,0" Foreground="Gray"
+                    Text="{Binding Load.EmailInvoiceSentDate, StringFormat=Sent {0:d}}"
+                    Visibility="{Binding Load.EmailInvoiceSentDate, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+              </TextBlock>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.CellTemplate>
+        </telerik:GridViewDataColumn>
+        <!-- Check -->
+        <telerik:GridViewDataColumn Header="Check" DataMemberBinding="{Binding Load.CheckNumber}">
+          <telerik:GridViewDataColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock>
+                <Hyperlink
+                    IsEnabled="{Binding Load.CheckFile, Converter={StaticResource ObjectToBoolConverter}}"
+                    Command="{Binding Source={StaticResource proxy}, Path=Data.dc.OpenCheckCommand}" helpers:UIHelper.CommandParameter="{Binding}">
+                  <Run Text="{Binding Load.CheckNumber}"/>
+                </Hyperlink>
+                <Run Text="{Binding Load.CheckDate, StringFormat=d}"/>
+              </TextBlock>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.CellTemplate>
+        </telerik:GridViewDataColumn>
+        <!-- Comment -->
+        <telerik:GridViewDataColumn Width="*" ColumnGroupName="Load"
+                Header="{Binding Data.Origin.BoardType, Source={StaticResource proxy}, Converter={StaticResource BoardToComment1NameConverter}, Mode=OneWay}"
+                DataMemberBinding="{Binding Load.Comment1Text}">
+          <telerik:GridViewDataColumn.CellStyle>
+            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+              <Setter Property="Background" Value="{Binding Load.Comment1Background}"/>
+              <Setter Property="Foreground" Value="{Binding Load.Comment1Foreground}"/>
+              <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.Comment1Text, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+            </Style>
+          </telerik:GridViewDataColumn.CellStyle>
+          <telerik:GridViewDataColumn.ToolTipTemplate>
+            <DataTemplate>
+              <Grid>
+                <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                        Xaml="{Binding Load.Comments, Mode=OneWay}"
+                        RichTextBox="{Binding ElementName=richTextBox}"
+                        SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                <telerik:RadRichTextBox x:Name="richTextBox"/>
+              </Grid>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.ToolTipTemplate>
+        </telerik:GridViewDataColumn>
+        <!-- Comment2 -->
+        <telerik:GridViewDataColumn Width="*"
+            Header="{Binding Data.Origin.BoardType, Source={StaticResource proxy}, Converter={StaticResource BoardToComment2NameConverter}, Mode=OneWay}"
+            DataMemberBinding="{Binding Load.Comment2Text}">
+          <telerik:GridViewDataColumn.CellStyle>
+            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+              <Setter Property="Background" Value="{Binding Load.Comment2Background}"/>
+              <Setter Property="Foreground" Value="{Binding Load.Comment2Foreground}"/>
+              <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.Comment2Text, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+            </Style>
+          </telerik:GridViewDataColumn.CellStyle>
+          <telerik:GridViewDataColumn.ToolTipTemplate>
+            <DataTemplate>
+              <Grid>
+                <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                    Xaml="{Binding Load.Comments2, Mode=OneWay}"
+                    RichTextBox="{Binding ElementName=richTextBox}"
+                    SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                <telerik:RadRichTextBox x:Name="richTextBox" />
+              </Grid>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.ToolTipTemplate>
+        </telerik:GridViewDataColumn>
+        <!-- Consolidation -->
+        <telerik:GridViewDataColumn Width="*"
+            Header="{Binding Data.Origin.BoardType, Source={StaticResource proxy}, Converter={StaticResource BoardToConsolidationNameConverter}, Mode=OneWay}"
+            DataMemberBinding="{Binding Load.ConsolidationText}">
+          <telerik:GridViewDataColumn.CellStyle>
+            <Style TargetType="telerik:GridViewCell" BasedOn="{StaticResource {x:Type telerik:GridViewCell}}">
+              <Setter Property="Background" Value="{Binding Load.ConsolidationBackground}"/>
+              <Setter Property="Foreground" Value="{Binding Load.ConsolidationForeground}"/>
+              <Setter Property="ToolTipService.IsEnabled" Value="{Binding Load.ConsolidationText, Converter={StaticResource NotEmptyStringToBoolConverter}}"/>
+            </Style>
+          </telerik:GridViewDataColumn.CellStyle>
+          <telerik:GridViewDataColumn.ToolTipTemplate>
+            <DataTemplate>
+              <Grid>
+                <telerik:XamlDataProvider x:Name="xamlDataProvider"
+                    Xaml="{Binding Load.Comments2, Mode=OneWay}"
+                    RichTextBox="{Binding ElementName=richTextBox}"
+                    SetupDocument="{x:Static helpers:UIElementHelper.XamlDataProvider_OnSetupDocument}"/>
+                <telerik:RadRichTextBox x:Name="richTextBox" />
+              </Grid>
+            </DataTemplate>
+          </telerik:GridViewDataColumn.ToolTipTemplate>
+        </telerik:GridViewDataColumn>
+        <telerik:GridViewDataColumn Header="Tracker#" DataMemberBinding="{Binding Load.TrackerId}" />
+        <telerik:GridViewDataColumn Header="CarrierView Phone" DataMemberBinding="{Binding Load.CarrierViewPhone}" />
+        <telerik:GridViewDataColumn Header="Deleted" DataMemberBinding="{Binding Load.IsDeleted, Converter={StaticResource BooleanToYesNoConverter}}" />
+      </telerik:RadGridView.Columns>
+    </telerik:RadGridView>
+    <!--Error message-->
+    <TextBlock x:Name="tbError" Grid.Row="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+    <!--Progress bar-->
+    <telerik:RadProgressBar x:Name="progressBar" Grid.Row="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+    <Button x:Name="btnOk" Grid.Row="3" Style="{StaticResource OkButtonStyle}" Visibility="Collapsed">OK</Button>
+    <Button x:Name="btnClose" Grid.Row="3" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+  </Grid>
+</dialogs:BaseDispatchDialog>
+
+
+
+
+
+
+

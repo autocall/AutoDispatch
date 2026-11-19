@@ -1,0 +1,408 @@
+﻿<UserControl x:Class="AutoCall.WPF.Dialogs.Dispatch.UserControls.TrailerLayout"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:core="clr-namespace:AutoCall.WPF.Core"
+             xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+             xmlns:helpers="clr-namespace:AutoDispatch.Logic.Helpers;assembly=AutoDispatch.Logic.Contracts"
+             xmlns:dispatch="clr-namespace:AutoCall.WPF.Converters.Dispatch"
+             mc:Ignorable="d" Name="trailerLayout"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <core:BindingProxy x:Key="proxy" Data="{Binding Layout}"/>
+        <converters:ColorToSolidColorBrushValueConverter x:Key="ColorToSolidColorBrushValueConverter"/>
+        <dispatch:TrailerLayout_PalletToThicknessMultiConverter x:Key="PalletToThicknessConverter"/>
+        <dispatch:TrailerLayout_PalletToMarginMultiConverter x:Key="PalletToMarginConverter" />
+    </UserControl.Resources>
+
+    <Border Padding="6" BorderThickness="1,1,1,0" BorderBrush="Black" SnapsToDevicePixels="True" Background="#FFE0E0E0">
+        <Grid DataContext="{Binding Layout}">
+            <Grid.Resources>
+                <DataTemplate x:Key="template0">
+                    <Border BorderBrush="Black" BorderThickness="1" Margin="0,0,-1,-1">
+                        <ContentControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" BorderBrush="Black" AllowDrop="True" Background="DarkGray" BorderThickness="0">
+                                </Border>
+                            </Grid>
+                        </ContentControl>
+                    </Border>
+                </DataTemplate>
+                <DataTemplate x:Key="template1">
+                    <Border BorderBrush="Black" BorderThickness="1" Margin="0,0,-1,-1">
+                        <ContentControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" AllowDrop="True"
+                                        DataContext="{Binding Pallets[0]}"
+                                        MouseEnter="template_MouseEnter"
+                                        MouseLeave="template_MouseLeave"
+                                        MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                        DragEnter="template_CheckDropTarget"
+                                        Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                    <!--Margin="-2,-2,2,2"-->
+                                    <Border.Margin>
+                                        <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                            <Binding/>
+                                            <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                            <Binding Path="Trigger"/>
+                                        </MultiBinding>
+                                    </Border.Margin>
+                                    <Border.BorderThickness>
+                                        <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                            <Binding/>
+                                            <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                            <Binding Path="Trigger"/>
+                                        </MultiBinding>
+                                    </Border.BorderThickness>
+                                    <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True">
+                                    </TextBlock>
+                                </Border>
+                            </Grid>
+                        </ContentControl>
+                    </Border>
+                </DataTemplate>
+                <DataTemplate x:Key="template2">
+                    <Border BorderBrush="Black" BorderThickness="1" Margin="0,0,-1,-1">
+                        <ContentControl AllowDrop="True" >
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" AllowDrop="True"
+                                        DataContext="{Binding Pallets[1]}"
+                                        MouseEnter="template_MouseEnter"
+                                        MouseLeave="template_MouseLeave"
+                                        MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                        DragEnter="template_CheckDropTarget"
+                                        Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                    <Border.Margin>
+                                        <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                            <Binding/>
+                                            <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                            <Binding Path="Trigger"/>
+                                        </MultiBinding>
+                                    </Border.Margin>
+                                    <Border.BorderThickness>
+                                        <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                            <Binding/>
+                                            <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                            <Binding Path="Trigger"/>
+                                        </MultiBinding>
+                                    </Border.BorderThickness>
+                                    <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                </Border>
+                                <Border Grid.Column="1" AllowDrop="True"
+                                        DataContext="{Binding Pallets[0]}"
+                                        MouseEnter="template_MouseEnter"
+                                        MouseLeave="template_MouseLeave"
+                                        MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                        DragEnter="template_CheckDropTarget"
+                                        Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                    <Border.Margin>
+                                        <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                            <Binding/>
+                                            <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                            <Binding Path="Trigger"/>
+                                        </MultiBinding>
+                                    </Border.Margin>
+                                    <Border.BorderThickness>
+                                        <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                            <Binding/>
+                                            <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                            <Binding Path="Trigger"/>
+                                        </MultiBinding>
+                                    </Border.BorderThickness>
+                                    <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                </Border>
+                            </Grid>
+                        </ContentControl>
+                    </Border>
+                </DataTemplate>
+                <DataTemplate x:Key="template3">
+                    <ContentControl >
+                        <Border BorderBrush="Black" BorderThickness="1" Margin="0,0,-1,-1">
+                            <ContentControl AllowDrop="True"  >
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" AllowDrop="True"
+                                            DataContext="{Binding Pallets[2]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+                                    <Border Grid.Column="1" AllowDrop="True"
+                                            DataContext="{Binding Pallets[1]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+                                    <Border Grid.Column="2" AllowDrop="True"
+                                            DataContext="{Binding Pallets[0]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+                                </Grid>
+                            </ContentControl>
+                        </Border>
+                    </ContentControl>
+                </DataTemplate>
+                <DataTemplate x:Key="template4">
+                    <ContentControl >
+                        <Border BorderBrush="Black" BorderThickness="1" Margin="0,0,-1,-1">
+                            <ContentControl AllowDrop="True"  >
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" AllowDrop="True"
+                                            DataContext="{Binding Pallets[3]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+
+                                    <Border Grid.Column="1" AllowDrop="True"
+                                            DataContext="{Binding Pallets[2]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+                                    <Border Grid.Column="2" AllowDrop="True"
+                                            DataContext="{Binding Pallets[1]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+                                    <Border Grid.Column="3" AllowDrop="True"
+                                            DataContext="{Binding Pallets[0]}"
+                                            MouseEnter="template_MouseEnter"
+                                            MouseLeave="template_MouseLeave"
+                                            MouseLeftButtonDown="template_MouseLeftButtonDown"
+                                            DragEnter="template_CheckDropTarget"
+                                            Background="{Binding Load.Background, Converter={StaticResource ColorToSolidColorBrushValueConverter}}" BorderBrush="Black">
+                                        <Border.Margin>
+                                            <MultiBinding Converter="{StaticResource PalletToMarginConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.Margin>
+                                        <Border.BorderThickness>
+                                            <MultiBinding Converter="{StaticResource PalletToThicknessConverter}">
+                                                <Binding/>
+                                                <Binding Path="Data" Source="{StaticResource proxy}"/>
+                                                <Binding Path="Trigger"/>
+                                            </MultiBinding>
+                                        </Border.BorderThickness>
+                                        <TextBlock Text="{Binding Load.IndexString}" Foreground="{Binding Load.Foreground, Converter={StaticResource ColorToSolidColorBrushValueConverter}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" AllowDrop="True"/>
+                                    </Border>
+                                </Grid>
+                            </ContentControl>
+                        </Border>
+                    </ContentControl>
+                </DataTemplate>
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ItemsControl Name="trailerContentControl" Grid.Row="0" ItemsSource="{Binding}">
+                <!-- http://stackoverflow.com/questions/3543515/wpf-reapply-datatemplateselector-when-a-certain-value-changes -->
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ContentControl Content="{Binding}">
+                            <ContentControl.Style>
+                                <Style TargetType="{x:Type ContentControl}">
+                                    <!--<Setter Property="ContentTemplate" Value="{DynamicResource ItemTemplate}"/>-->
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Pallets.Count}" Value="0">
+                                            <Setter Property="ContentTemplate" Value="{DynamicResource template0}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Pallets.Count}" Value="1">
+                                            <Setter Property="ContentTemplate" Value="{DynamicResource template1}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Pallets.Count}" Value="2">
+                                            <Setter Property="ContentTemplate" Value="{DynamicResource template2}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Pallets.Count}" Value="3">
+                                            <Setter Property="ContentTemplate" Value="{DynamicResource template3}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Pallets.Count}" Value="4">
+                                            <Setter Property="ContentTemplate" Value="{DynamicResource template4}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentControl.Style>
+                        </ContentControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid SnapsToDevicePixels="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style>
+                        <Setter Property="Grid.Row" Value="{Binding RowIndex}" />
+                        <Setter Property="Grid.Column" Value="{Binding ColumnIndex}" />
+                        <Setter Property="helpers:SizeObserver.Observe" Value="True" />
+                        <Setter Property="helpers:SizeObserver.ObservedWidth" Value="{Binding DataContext.Width, Mode=OneWayToSource, ElementName=trailerLayout}" />
+                        <Setter Property="helpers:SizeObserver.ObservedHeight" Value="{Binding DataContext.Height, Mode=OneWayToSource, ElementName=trailerLayout}" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+            </ItemsControl>
+            <TextBlock Grid.Row="1" Foreground="Gray" FontWeight="Black" VerticalAlignment="Center" HorizontalAlignment="Center">DOOR</TextBlock>
+        </Grid>
+    </Border>
+
+</UserControl>

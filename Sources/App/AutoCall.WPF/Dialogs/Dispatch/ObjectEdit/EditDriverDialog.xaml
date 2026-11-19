@@ -1,0 +1,233 @@
+﻿<dialogs:BaseDispatchDialog x:Class="AutoCall.WPF.Dialogs.Dispatch.EditDriverDialog"
+    xmlns:dialogs="clr-namespace:AutoCall.WPF.Dialogs"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:uc1="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:uc2="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    SizeToContent="Height" Width="770" 
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    Background="{x:Static SystemColors.ControlBrush}"
+    WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+    Loaded="EditDriverDialog_Loaded">
+    <dialogs:BaseDispatchDialog.Resources>
+        <ResourceDictionary>
+            <Style x:Key="phoneTextBox" TargetType="{x:Type uc1:RadPhoneTextInput}" BasedOn="{StaticResource fieldRadMaskedTextInput}">
+                <Setter Property="Margin" Value="0,5,0,5"/>
+                <Setter Property="IsLastPositionEditable" Value="False"/>
+                <Setter Property="IsClearButtonVisible" Value="False"/>
+            </Style>
+            <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/AutoDispatch;component/Themes/ComboBoxEx.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </dialogs:BaseDispatchDialog.Resources>
+    <Grid ShowGridLines="False">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="125"/>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="65"/>
+            <ColumnDefinition Width="130"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource titleTextBlock}" Text="Name" />
+        <TextBox Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource fieldTextBox}" Text="{Binding Name}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource titleTextBlock}" Text="Email" />
+        <TextBox Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource fieldTextBox}" Text="{Binding Email}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource titleTextBlock}" Text="Phone" />
+        <uc1:RadPhoneTextInput Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="3" Style="{StaticResource phoneTextBox}" Value="{Binding Phone}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource titleTextBlock}" Text="Truck" />
+        <uc1:ComboBoxEx Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="3" x:Name="cbTrucks"
+            SelectedValue="{Binding TruckId}" Margin="0,5,5,5" Padding="5"
+            SelectedValuePath="EntityId" DisplayMemberPath="Number" SelectionBoxNullValueText="" NullValueText=""/>
+
+        <TextBlock Grid.Column="0" Grid.Row="4" Style="{StaticResource titleTextBlock}" Text="THE APPLICATION&#x0a;OF EMPLOYMENT"/>
+        <TextBlock Grid.Column="0" Grid.Row="5" Style="{StaticResource titleTextBlock}" Text="MVR" />
+        <TextBlock Grid.Column="0" Grid.Row="6" Style="{StaticResource titleTextBlock}" Text="MEDICAL CARD" />
+        <TextBlock Grid.Column="0" Grid.Row="7" Style="{StaticResource titleTextBlock}" Text="CDL" />
+        <TextBlock Grid.Column="0" Grid.Row="8" Style="{StaticResource titleTextBlock}" Text="DOT INSPECTIONS" />
+        <TextBlock Grid.Column="0" Grid.Row="9" Style="{StaticResource titleTextBlock}" Text="BACKGROUND" />
+        <TextBlock Grid.Column="0" Grid.Row="10" Style="{StaticResource titleTextBlock}" Text="DRUG TEST" />
+        <TextBlock Grid.Column="0" Grid.Row="11" Style="{StaticResource titleTextBlock}" Text="RANDOM DRUG TEST" Margin="5,0"/>
+        <TextBlock Grid.Column="0" Grid.Row="12" Style="{StaticResource titleTextBlock}" Text="ACH"/>
+        <TextBlock Grid.Column="0" Grid.Row="13" Style="{StaticResource titleTextBlock}" Text="W9"/>
+        <!-- THE APPLICATION OF EMPLOYMENT -->
+        <StackPanel Grid.Column="1" Grid.Row="4" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding THE_APPLICATION_OF_EMPLOYMENT_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenTHE_APPLICATION_OF_EMPLOYMENT_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseTHE_APPLICATION_OF_EMPLOYMENT_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <!-- MVR -->
+        <StackPanel Grid.Column="1" Grid.Row="5" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding MVR_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenMVR_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseMVR_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <TextBlock Grid.Column="2" Grid.Row="5" Style="{StaticResource titleTextBlock}" Text="Expiration" Margin="5,0"/>
+        <telerik:RadDatePicker Grid.Column="3" Grid.Row="5"
+                HorizontalAlignment="Left" VerticalContentAlignment="Center" Width="120" Margin="0,5,5,5" Padding="5"
+                SelectedDate="{Binding MVR_Expiration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <!-- MEDICAL CARD -->
+        <StackPanel Grid.Column="1" Grid.Row="6" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding MEDICAL_CARD_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenMEDICAL_CARD_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseMEDICAL_CARD_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <TextBlock Grid.Column="2" Grid.Row="6" Style="{StaticResource titleTextBlock}" Text="Expiration" Margin="5,0"/>
+        <telerik:RadDatePicker Grid.Column="3" Grid.Row="6"
+                HorizontalAlignment="Left" VerticalContentAlignment="Center" Width="120" Margin="0,5,5,5" Padding="5"
+                SelectedDate="{Binding MEDICAL_CARD_Expiration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <!-- CDL -->
+        <StackPanel Grid.Column="1" Grid.Row="7" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding CDL_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenCDL_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseCDL_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <TextBlock Grid.Column="2" Grid.Row="7" Style="{StaticResource titleTextBlock}" Text="Expiration" Margin="5,0"/>
+        <telerik:RadDatePicker Grid.Column="3" Grid.Row="7"
+                HorizontalAlignment="Left" VerticalContentAlignment="Center" Width="120" Margin="0,5,5,5" Padding="5"
+                SelectedDate="{Binding CDL_Expiration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <!-- DOT INSPECTIONS -->
+        <StackPanel Grid.Column="1" Grid.Row="8" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding DOT_INSPECTIONS_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenDOT_INSPECTIONS_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseDOT_INSPECTIONS_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <!-- BACKGROUND -->
+        <StackPanel Grid.Column="1" Grid.Row="9" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding BACKGROUND_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenBACKGROUND_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseBACKGROUND_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <!-- DRUG TEST -->
+        <StackPanel Grid.Column="1" Grid.Row="10" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding DRUG_TEST_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenDRUG_TEST_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseDRUG_TEST_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <!-- RANDOM DRUG TEST -->
+        <StackPanel Grid.Column="1" Grid.Row="11" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding RANDOM_DRUG_TEST_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenRANDOM_DRUG_TEST_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseRANDOM_DRUG_TEST_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <!-- ACH -->
+        <StackPanel Grid.Column="1" Grid.Row="12" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding ACH_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenACH_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseACH_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <TextBlock Grid.Column="2" Grid.Row="12" Style="{StaticResource titleTextBlock}" Text="Expiration" Margin="5,0"/>
+        <telerik:RadDatePicker Grid.Column="3" Grid.Row="12"
+                HorizontalAlignment="Left" VerticalContentAlignment="Center" Width="120" Margin="0,5,5,5" Padding="5"
+                SelectedDate="{Binding ACH_Expiration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <!-- W9 -->
+        <StackPanel Grid.Column="1" Grid.Row="13" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource titleTextBlock}"
+                Visibility="{Binding W9_File, Converter={StaticResource NotNullToVisibilityConverter}}">
+                <Hyperlink Click="OpenW9_OnClick">
+                    <Run>Open</Run>
+                </Hyperlink>
+            </TextBlock>
+            <telerik:RadButton Click="BrowseW9_OnClick" ToolTip="Attach Photo" Margin="0,5,5,0" VerticalAlignment="Center">
+                <uc1:AutoGreyableImage Source="/AutoDispatch;component/Resources/folder_open16.png" Height="16"/>
+            </telerik:RadButton>
+        </StackPanel>
+        <TextBlock Grid.Column="2" Grid.Row="13" Style="{StaticResource titleTextBlock}" Text="Expiration" Margin="5,0"/>
+        <telerik:RadDatePicker Grid.Column="3" Grid.Row="13"
+                HorizontalAlignment="Left" VerticalContentAlignment="Center" Width="120" Margin="0,5,5,5" Padding="5"
+                SelectedDate="{Binding W9_Expiration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        
+        <!--Manage Files control-->
+        <uc2:FilesControl x:Name="filesControl" Grid.Column="4" Grid.Row="0" Grid.RowSpan="13"
+             Height="435" VerticalAlignment="Top" Margin="5" DataContext="{Binding Files, Mode=OneWay}"/>
+
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="16" Grid.ColumnSpan="10" TextWrapping="Wrap" Margin="5" Foreground="Red" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="16" Grid.ColumnSpan="10" Margin="5" IsIndeterminate="True" Visibility="Hidden" />
+
+        <Button x:Name="btnOk" Grid.Row="17" Grid.ColumnSpan="10" Style="{StaticResource OkButtonStyle}" Click="btnOk_Clicked">OK</Button>
+        <Button x:Name="btnClose" Grid.Row="17" Grid.ColumnSpan="10" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</dialogs:BaseDispatchDialog>

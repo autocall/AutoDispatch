@@ -1,0 +1,137 @@
+﻿<dispatch1:DetailsBaseDialog 
+    x:Class="AutoCall.WPF.Dialogs.Dispatch.DetailsTrailerLayoutDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:converters="clr-namespace:AutoCall.WPF.Converters"
+    xmlns:core="clr-namespace:AutoCall.WPF.Core"
+    xmlns:userControls="clr-namespace:AutoCall.WPF.Dialogs.Dispatch.UserControls"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+    xmlns:userControls1="clr-namespace:AutoCall.WPF.UserControls"
+    xmlns:dispatch1="clr-namespace:AutoCall.WPF.Dialogs.Dispatch"
+    mc:Ignorable="d" 
+    Title="Trailer" Width="750" Height="750"
+    Icon="/AutoDispatch;component/Resources/icon.ico" 
+    WindowStartupLocation="CenterScreen"
+    Loaded="DriverDetailesLoadDialog_OnLoaded"
+    Background="{x:Static SystemColors.ControlBrush}">
+    <Window.Resources>
+        <converters:ColorToSolidColorBrushValueConverter x:Key="ColorToSolidColorBrushValueConverter"/>
+        <converters:CompareToVisibilityConverter x:Key="CompareToVisibilityConverter"/>
+        <converters:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True"/>
+        <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+        <converters:AnyToVisibilityConverter x:Key="AnyToVisibilityConverter"/>
+        <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
+        <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
+        <core:BindingProxy x:Key="rootProxy" Data="{Binding RelativeSource={RelativeSource AncestorType={x:Type dispatch1:DetailsBaseDialog}, Mode=FindAncestor}}"/>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <!--Loading control-->
+        <userControls1:LoadingControl x:Name="loading" Panel.ZIndex="100" Visibility="Collapsed" Grid.RowSpan="10" Grid.ColumnSpan="10" />
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <!-- driver / truck / trailer -->
+            <Border Grid.Row="0" BorderThickness="1" BorderBrush="Black" Background="White">
+                <Grid Margin="5">
+                    <StackPanel>
+                        <userControls:DriverInfo
+                            DataContext="{Binding Driver}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                        <userControls:TruckInfo
+                            DataContext="{Binding Truck}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                        <userControls:TrailerInfo
+                            DataContext="{Binding Trailer}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <telerik:RadTreeView Name="loadsListView" 
+                    BorderThickness="0" BorderBrush="Black" 
+                    ItemsSource="{Binding Loads}" 
+                    Visibility="{Binding Loads, Converter={StaticResource AnyToVisibilityConverter}}"
+                    Background="{x:Static SystemColors.ControlBrush}"
+                    HorizontalContentAlignment="Stretch" 
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <telerik:RadTreeView.ItemContainerStyle>
+                        <Style TargetType="telerik:RadTreeViewItem" BasedOn="{StaticResource LoadsRadTreeViewItemStyle}">
+                            <Setter Property="IsExpanded" Value="True"/>
+                            <!--<EventSetter Event="MouseDoubleClick" Handler="loadItemsControl_MouseDoubleClick"/>-->
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="Edit Comments" DataContext="{Binding Load}">
+                                            <MenuItem.Style>
+                                                <Style TargetType="MenuItem">
+                                                    <EventSetter Event="Click" Handler="editComments_OnClicked"/>
+                                                </Style>
+                                            </MenuItem.Style>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </telerik:RadTreeView.ItemContainerStyle>
+                    <telerik:RadTreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <Grid>
+                                <userControls:LoadDetails />
+                                <StackPanel Orientation="Vertical" DataContext="{Binding}" 
+                                    HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                    <!-- At The Pick Up -->
+                                    <Button Width="100" Style="{StaticResource ButtonInDetailsStyle}"
+                                        Command="{Binding Data.dc.CarrierDispatchAtPickUpCommand, Source={StaticResource rootProxy}}"
+                                        CommandParameter="{Binding}">At The Pick Up</Button>
+                                    <!-- Picke Up -->
+                                    <Button Width="100" Style="{StaticResource ButtonInDetailsStyle}"
+                                        Command="{Binding Data.dc.CarrierDispatchPickedUpCommand, Source={StaticResource rootProxy}}"
+                                        CommandParameter="{Binding}">Picked Up</Button>
+                                    <!-- In Transit -->
+                                    <Button Width="100" Style="{StaticResource ButtonInDetailsStyle}"
+                                        Command="{Binding Data.dc.CarrierDispatchInTransitCommand, Source={StaticResource rootProxy}}"
+                                        CommandParameter="{Binding}">In Transit</Button>
+                                    <!-- At Delivery -->
+                                    <Button Width="100" Style="{StaticResource ButtonInDetailsStyle}"
+                                        Command="{Binding Data.dc.CarrierDispatchAtDeliveryCommand, Source={StaticResource rootProxy}}"
+                                        CommandParameter="{Binding}">At Delivery</Button>
+                                    <!-- Delivered -->
+                                    <Button Width="100" Style="{StaticResource ButtonInDetailsStyle}"
+                                        Command="{Binding Data.dc.CarrierDispatchDeliveredCommand, Source={StaticResource rootProxy}}"
+                                        CommandParameter="{Binding}">Delivered</Button>
+                                    <!-- Move To Accounting -->
+                                    <Button Width="120" Style="{StaticResource ButtonInDetailsStyle}"
+                                        Command="{Binding Data.dc.MoveToAccountingAsDeliveredCommand, Source={StaticResource rootProxy}}"
+                                        CommandParameter="{Binding}">Move to Accounting</Button>
+                                </StackPanel>
+                            </Grid>
+                        </HierarchicalDataTemplate>
+                    </telerik:RadTreeView.ItemTemplate>
+                </telerik:RadTreeView>
+            </ScrollViewer>
+        </Grid>
+        <!-- Trailer layout -->
+        <userControls:TrailerLayout Grid.Column="1" Margin="5,10,10,5"
+            DataContext="{Binding Trailer}" Visibility="{Binding Converter={StaticResource NotNullToVisibilityConverter}}"/>
+        <!--Error message-->
+        <TextBlock x:Name="tbError" Grid.Row="1" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5" Foreground="Red" MaxHeight="80" HorizontalAlignment="Right" Visibility="Collapsed" />
+        <!--Progress bar-->
+        <telerik:RadProgressBar x:Name="progressBar" Grid.Row="1" Grid.ColumnSpan="2" Margin="5" IsIndeterminate="True" Height="10" Visibility="Collapsed" />
+
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Orientation="Horizontal">
+            <Button x:Name="btnMap" Click="btnMap_Clicked" Width="100" Margin="5">Map</Button>
+            <Button x:Name="btnEditLayout" Click="btnEditLayout_Clicked" Width="100" Margin="5">Edit layout</Button>
+        </StackPanel>
+        <Button x:Name="btnClose" Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource CloseButtonStyle}" Click="btnClose_Clicked">Close</Button>
+    </Grid>
+</dispatch1:DetailsBaseDialog>
