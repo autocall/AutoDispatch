@@ -3,7 +3,7 @@
 -------- каталоги под volume контейнера --------
 sudo mkdir -p /home/autodispatch/logs /home/autodispatch/keys /home/autodispatch/config /home/autodispatch/download /home/autodispatch/files
 # download/ — /Download сайта: ClickOnce-публикация AutoDispatch App (setup.exe, AutoDispatch.application, Application Files/)
-# files/ — документы dispatch, каталог {EntityId} (V1 E:\Files, ~150 ГБ; заливка — Scripts/sync-dispatch-files.ps1, этап 7)
+# files/ — документы dispatch, каталог {EntityId} (весь V1 E:\Files, ~255 ГБ: FileZilla в /home/safer/temp, затем Scripts/copy-dispatch-files.sh; AI/wiki/data-migration.md «Файлы»)
 # конфиг с секретами: шаблон Deploy/AutoDispatch.Web/appsettings.Production.json.example, заполнить и положить сюда
 sudo nano /home/autodispatch/config/appsettings.Production.json
 sudo chmod 600 /home/autodispatch/config/appsettings.Production.json

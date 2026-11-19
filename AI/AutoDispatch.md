@@ -14,7 +14,7 @@
 - [[plan]] — этапы, оценка, решения
 - [[v1-inventory]] — что именно переносим из V1 и что к dispatch не относится
 - [[protocol]] — `Api/Dispatch/Request|Response`, конверт `EventRequest`, что сохраняем в V3
-- [[data-migration]] — замеры, блоки переноса, файлы 147.5 ГБ
+- [[data-migration]] — замеры, блоки переноса, догон, файлы (весь `E:\Files` FileZilla в `/home/safer/temp`, 255 ГБ, затем `Scripts/copy-dispatch-files.sh`)
 - [[deploy]] — контейнер, поддомен, volume `/files`, секреты
 
 Индекс — `AI/wiki/index.md`, журнал — `AI/wiki/log.md`.

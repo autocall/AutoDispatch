@@ -226,3 +226,20 @@ allowed, поэтому не попала в `#company`, а её Truck/Driver/Tr
 Блок 5 брал только Load/DatCompany/SetupPacket — теперь все сущности с каталогами (Driver, Truck, Trailer, Defect, DefectRepair, DispatchCompany),
 из `autodispatch`, Guid в нижнем регистре. Новый `Scripts/sync-dispatch-files.ps1` (Full пачками с возобновлением, Diff с `-DeleteExtra`).
 Правки скрипта и синхронизация не выполнялись. [[data-migration]] «Догон», «Файлы»; [[plan]] этап 7.
+
+## [2026-11-18] update | sync-dispatch-files.ps1 — параметры -Tar/-Ssh
+На сервере V1 нет `tar` (Server 2016 или старше). Добавлены пути к портативным bsdtar и Win32-OpenSSH; прогон с заглушкой ssh локально:
+каталог `AAAA…` на диске уходит в архив как `aaaa…`, строки-заголовки `dirs.txt` отбрасываются, повторный запуск пропускает залитые пачки. [[data-migration]] «Файлы».
+
+## [2026-11-19] decision | Документы — весь E:\Files через FileZilla
+Решение пользователя: документы переносятся целиком FileZilla (подключения есть), а не скриптом по списку — на сервере V1 нет `tar`/`ssh`.
+Хост: свободно 765 ГБ из 878, в `/home/autodispatch/files` пока только `_recycle`, `_temp`. После заливки — каталоги в нижний регистр (команда в
+[[data-migration]] «Файлы»), досинк — `robocopy /MAXAGE` + FileZilla. `sync-dispatch-files.ps1` помечен «не используется». Обновлены
+[[data-migration]], [[deploy]], [[plan]] («Решить»), `Deploy/server-setup.txt`, хаб.
+
+## [2026-11-19] update | Документы: FileZilla в /home/safer/temp, затем copy-dispatch-files.sh
+Уточнение пользователя: FileZilla кладёт весь `E:\Files` в `/home/safer/temp`, оттуда — в `/home/autodispatch/files`. Новый `Scripts/copy-dispatch-files.sh`
+(на хосте под root): rsync всех каталогов-Guid, имена в нижнем регистре, root 755/644, повтор докопирует только новое (досинк), `--check dirs.txt`
+(блок 5) — список отсутствующих. Проверен на хосте на тестовых каталогах в `/tmp` (регистр, права 600 → 644, пробелы в именах, дельта), тест удалён.
+Хост: `temp` и `files` на одном `/dev/md2`, свободно 765 ГБ — две копии по 255 ГБ помещаются; `temp` никто не чистит. `temp` удалить после
+переключения. Ручная команда `mv` в нижний регистр в [[data-migration]] заменена скриптом; обновлены [[plan]], [[deploy]], `Deploy/server-setup.txt`, хаб.

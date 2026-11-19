@@ -13,10 +13,10 @@
 | Контейнер / порт | `autocall.web` → `127.0.0.1:5004` | `autodispatch.web` → `127.0.0.1:5005` |
 | Каталоги хоста | `/home/autocall/{logs,keys,config,download}` | `/home/autodispatch/{logs,keys,config,download,files}` |
 | БД | `db.myautocall.net`: `autocall_v3`, `autocall_v3_log` | `autodispatch`, `autodispatch_log`, логин `autodispatch` (`DataBase/create autodispatch.sql`; решено 2026-11-11) |
-| Образ | `mcr.microsoft.com/dotnet/aspnet:10.0`, `ASPNETCORE_URLS=http://+:8080`, volume `/logs /keys /download` | + volume `/files` (документы, 150 ГБ, место есть — 2026-11-11) |
+| Образ | `mcr.microsoft.com/dotnet/aspnet:10.0`, `ASPNETCORE_URLS=http://+:8080`, volume `/logs /keys /download` | + volume `/files` (документы — весь `E:\Files` V1, 255 ГБ; свободно 765 ГБ — 2026-11-19) |
 | Публикация Web | `Scripts/publish-autocall-web.ps1` | `Scripts/publish-autodispatch-web.ps1`: те же шаги, `-v /home/autodispatch/files:/files` |
 | Публикация App | `Scripts/publish-autocall-app.ps1` (ClickOnce, MSBuild VS 18, `tar | ssh` в `/download`) | `Scripts/publish-autodispatch-app.ps1`, `AssemblyName = AutoDispatch`, `/Download` нового контейнера |
-| Файлы | `Scripts/sync-dispatch-files.ps1` — первичная заливка и досинк ([[data-migration]]) |
+| Файлы | FileZilla: весь `E:\Files` → `/home/safer/temp`, затем `Scripts/copy-dispatch-files.sh` → `/home/autodispatch/files` (каталоги в нижнем регистре); досинк — `robocopy /MAXAGE` + FileZilla + тот же скрипт (решено 2026-11-19, [[data-migration]] «Файлы») |
 
 ## `server-setup.txt` (по образцу V3)
 
