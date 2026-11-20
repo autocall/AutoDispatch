@@ -30,6 +30,7 @@ namespace AutoDispatch.Logic.Converters {
         }
 
         public static string ToDto(List<ExpenseViewModel> source) {
+            if (source == null) return null; // V1 AutoMapper TypeConverter: null-источник → null без вызова конвертера (части после Split)
             if (source.Any()) {
                 return JsonExtension.SerializeObject(source.Where(e => e.Cost != null).ToArray());
             } else {
@@ -59,6 +60,7 @@ namespace AutoDispatch.Logic.Converters {
         }
 
         public static string ToDto(List<GainViewModel> source) {
+            if (source == null) return null; // V1 AutoMapper TypeConverter: null-источник → null без вызова конвертера
             if (source.Any()) {
                 return JsonExtension.SerializeObject(source.Where(e => e.Cost != null).ToArray());
             } else {

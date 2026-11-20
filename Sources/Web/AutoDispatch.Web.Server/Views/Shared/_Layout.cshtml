@@ -39,6 +39,10 @@
                     <a class="btn btn-ghost btn-sm" href="/Admin/Monitor">Overview</a>
                     <a class="btn btn-ghost btn-sm" href="/Admin/Metrics">Metrics</a>
                 }
+                @* V1 Menu.cshtml: Dispatch Companies — у Admin в меню Admin, у Owner отдельным пунктом *@
+                @if (User.IsInRole(nameof(RoleEnum.Admin)) || User.IsInRole(nameof(RoleEnum.Owner))) {
+                    <a class="btn btn-ghost btn-sm" href="/Admin/DispatchCompanies">Dispatch Companies</a>
+                }
             </div>
             @* flex-1 (basis 0) на узком: группа не уходит на свою строку, длинный email обрезается *@
             <div class="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">

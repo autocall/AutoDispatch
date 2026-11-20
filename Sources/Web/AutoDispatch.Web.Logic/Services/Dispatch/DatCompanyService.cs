@@ -47,7 +47,7 @@ public class DatCompanyService : DispatchCrudService<DatCompanyDto, DatCompany> 
         var dbCompany = await GetByIdAsync<DispatchCompany>(webCompany.EntityId);
         var smtpSettings = new SmtpSettings(
             webCompany.SMTP_Email,
-            webCompany.SMTP_Password ?? dbCompany.SMTP_Password,
+            webCompany.SMTP_Password ?? dbCompany?.SMTP_Password,
             webCompany.SMTP_Host,
             webCompany.SMTP_Port);
         var emailObj = new Email.Email(email, webCompany.SMTP_Email, "Test", "Test");
@@ -58,7 +58,7 @@ public class DatCompanyService : DispatchCrudService<DatCompanyDto, DatCompany> 
         var dbCompany = await GetByIdAsync<DispatchCompany>(webCompany.EntityId);
         var smtpSettings = new SmtpSettings(
             webCompany.SMTP_SchemeEmail,
-            webCompany.SMTP_SchemePassword ?? dbCompany.SMTP_SchemePassword,
+            webCompany.SMTP_SchemePassword ?? dbCompany?.SMTP_SchemePassword,
             webCompany.SMTP_SchemeHost,
             webCompany.SMTP_SchemePort);
         var emailObj = new Email.Email(email, webCompany.SMTP_SchemeEmail, "Test", "Test Scheme");

@@ -1,0 +1,281 @@
+@using AutoDispatch.Web.Logic.Helpers.Dispatch
+@model DispatchCompanyFormViewModel
+@{
+    // V1 ActualCompany/Index (модалка knockout) → страница: обычный POST multipart; Load FMCSA и Send — htmx с полями этой формы
+    // пароль задан — маска (точки), сам пароль в страницу не попадает; маска или пусто при сохранении — прежний пароль
+    string PasswordValue(bool has) => has ? AutoDispatch.Web.Server.Converters.DispatchCompanyFormConverter.PasswordMask : "";
+    var customTypes = Enum.GetValues<CompanyCustomizationEnum>();
+}
+<form id="company-form" method="post" action="/Admin/DispatchCompanies/Save" enctype="multipart/form-data"
+      data-controller="board rows" class="flex flex-col gap-4">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="EntityId" />
+    <input type="hidden" asp-for="LogoSmall" />
+    <input type="hidden" asp-for="LogoBig" />
+    <div asp-validation-summary="All" class="text-error text-sm"></div>
+
+    <div class="card bg-base-100 shadow-sm p-4 grid gap-3 sm:grid-cols-2">
+        <h2 class="font-semibold sm:col-span-2">Company</h2>
+        <label class="form-control">
+            <span class="label-text">Dispatch Company MC#</span>
+            <div class="flex gap-2">
+                <input asp-for="McNumber" type="number" class="input input-bordered w-full" />
+                <button type="button" class="btn" hx-post="/Admin/DispatchCompanies/LoadFmcsa" hx-target="#company-form" hx-swap="outerHTML"
+                        hx-disabled-elt="this" title="FMCSA fields and generated logos by MC#">Load FMCSA</button>
+            </div>
+            <span asp-validation-for="McNumber" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Board</span>
+            <select asp-for="BoardType" class="select select-bordered w-full" data-board-target="select" data-action="board#update">
+                <option value="Carrier">Carrier</option>
+                <option value="Broker">Broker</option>
+            </select>
+        </label>
+        @if (Model.IsAdmin) {
+            <label class="form-control">
+                <span class="label-text">Company</span>
+                <select asp-for="CompanyId" class="select select-bordered w-full">
+                    <option value="">Select company...</option>
+                    @foreach (var company in Model.Companies) {
+                        <option value="@company.Id">@company.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="CompanyId" class="text-error text-xs"></span>
+            </label>
+        }
+        <label class="form-control sm:col-span-2">
+            <span class="label-text">Legal Name</span>
+            <input asp-for="LegalName" class="input input-bordered w-full" />
+            <span asp-validation-for="LegalName" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Small Logo 64x64</span>
+            <img class="size-16 rounded my-1" src="@Model.LogoSmall" alt="" />
+            <input type="file" name="logoSmallFile" accept="image/*" class="file-input file-input-bordered w-full" />
+            <span asp-validation-for="LogoSmall" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Big Logo (up to 1024x256)</span>
+            <img class="h-16 max-w-full object-contain object-left my-1" src="@Model.LogoBig" alt="" />
+            <input type="file" name="logoBigFile" accept="image/*" class="file-input file-input-bordered w-full" />
+            <span asp-validation-for="LogoBig" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Physical Address</span>
+            <textarea asp-for="PhysicalAddress" rows="2" class="textarea textarea-bordered w-full"></textarea>
+            <span asp-validation-for="PhysicalAddress" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Mailing Address</span>
+            <textarea asp-for="MailingAddress" rows="2" class="textarea textarea-bordered w-full"></textarea>
+            <span asp-validation-for="MailingAddress" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control sm:col-span-2" data-board-target="item" data-board="Broker">
+            <span class="label-text">Payment Instructions</span>
+            <textarea asp-for="PaymentInstructions" rows="2" class="textarea textarea-bordered w-full"></textarea>
+        </label>
+        <label class="form-control" data-board-target="item" data-board="Broker">
+            <span class="label-text">Shippers Phone</span>
+            <input asp-for="ShippersPhone" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Cell Phone</span>
+            <input asp-for="CellPhone" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Work Phone</span>
+            <input asp-for="WorkPhone" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Work Fax</span>
+            <input asp-for="WorkFax" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Work Email</span>
+            <input asp-for="WorkEmail" class="input input-bordered w-full" />
+        </label>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm p-4 grid gap-3 sm:grid-cols-2">
+        <h2 class="font-semibold sm:col-span-2">SMTP — invoices, confirmations, setup packets</h2>
+        <label class="form-control">
+            <span class="label-text">SMTP Email</span>
+            <input asp-for="SMTP_Email" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">SMTP Password</span>
+            <input id="SMTP_Password" name="SMTP_Password" type="password" autocomplete="new-password" value="@PasswordValue(Model.HasSmtpPassword)" placeholder="not set" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">SMTP Host</span>
+            <input asp-for="SMTP_Host" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">SMTP Port</span>
+            <input asp-for="SMTP_Port" type="number" class="input input-bordered w-full" />
+        </label>
+        <div class="form-control sm:col-span-2">
+            <span class="label-text">Test SMTP — sends a test email to the address below with the values above (not saved)</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <input type="text" inputmode="email" name="testEmail" placeholder="Send test to (email)" class="input input-bordered w-64" />
+                <button type="button" class="btn" hx-post="/Admin/DispatchCompanies/SendTestEmail" hx-target="#test-email-result" hx-disabled-elt="this">Send</button>
+                <span id="test-email-result" class="text-sm"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm p-4 grid gap-3 sm:grid-cols-2">
+        <h2 class="font-semibold sm:col-span-2">Scheme SMTP</h2>
+        <label class="form-control">
+            <span class="label-text">Scheme SMTP Email</span>
+            <input asp-for="SMTP_SchemeEmail" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Scheme SMTP Password</span>
+            <input id="SMTP_SchemePassword" name="SMTP_SchemePassword" type="password" autocomplete="new-password" value="@PasswordValue(Model.HasSmtpSchemePassword)" placeholder="not set" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Scheme SMTP Host</span>
+            <input asp-for="SMTP_SchemeHost" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">Scheme SMTP Port</span>
+            <input asp-for="SMTP_SchemePort" type="number" class="input input-bordered w-full" />
+        </label>
+        <div class="form-control sm:col-span-2">
+            <span class="label-text">Test Scheme SMTP</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <input type="text" inputmode="email" name="testSchemeEmail" placeholder="Send test to (email)" class="input input-bordered w-64" />
+                <button type="button" class="btn" hx-post="/Admin/DispatchCompanies/SendTestSchemeEmail" hx-target="#test-scheme-result" hx-disabled-elt="this">Send</button>
+                <span id="test-scheme-result" class="text-sm"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm p-4 grid gap-3 sm:grid-cols-2">
+        <h2 class="font-semibold sm:col-span-2">SMS</h2>
+        <label class="form-control">
+            <span class="label-text">Out SMS Phone</span>
+            <input asp-for="SMS_Phone" class="input input-bordered w-full" data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+        </label>
+        <div class="form-control">
+            <span class="label-text">Test SMS</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <input name="testSms" placeholder="Send test to (phone)" class="input input-bordered w-48" data-controller="mask" data-mask-pattern-value="(999) 999-9999" data-action="input->mask#format" />
+                <button type="button" class="btn" hx-post="/Admin/DispatchCompanies/SendTestSms" hx-target="#test-sms-result" hx-disabled-elt="this">Send</button>
+                <span id="test-sms-result" class="text-sm"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm p-4 grid gap-3 sm:grid-cols-2">
+        <h2 class="font-semibold sm:col-span-2">Templates and numbering</h2>
+        <label class="form-control" data-board-target="item" data-board="Broker">
+            <span class="label-text">Confirmation (.rtf)
+                @if (Model.ConfirmationFile != null && Model.EntityId != Guid.Empty) {
+                    <a class="link" target="_blank" href="/Admin/DispatchCompanies/Download/@Model.EntityId?fileName=@Uri.EscapeDataString(Model.ConfirmationFile)">@Model.ConfirmationFile</a>
+                }
+            </span>
+            <input type="file" name="confirmationFile" accept=".rtf" class="file-input file-input-bordered w-full" />
+        </label>
+        <label class="form-control" data-board-target="item" data-board="Broker">
+            <span class="label-text">BOL (.rtf)
+                @if (Model.BOLFile != null && Model.EntityId != Guid.Empty) {
+                    <a class="link" target="_blank" href="/Admin/DispatchCompanies/Download/@Model.EntityId?fileName=@Uri.EscapeDataString(Model.BOLFile)">@Model.BOLFile</a>
+                }
+            </span>
+            <input type="file" name="bolFile" accept=".rtf" class="file-input file-input-bordered w-full" />
+        </label>
+        <label class="form-control" data-board-target="item" data-board="Carrier">
+            <span class="label-text">Invoice (.rtf)
+                @if (Model.InvoiceFile != null && Model.EntityId != Guid.Empty) {
+                    <a class="link" target="_blank" href="/Admin/DispatchCompanies/Download/@Model.EntityId?fileName=@Uri.EscapeDataString(Model.InvoiceFile)">@Model.InvoiceFile</a>
+                }
+            </span>
+            <input type="file" name="invoiceFile" accept=".rtf" class="file-input file-input-bordered w-full" />
+        </label>
+        <label class="label cursor-pointer justify-start gap-2" data-board-target="item" data-board="Carrier">
+            <input asp-for="InvoiceNumberAsLoadNumber" type="checkbox" class="checkbox checkbox-sm" />
+            <span class="label-text">Invoice# as Load#</span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Next Confirmation#</span>
+            <input asp-for="NextConfirmationNumber" type="number" class="input input-bordered w-full" />
+            <span asp-validation-for="NextConfirmationNumber" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Next Invoice#</span>
+            <input asp-for="NextInvoiceNumber" type="number" class="input input-bordered w-full" />
+            <span asp-validation-for="NextInvoiceNumber" class="text-error text-xs"></span>
+        </label>
+        <label class="form-control">
+            <span class="label-text">Next Load#</span>
+            <input asp-for="NextLoadNumber" type="number" class="input input-bordered w-full" />
+            <span asp-validation-for="NextLoadNumber" class="text-error text-xs"></span>
+        </label>
+        <label class="label cursor-pointer justify-start gap-2">
+            <input asp-for="SubmitRates" type="checkbox" class="checkbox checkbox-sm" />
+            <span class="label-text">Submit Rates</span>
+        </label>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm p-4 grid gap-3 sm:grid-cols-2">
+        <h2 class="font-semibold sm:col-span-2">BNSF and CarrierView</h2>
+        <label class="form-control">
+            <span class="label-text">BNSF Login</span>
+            <input asp-for="BnsfLogin" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control">
+            <span class="label-text">BNSF Password</span>
+            <input id="BnsfPassword" name="BnsfPassword" type="password" autocomplete="new-password" value="@PasswordValue(Model.HasBnsfPassword)" placeholder="not set" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control sm:col-span-2" data-board-target="item" data-board="Broker">
+            <span class="label-text">CarrierView Token</span>
+            <input asp-for="CarrierViewToken" class="input input-bordered w-full" />
+        </label>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold">Customizes</h2>
+            <button type="button" class="btn btn-sm" data-action="rows#add">Add</button>
+        </div>
+        <div class="flex flex-col gap-2" data-rows-target="list">
+            @for (var i = 0; i < Model.Customizes.Count; i++) {
+                var row = Model.Customizes[i];
+                <div class="grid gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]" data-rows-item>
+                    <input type="hidden" name="Customizes.Index" value="@i" />
+                    <input type="hidden" name="Customizes[@i].EntityId" value="@row.EntityId" />
+                    <input name="Customizes[@i].Name" value="@row.Name" placeholder="Name" class="input input-bordered input-sm w-full" />
+                    <select name="Customizes[@i].Type" class="select select-bordered select-sm w-full">
+                        @foreach (var type in customTypes) {
+                            <option value="@((int)type)" selected="@(row.Type == (int)type)">@type</option>
+                        }
+                    </select>
+                    <input name="Customizes[@i].Params" value="@row.Params" placeholder="Params" class="input input-bordered input-sm w-full" />
+                    <button type="button" class="btn btn-ghost btn-sm text-error" data-action="rows#remove">Remove</button>
+                </div>
+            }
+        </div>
+        <template data-rows-target="template">
+            <div class="grid gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]" data-rows-item>
+                <input type="hidden" name="Customizes.Index" value="__key__" />
+                <input type="hidden" name="Customizes[__key__].EntityId" value="@Guid.Empty" />
+                <input name="Customizes[__key__].Name" placeholder="Name" class="input input-bordered input-sm w-full" />
+                <select name="Customizes[__key__].Type" class="select select-bordered select-sm w-full">
+                    @foreach (var type in customTypes) {
+                        <option value="@((int)type)">@type</option>
+                    }
+                </select>
+                <input name="Customizes[__key__].Params" placeholder="Params" class="input input-bordered input-sm w-full" />
+                <button type="button" class="btn btn-ghost btn-sm text-error" data-action="rows#remove">Remove</button>
+            </div>
+        </template>
+    </div>
+
+    <div class="flex justify-end gap-2">
+        <a class="btn" href="/Admin/DispatchCompanies">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+</form>

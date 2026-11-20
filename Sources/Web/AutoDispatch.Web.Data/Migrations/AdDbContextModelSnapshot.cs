@@ -2942,6 +2942,26 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.ToTable("Yard", (string)null);
                 });
 
+            modelBuilder.Entity("AutoDispatch.Web.Data.Entities.GeocodeAddress", b =>
+                {
+                    b.Property<int>("Lat")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Lng")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("varchar(400)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2(0)");
+
+                    b.HasKey("Lat", "Lng");
+
+                    b.ToTable("GeocodeAddress", (string)null);
+                });
+
             modelBuilder.Entity("AutoDispatch.Web.Data.Entities.UserSetting", b =>
                 {
                     b.Property<Guid>("UserId")

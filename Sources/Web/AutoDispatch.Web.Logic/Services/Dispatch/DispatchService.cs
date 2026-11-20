@@ -273,8 +273,9 @@ public partial class DispatchService : DispatchBaseService, IDispatchService {
     #endregion [ Save History ]
 
     /// <summary>
-    ///     Текущее положение объекта (V1 _modifyLocation; изменения EF сохранял при следующем SaveChanges — здесь сразу) </summary>
-    private async Task _modifyLocationAsync(BaseDispatchEntity entity, LocationDto location, Guid userId) {
+    ///     Текущее положение объекта (V1 _modifyLocation; изменения EF сохранял при следующем SaveChanges — здесь сразу).
+    ///     Generic: LinqToDB берёт маппинг по типу на этапе компиляции — с BaseDispatchEntity UpdateAsync падал «no fields to update» </summary>
+    private async Task _modifyLocationAsync<T>(T entity, LocationDto location, Guid userId) where T : BaseDispatchEntity {
         LocationConverter.SetCurrent(entity, location);
         entity.LastModifiedById = userId;
         entity.LastModifiedDate = DateTime.UtcNow;

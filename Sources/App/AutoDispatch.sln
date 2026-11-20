@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCall.WPF", "AutoCall.WPF\AutoCall.WPF.csproj", "{90B956EB-83B4-4D35-AB81-B8468013C35E}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCall.Common", "AutoCall.Common\AutoCall.Common.csproj", "{82C313B5-DC75-47C3-9A4C-3203505CDAE6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDispatch.Dtos", "..\Shared\AutoDispatch.Dtos\AutoDispatch.Dtos.csproj", "{59E570BE-B1A7-44A5-9B8A-C618BBFBE268}"
@@ -14,8 +16,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDispatch.Logic", "AutoDispatch.Logic\AutoDispatch.Logic.csproj", "{3972170A-41FA-42F2-B417-82ADAE454636}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPhoneV2", "AutoPhoneV2\AutoPhoneV2.csproj", "{FD313447-1353-4E54-A069-060723055205}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCall.WPF", "AutoCall.WPF\AutoCall.WPF.csproj", "{90B956EB-83B4-4D35-AB81-B8468013C35E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

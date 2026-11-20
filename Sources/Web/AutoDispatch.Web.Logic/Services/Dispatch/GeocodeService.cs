@@ -1,20 +1,24 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.Http.Headers;
+using LinqToDB;
+using LinqToDB.Async;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using AutoCall.Dtos.Dtos;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Extensions;
+using AutoDispatch.Web.Data.Entities;
 using AutoDispatch.Web.Logic.WebServices;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
 /// <summary>
 ///     Геокодинг грузов и положений (V1 GeocodeService): обратный геокодинг, автокомплит и place details — Safer (BrokersnapshotWebService),
-///     часовой пояс — keeppingin.com, расстояние — Google Distance Matrix. Таблицы Cache V1 нет: кэш в памяти процесса
-///     (Safer кэширует geo на своей стороне), AI/wiki/plan.md </summary>
+///     часовой пояс — keeppingin.com, расстояние — Google Distance Matrix. Таблицы Cache V1 нет: адреса — в таблице GeocodeAddress
+///     (решено 2026-11-20: без неё каждый перезапуск заново геокодирует все точки, LoadLoads не укладывался в 100 с),
+///     остальное — кэш в памяти процесса (Safer кэширует geo на своей стороне), AI/wiki/plan.md </summary>
 public class GeocodeService : BaseService {
 
     /// <summary>
@@ -23,7 +27,12 @@ public class GeocodeService : BaseService {
 
     private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
 
-    private static readonly ConcurrentDictionary<string, string> _addressCache = new ConcurrentDictionary<string, string>();
+    /// <summary>
+    ///     Одновременных запросов обратного геокодинга к Safer из одного списка (~160 мс на запрос) </summary>
+    private const int AddressParallelism = 8;
+
+    private static readonly ConcurrentDictionary<(int Lat, int Lng), string> _addressCache = new ConcurrentDictionary<(int Lat, int Lng), string>();
+    private static readonly ConcurrentDictionary<(int Lat, int Lng), Task<string>> _addressRequests = new ConcurrentDictionary<(int Lat, int Lng), Task<string>>();
     private static readonly ConcurrentDictionary<string, string> _timeZoneCache = new ConcurrentDictionary<string, string>();
     private static readonly ConcurrentDictionary<string, byte[]> _placeCache = new ConcurrentDictionary<string, byte[]>();
     private static readonly ConcurrentDictionary<string, Tuple<int, int>> _distanceCache = new ConcurrentDictionary<string, Tuple<int, int>>();
@@ -31,12 +40,6 @@ public class GeocodeService : BaseService {
     private BrokersnapshotWebService Brokersnapshot => Host.GetService<BrokersnapshotWebService>();
 
     public GeocodeService(ServicesHost host) : base(host) { }
-
-    private static string LocationKey(LocationDto location) {
-        var intLat = Convert.ToInt32(Math.Round(location.Latitude / Step));
-        var intLng = Convert.ToInt32(Math.Round(location.Longitude / Step));
-        return $"{intLat}:{intLng}";
-    }
 
     #region [ time zone ]
 
@@ -106,39 +109,113 @@ public class GeocodeService : BaseService {
     #region [ formatted address ]
 
     /// <summary>
-    ///     Адреса пачкой для списков объектов; found=false у Safer — адрес остаётся пустым (V1 ZERO_RESULTS) </summary>
+    ///     Адреса пачкой для списков объектов: память → таблица GeocodeAddress → Safer (параллельно, AddressParallelism);
+    ///     найденные у Safer сохраняются в таблицу. found=false у Safer — пустой адрес (V1 ZERO_RESULTS), он тоже сохраняется;
+    ///     ошибка Safer — адрес остаётся пустым и не сохраняется </summary>
     public async Task GetFormattedPlaceNamesAsync(List<LocationDto> locations) {
         // NOTES: locations contain duplicates
-        var dic = new Dictionary<string, string>();
-        foreach (var location in locations) {
-            if (String.IsNullOrEmpty(location.FormattedAddress) == false) continue;
-            var key = LocationKey(location);
-            if (dic.TryGetValue(key, out var cached) || _addressCache.TryGetValue(key, out cached)) {
-                location.FormattedAddress = cached;
-                continue;
+        var groups = locations.Where(e => String.IsNullOrEmpty(e.FormattedAddress)).GroupBy(AddressKey).ToList();
+        var addresses = new Dictionary<(int Lat, int Lng), string>();
+        foreach (var group in groups) {
+            if (_addressCache.TryGetValue(group.Key, out var cached)) {
+                addresses[group.Key] = cached;
             }
-            string result;
-            try {
-                result = await RequestFormattedPlaceNameAsync(location);
-            } catch (Exception e) {
-                if (e.Message.Contains("ZERO_RESULTS") == false) {
-                    _l.e(e.Message);
-                    continue;
+        }
+
+        var missing = groups.Where(g => addresses.ContainsKey(g.Key) == false).ToList();
+        foreach (var row in await ReadAddressesAsync(missing.Select(g => g.Key).ToList())) {
+            addresses[(row.Lat, row.Lng)] = _addressCache[(row.Lat, row.Lng)] = row.Address;
+        }
+
+        var requested = new ConcurrentDictionary<(int Lat, int Lng), string>();
+        await Parallel.ForEachAsync(missing.Where(g => addresses.ContainsKey(g.Key) == false),
+            new ParallelOptions { MaxDegreeOfParallelism = AddressParallelism }, async (group, _) => {
+                var address = await RequestAddressOnceAsync(group.Key, group.First());
+                if (address != null) {
+                    requested[group.Key] = address;
                 }
-                result = String.Empty;
+            });
+        await SaveAddressesAsync(requested);
+        foreach (var item in requested) {
+            addresses[item.Key] = _addressCache[item.Key] = item.Value;
+        }
+
+        foreach (var group in groups) {
+            if (addresses.TryGetValue(group.Key, out var address)) {
+                foreach (var location in group) {
+                    location.FormattedAddress = address;
+                }
             }
-            dic[key] = _addressCache[key] = location.FormattedAddress = result;
         }
     }
 
+    /// <summary>
+    ///     Один адрес: память → таблица GeocodeAddress → Safer. Ошибка Safer — исключение, как в V1 </summary>
     public async ValueTask<string> GetFormattedPlaceNameAsync(LocationDto location) {
-        var key = LocationKey(location);
+        var key = AddressKey(location);
         if (_addressCache.TryGetValue(key, out var value)) {
             return value;
         }
+        var row = (await ReadAddressesAsync([key])).FirstOrDefault();
+        if (row != null) {
+            return _addressCache[key] = row.Address;
+        }
         var result = await RequestFormattedPlaceNameAsync(location);
+        await SaveAddressesAsync(new Dictionary<(int Lat, int Lng), string> { [key] = result });
         _addressCache[key] = result;
         return result;
+    }
+
+    /// <summary>
+    ///     Ключ как в V1 Cache: координаты, округлённые с шагом Step </summary>
+    private static (int Lat, int Lng) AddressKey(LocationDto location) {
+        return (Convert.ToInt32(Math.Round(location.Latitude / Step)), Convert.ToInt32(Math.Round(location.Longitude / Step)));
+    }
+
+    /// <summary>
+    ///     Одинаковые точки из параллельных запросов (App грузит борды одновременно) идут в Safer одним вызовом.
+    ///     null — ошибка Safer (в лог), "" — адреса нет </summary>
+    private async Task<string> RequestAddressOnceAsync((int Lat, int Lng) key, LocationDto location) {
+        var task = _addressRequests.GetOrAdd(key, _ => RequestFormattedPlaceNameAsync(location));
+        try {
+            return await task;
+        } catch (Exception e) {
+            if (e.Message.Contains("ZERO_RESULTS")) {
+                return String.Empty;
+            }
+            _l.e(e.Message);
+            return null;
+        } finally {
+            _addressRequests.TryRemove(new KeyValuePair<(int Lat, int Lng), Task<string>>(key, task));
+        }
+    }
+
+    private async Task<List<GeocodeAddress>> ReadAddressesAsync(List<(int Lat, int Lng)> keys) {
+        var result = new List<GeocodeAddress>();
+        // пачками: IN по Lat и Lng, точное совпадение пары — в памяти
+        foreach (var chunk in keys.Chunk(500)) {
+            var set = chunk.ToHashSet();
+            var lats = chunk.Select(k => k.Lat).Distinct().ToList();
+            var lngs = chunk.Select(k => k.Lng).Distinct().ToList();
+            var rows = await UnitOfWork.Context.GetTable<GeocodeAddress>()
+                .Where(e => lats.Contains(e.Lat) && lngs.Contains(e.Lng)).ToListAsync();
+            result.AddRange(rows.Where(e => set.Contains((e.Lat, e.Lng))));
+        }
+        return result;
+    }
+
+    /// <summary>
+    ///     MERGE только вставкой: строку, уже записанную параллельным запросом, не трогает. Сбой записи кэша не ломает ответ </summary>
+    private async Task SaveAddressesAsync(IDictionary<(int Lat, int Lng), string> addresses) {
+        var now = DateTime.UtcNow;
+        foreach (var chunk in addresses.Chunk(200)) {
+            var rows = chunk.Select(e => new GeocodeAddress { Lat = e.Key.Lat, Lng = e.Key.Lng, Address = e.Value, CreatedDate = now }).ToList();
+            try {
+                await UnitOfWork.Context.GetTable<GeocodeAddress>().Merge().Using(rows).OnTargetKey().InsertWhenNotMatched().MergeAsync();
+            } catch (Exception e) {
+                _l.w($"GeocodeAddress: {rows.Count} addresses are not saved: {e.Message}");
+            }
+        }
     }
 
     /// <summary>

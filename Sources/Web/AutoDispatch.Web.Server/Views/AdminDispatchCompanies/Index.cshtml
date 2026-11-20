@@ -1,0 +1,61 @@
+@using AutoDispatch.Dtos.Enums
+@model DispatchCompaniesIndexViewModel
+@{
+    ViewData["Title"] = "Dispatch Companies";
+}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Dispatch Companies</h1>
+    @if (Model.IsAdmin) {
+        <a class="btn btn-primary btn-sm" href="/Admin/DispatchCompanies/Create">+ Add</a>
+    }
+</div>
+@* V1 после сохранения: «Please restart AutoCall» — App читает компании при входе *@
+<p class="text-sm opacity-60 mb-2">Changes take effect in the App after restart.</p>
+<div class="card bg-base-100 shadow-sm overflow-x-auto">
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th></th>
+                <th>MC#</th>
+                <th>Board</th>
+                @if (Model.IsAdmin) {
+                    <th>Company</th>
+                }
+                <th>Legal Name</th>
+                <th>BNSF</th>
+                <th>Next Load#</th>
+                <th>CarrierView Token</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var company in Model.Companies) {
+            <tr>
+                <td><img class="size-8 rounded" src="@company.LogoSmall" alt="" /></td>
+                <td>@company.McNumber</td>
+                <td>@(company.BoardType == DispatchBoardType.Broker ? "Broker" : "Carrier")</td>
+                @if (Model.IsAdmin) {
+                    <td>@Model.CompanyNames.GetValueOrDefault(company.CompanyId, "undefined")</td>
+                }
+                <td>@company.LegalName</td>
+                <td>
+                    @* V1: нет логина — «-», не было входа — красный «?», последний вход старше суток — красная дата *@
+                    @if (company.BnsfLogin == null) {
+                        <span>-</span>
+                    } else if (company.BnsfLastDone == null) {
+                        <span class="text-error">?</span>
+                    } else {
+                        <span class="@(DateTime.UtcNow - company.BnsfLastDone.Value > TimeSpan.FromHours(24) ? "text-error" : "")">@company.BnsfLastDone.Value.ToString("yyyy-MM-dd")</span>
+                    }
+                </td>
+                <td>@company.NextLoadNumber</td>
+                <td>@(String.IsNullOrEmpty(company.CarrierViewToken) ? "-" : "Yes")</td>
+                <td class="text-right"><a class="btn btn-ghost btn-xs" href="/Admin/DispatchCompanies/Edit/@company.EntityId">Edit</a></td>
+            </tr>
+        }
+        @if (Model.Companies.Count == 0) {
+            <tr><td colspan="9" class="text-center opacity-60">Nothing here</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

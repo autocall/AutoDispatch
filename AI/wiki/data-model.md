@@ -20,6 +20,10 @@ Guid `EntityId`, `CreatedDate/CreatedById/LastModifiedDate/LastModifiedById`, `I
 → `BaseDispatchEntity` (+ `CurrentLatitude/CurrentLongitude`); `BaseHistoryEntity` → `BaseHistoryLocationEntity` (+ `Latitude/Longitude`).
 Имена те же, что в V1; пространство имён `AutoDispatch.Web.Data.Entities.Dispatch` отдельно от `Entities.BaseEntity` V3 (Company, UserSetting).
 
+Вне dispatch (2026-11-20): `Entities/GeocodeAddress` — кэш обратного геокодинга вместо адресов из `Cache` V1, ключ (`Lat`, `Lng`) int —
+координаты / 0.0005 (не Guid: естественный ключ точки, как ключ `Cache` V1), `Address varchar(400)` (пусто — адреса нет), `CreatedDate datetime2(0)`;
+`GeocodeAddressMap` (EF Core + LinqToDB), миграция — пользователь ([[plan]], [[data-migration]] блок 7).
+
 ## Отличия от V1 (все — решения 2026-11-13, [[plan]])
 
 - **Таблицы без префикса `d_`**: имя таблицы = имя класса (`Load`, `Driver`, `Event`, …) — своя БД `autodispatch`.

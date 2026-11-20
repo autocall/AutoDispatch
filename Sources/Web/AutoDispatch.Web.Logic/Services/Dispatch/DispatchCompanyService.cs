@@ -128,11 +128,21 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
                     await UpdateAsync(newModel);
                 }
             }
+            // V1 удалял только при Customizes == null — Remove на странице не работал; удалённые на странице строки удаляются
+            var keepIds = dto.Customizes.Select(e => e.EntityId).ToList();
+            await Table<DispatchCompanyCustom>().Where(e => e.DispatchCompanyId == dto.EntityId && keepIds.Contains(e.EntityId) == false).DeleteAsync();
         } else {
             // removes
             await Table<DispatchCompanyCustom>().Where(e => e.DispatchCompanyId == dto.EntityId).DeleteAsync();
         }
         #endregion [ customizes ]
+    }
+
+    /// <summary>
+    ///     Заданы ли пароли SMTP, Scheme SMTP и BNSF — DTO их не несёт, страница Dispatch Companies показывает только факт </summary>
+    public async Task<(bool Smtp, bool SmtpScheme, bool Bnsf)> HasPasswordsAsync(Guid id) {
+        var store = await GetByIdAsync<DispatchCompany>(id);
+        return (store?.SMTP_Password != null, store?.SMTP_SchemePassword != null, store?.BnsfPassword != null);
     }
 
     /// <summary>

@@ -12,9 +12,7 @@
     x:Class="AutoCall.WPF.MainWindow"
     Title="Auto Call" Height="500" Width="1100" WindowState="Maximized" 
     Icon="/AutoDispatch;component/Resources/icon.ico" 
-    Closing="OnWindowClosing" 
-    Loaded="OnWindowLoaded"
-    Activated="Window_Activated"
+    Closing="OnWindowClosing"
     KeyDown="Window_OnKeyDown">
     <dialogs:SingleInstanceWindow.Resources>
         <!--Converters-->

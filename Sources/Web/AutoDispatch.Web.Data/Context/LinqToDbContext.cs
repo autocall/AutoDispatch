@@ -16,6 +16,7 @@ public class LinqToDbContext : DataConnection {
         CompanyMap.LinqToDbConfigure(builder);
         UserMap.LinqToDbConfigure(builder);
         UserSettingMap.LinqToDbConfigure(builder);
+        GeocodeAddressMap.LinqToDbConfigure(builder);
         DispatchMap.LinqToDbConfigure(builder);
         builder.Build();
         this.AddMappingSchema(mappingSchema);

@@ -13,6 +13,9 @@ namespace AutoDispatch.Logic.Mappings {
     ///     DatPowerRecordViewModel → ContactBaseViewModel (модуль AutoCall) не перенесено </summary>
     public class BllMappingProfile : Profile {
         public BllMappingProfile() {
+            // вложенная автоматическая пара для QueryLoad (подсказки Origin/Destination окна груза) и CarrierHistory → RequestHistory2Dto
+            // (Origin/Destination); без неё оба Map падали «Missing type map» — то же, что статический LocationConverter
+            CreateMap<LocationViewModel, LocationDto>().ReverseMap();
             CreateMap<QueryLoadViewModel, QueryLoadDto>().ReverseMap();
 
             CreateMap<HistoryObjectDto, HistoryObjectViewModel>().ReverseMap();

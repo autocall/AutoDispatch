@@ -14,9 +14,11 @@ public class ApiActualCompanyController : ApiBaseController {
     public ApiActualCompanyController(ServicesHost host) : base(host) { }
 
     /// <summary>
-    ///     ActualCompanyDto[] компании пользователя </summary>
+    ///     ActualCompanyDto[] компании пользователя — полные, как V1 SearchForAsync: шаблоны confirmation/BOL/invoice,
+    ///     LogoBig и Customizes нужны App для печати и писем (GetAllAsync — вариант веб-грида без них: инвойс в App падал) </summary>
     [HttpGet]
     public async Task<ActionResult> List() {
-        return JsonSuccess(await Service.GetAllAsync(GetCompanyId()));
+        var companyId = GetCompanyId();
+        return JsonSuccess(await Service.SearchFor2Async(e => e.CompanyId == companyId));
     }
 }

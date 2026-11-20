@@ -269,3 +269,65 @@ Unity → MS DI без интерфейсов, AutoMapper — только ав�
 Решение пользователя: `AutoCall.Common` и `AutoCall.WPF` остаются с именами V1; подпись ClickOnce — сертификатом AutoCall V3
 (`AutoCall.Publish_3_TemporaryKey.pfx`, `CN=AutoCall`, в `.gitignore`), отпечаток записан в `ClickOnceProfile.pubxml`; пробный `msbuild /t:Publish`
 подписал манифест. Папка `Resources/phone` совпадает с V1/V3 и вся относится к двум софтфонам — не менялась. [[deploy]], [[app]], [[plan]].
+
+## [2026-11-19] fix | App: иконки RichTextEditor под Telerik R1 2022
+`XamlParseException` при создании `RichTextEditor` — `images/msoffice/16/new.png` не найден: в WPF60 R1 2022 ресурсы бывшего `RichTextBoxUI` лежат
+в `Telerik.Windows.Controls.RichTextBox.dll` с префиксом `RichTextBoxUI/`. Пути `IconSources` исправлены, все 185 иконок есть во всех трёх темах. [[app]].
+Стартовые проекты: в `AutoDispatch.sln` и `AutoDispatch.Web.sln` первыми стоят `AutoCall.WPF` и `AutoDispatch.Web.Server`.
+
+## [2026-11-19] ingest | Локальная копия одной компании для проверки App
+`DataBase/copy company to local.sql`: компания пользователя `@email` из пробного `autodispatch` (linked server, `OPENQUERY`) в `autodispatch_local`,
+пароль от локального admin, повторный запуск заменяет копию. Синтаксис проверен `parseonly`, фильтры — через MCP на LEVSKI INC; сам скрипт не запускался
+(чтение linked server из сессии Claude запрещено). [[data-migration]] «Локальная копия компании».
+
+## [2026-11-19] decision | локальная копия по умолчанию — тестовый пользователь Anton Gmail (DDM Logistics)
+
+`copy company to local.sql`: `@email` по умолчанию сменён на тестового пользователя (Owner DDM Logistics); объёмы DDM записаны в [[data-migration]].
+
+## [2026-11-19] fix | copy company to local.sql — конфликт collation
+
+`#rcol` создавалась в collation сервера (`SQL_Latin1_General_CP1_CI_AS`), `autodispatch_local` — `Latin1_General_100_CI_AI_SC_UTF8`; колонки временной таблицы теперь `collate database_default`.
+
+## [2026-11-20] fix | App: XamlParseException OnWindowLoaded при запуске
+
+`MainWindow.xaml` ссылался на удалённые с модулем AutoCall `OnWindowLoaded` (горячие клавиши) и `Window_Activated` (подсветка иконки) — атрибуты убраны. Корневые события всех XAML проверены скриптом, других висячих нет; App собирается. [[app]]
+
+## [2026-11-20] decision | кэш адресов геокодинга в БД (GeocodeAddress) + перенос из Cache V1
+
+App висел на Loading: LoadLoads DDM (~3 500 активных грузов, 3 173 в Canceled1, ~2 200 точек) по одному запрашивал адреса у Safer (~160 мс), кэш в памяти обнулялся перезапуском, 100 с клиента не хватало; Safer часть точек отдаёт 500 (дубль ключа ResultGoogle/QueryLatLngGoogle на его стороне). Решение 2026-11-13 пересмотрено для адресов: таблица `GeocodeAddress`, `GeocodeService` — память → таблица → Safer по 8 параллельно, одинаковые точки одним вызовом; блок 7 скрипта переноса — адреса из `Cache` (формат ключа проверен на данных, UTF-16 → UTF-8 без потерь проверено локально). Web собирается; миграция — пользователь; блок 7 не прогонялся. [[plan]], [[data-migration]], [[data-model]], [[web-logic]]
+
+## [2026-11-20] fix | проверка App под DDM: создание груза, статусы, инвойс
+
+Прогон App через UI Automation (локальная копия DDM). Создан груз 9086 (Carrier, Chicago → Dallas, confirmation загружен в files/{EntityId}), назначен водитель. Найдено и исправлено: (1) App — нет пары AutoMapper `LocationDto ↔ LocationViewModel`, из-за неё молча не работали подсказки Origin/Destination окна груза (`QueryLoadDto → QueryLoadViewModel`) и поиск Carrier History (`CarrierHistoryViewModel → RequestHistory2Dto`); остальные пары проверены прогоном всех TypeMap. (2) Web — `_modifyLocationAsync` принимал `BaseDispatchEntity`, LinqToDB `UpdateAsync` падал «no fields to update» при любой смене положения (At The Pick Up и др.); сделан generic. (3) Web — `Api/ActualCompany/List` отдавал вариант веб-грида без шаблонов confirmation/BOL/invoice, LogoBig и Customizes (V1 для WPF — `SearchForAsync`, полный); инвойс в App падал `StringBuilder.Remove(-1)`; теперь `SearchFor2Async`. Не ошибки: `confirmation.rtf` UNITED GLOBAL — документы не скопированы локально; Distance не считается после ввода Destination — как в V1. [[app]], [[web-logic]]
+
+## [2026-11-20] ingest | документы для локальной копии — Scripts/pull-local-files.ps1
+
+Скачивание с хоста только каталогов {EntityId} строк autodispatch_local (запрос блока 5) из /home/safer/temp/Files в FilesPath локального Web, tar | ssh пачками, докачка; прямое подключение каталога хоста к отладке отклонено — локальный сервер пишет в FilesPath. Скрипт не запускался. [[data-migration]]
+
+## [2026-11-20] decision | локальные документы — E:\AutoDispatch\Files
+
+`FilesPath` в локальном AppSettings.Environment.Local.cs (gitignored) и `-Target` по умолчанию в Scripts/pull-local-files.ps1 — `E:\AutoDispatch\Files\` (решение пользователя); прежнее содержимое D:\Develop\AutoDispatch\Data\files скопировано туда. Шаблон .example не менялся. [[data-migration]]
+
+## [2026-11-20] ingest | страница app-testing — журнал ручной проверки App
+
+Сессия 1 (до перезапуска) перенесена из лога в [[app-testing]]; дальнейшие проверки пишутся туда.
+
+## [2026-11-20] query | проверка App, сессия 4
+
+Distance с новым ключом работает; Send Invoice не уходит — у DDM LOGISTICS INC нет пароля SMTP (и в V1), у ящика ddmtest2019@gmail.com Gmail отклоняет пароль (535, нужен пароль приложения) — данные; BOL/confirmation брокера, справочники, Loads History, Settings, Map, Show Trip, View History, Edit Load, Broker Accounting — работают. Итог и открытые пункты — [[app-testing]].
+
+## [2026-11-20] query | бланк водителя, SMTP компаний, сканер
+
+New Driver Application Package.pdf скопирован из V1 Web/Download в локальный DownloadPath (ссылка Drivers — 200). Найден пробел: в V3 нет интерфейса настройки компаний dispatch (SMTP, шаблоны, логотипы, нумерация) — в V1 админская страница ActualCompany/Index, не перенесена; вопрос пользователю. Сканер не проверить — нет устройств. [[app-testing]]
+
+## [2026-11-20] ingest | страница Dispatch Companies (V1 ActualCompany/Index) для Admin и Owner
+
+Решение пользователя: перенести. `/Admin/DispatchCompanies` — `AdminDispatchCompaniesController`, views `AdminDispatchCompanies/*`, `DispatchCompanyFormConverter`, Stimulus `board`/`rows`, `LogoGenerator` (SkiaSharp вместо System.Drawing), дефолтные логотипы в `wwwroot/images/dispatch`; `DispatchCompanyService.HasPasswordsAsync` и удаление убранных Customizes, null-safe пароль в тестовом письме. Отличия от V1 (пароли не выводятся, Test SMS через Bandwidth) и локальная проверка под временными Owner/Admin — [[dispatch-companies]]. Переименование таблиц `d_ActualCompany` → `DispatchCompany`, `d_ActualCompanyCustom` → `DispatchCompanyCustom` повторено на странице и в решении. Обновлены [[plan]] (решение, этап 5), [[app-testing]] (пункт «Открыто» закрыт), [[index]].
+
+## [2026-11-20] query | Send Invoice после настройки SMTP на странице Dispatch Companies
+
+Test SMTP с формы ушёл (пароль приложения рабочий), но Save не сохранил: поле получателя теста `type=email` с «test test» блокировало отправку формы браузером. Поля теста — `type=text` (адрес проверяет сервер), ошибки формы — списком сверху. Send Invoice 9086 снова не ушёл — у DDM прежний SMTP. [[app-testing]] сессия 5, [[dispatch-companies]].
+
+## [2026-11-20] query | проверка App, сессия 5: Send Invoice, Undo, Parse Confirmation, Generate Load, Split
+
+Send Invoice с SMTP nata.kachina88@gmail.com ушёл, Undo откатил. Исправлено: `MscorlibBinder` (внешнее имя сборки оставалось `System.Private.CoreLib`, тест ужесточён), null в `ExpensesConverter.ToDto`/Gains (Split в App падал), маска пароля на странице Dispatch Companies, обрезка пробелов в SMTP-адресах. Ключ OpenAI в локальном `appsettings.Development.json` был с обёрткой `@"…"` — убрана. [[app-testing]] сессия 5, [[dispatch-companies]].

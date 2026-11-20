@@ -41,6 +41,8 @@ AutoCall V3 (`AutoCallV3/Repo/AI/wiki/app-v3.md`). Сделано 2026-11-19; с
   выбор места — `EditLocationDialog` (`Map/SelectLocation`, результат `postMessage`), остановки — `EditStopsDialog` (`Map/OrderStops`, `window.reorder`) — [[public-site]].
 - **Софтфоны** — AutoPhone (MicroSIP), AutoPhone v.2 (Abto), None; окно Settings — только Call Services. Под .NET 10 из V3: `Application.ExitThread` вместо
   `Thread.Abort`, COM SIPVoipSDK регистрируется для пользователя (HKCU). `AutoPhoneV2CallService` — синглтон DI, форма получает его в `ConfigurePhone`.
+- **Telerik R1 2022** — `RichTextBoxUI` слит в `Telerik.Windows.Controls.RichTextBox.dll`, иконки ленты редактора — `…RichTextBox;component/RichTextBoxUI/Images/MSOffice/`
+  (`RichTextEditor.xaml`, 185 иконок сверены с ресурсами сборки 2026-11-19).
 - **Сканер** — TwainDotNet по `HintPath` + log4net пакетом; `Process.Start` с `UseShellExecute = true` (Paint, файлы, ссылки — во всём App).
 - **ClickOnce** — `Properties/PublishProfiles/ClickOnceProfile.pubxml` (`https://dispatch.myautocall.net/Download/`, рантайм .NET Desktop **x86** — App x86;
   в V3 указан x64), `Scripts/publish-autodispatch-app.ps1` (копия V3). Сертификат подписи — тот же, что у V3 (решение пользователя 2026-11-19), подробнее — [[deploy]].
@@ -62,6 +64,10 @@ AutoCall V3 (`AutoCallV3/Repo/AI/wiki/app-v3.md`). Сделано 2026-11-19; с
 Борды и диалоги DatPower, LoadDetails, Patterns, RecordFilter (Blacklist/Favorites), QuickRateSearch (в т.ч. «Show Rates» в меню борда), SimilarLoads,
 DataSources, NewVersionDialog, тумблер автодозвона, тип вида, громкость уведомлений, вкладки Sound/Hotkeys, Bria/Desktop и устаревшие софтфоны,
 «Save Columns» (дефолты компании), чат, `ReportSimilarLoads`, конструкторы окна груза из записей лоадбордов.
+Из `MainWindow.xaml` убраны `Loaded="OnWindowLoaded"` (глобальные горячие клавиши звонков) и `Activated="Window_Activated"` (сброс подсветки
+иконки на панели задач, включалась новыми результатами лоадборда) — методы удалены вместе с модулем AutoCall. События корневого элемента
+WPF привязывает при загрузке через reflection, поэтому отсутствие метода видно только при запуске (`XamlParseException`), не при сборке;
+остальные XAML проверены на это 2026-11-20.
 
 ## Мёртвый код V1 — закомментирован с пометкой
 

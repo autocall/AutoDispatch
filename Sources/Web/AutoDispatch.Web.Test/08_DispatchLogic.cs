@@ -51,7 +51,9 @@ public class DispatchLogic_Test {
     public void Test03_JsonMscorlibBinderReadsBothNames() {
         var list = new List<Guid> { Guid.NewGuid() };
         string json = DispatchJson.Serialize(list);
+        // как V1 в d_Load.EmailInvoiceSent: "System.Collections.Generic.List`1[[System.Guid, mscorlib]], mscorlib"
         Assert.Contains("mscorlib", json);
+        Assert.DoesNotContain("System.Private.CoreLib", json);
         Assert.Equal(list[0], DispatchJson.Deserialize<List<Guid>>(json)[0]);
         Assert.Equal(list[0], DispatchJson.Deserialize<List<Guid>>(json.Replace("mscorlib", "System.Private.CoreLib"))[0]);
     }

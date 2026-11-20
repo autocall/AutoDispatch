@@ -13,7 +13,7 @@
     Loaded="RichTextEditor_OnLoaded">
     <Grid Background="{x:Static SystemColors.ControlBrush}">
         <Grid.Resources>
-            <telerik:IconSources x:Key="IconSources" DarkBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/Images/MSOffice/Dark/" LightBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/Images/MSOffice/" ModernBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/Images/MSOffice/Modern/"/>
+            <telerik:IconSources x:Key="IconSources" DarkBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/RichTextBoxUI/Images/MSOffice/Dark/" LightBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/RichTextBoxUI/Images/MSOffice/" ModernBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/RichTextBoxUI/Images/MSOffice/Modern/"/>
             <telerik:FontFamiliesProvider x:Key="FontFamiliesProvider"/>
             <telerik:EditingContextTypeToBoolConverter x:Key="EditingContextTypeToBoolConverter"/>
         </Grid.Resources>
@@ -38,7 +38,7 @@
 
         <telerik:RadRichTextBoxRibbonUI x:Name="radRichTextBoxRibbonUI" ApplicationName="" CollapseThresholdSize="50,50" DataContext="{Binding Commands, ElementName=richTextBox}" VerticalAlignment="Top">
             <telerik:RadRichTextBoxRibbonUI.Resources>
-                <telerik:IconSources x:Key="IconSources" DarkBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/Images/MSOffice/Dark/" LightBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/Images/MSOffice/" ModernBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/Images/MSOffice/Modern/"/>
+                <telerik:IconSources x:Key="IconSources" DarkBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/RichTextBoxUI/Images/MSOffice/Dark/" LightBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/RichTextBoxUI/Images/MSOffice/" ModernBasePath="pack://application:,,,/Telerik.Windows.Controls.RichTextBox;component/RichTextBoxUI/Images/MSOffice/Modern/"/>
                 <telerik:FontFamiliesProvider x:Key="FontFamiliesProvider"/>
                 <telerik:EditingContextTypeToBoolConverter x:Key="EditingContextTypeToBoolConverter"/>
             </telerik:RadRichTextBoxRibbonUI.Resources>

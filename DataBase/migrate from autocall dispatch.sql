@@ -1,6 +1,7 @@
 -- Перенос данных AutoDispatch из autocall (V1) -> autodispatch. Выполняется под sa на db.myautocall.net, блоками (AI/wiki/data-migration.md).
 -- По образцу AutoCallV3/Repo/DataBase/migrate from autocall.sql. Таблицы autodispatch должны существовать (миграция EF применена сервером).
--- Блок 0 — компании и пользователи; блоки 1–5 — справочники и объекты, грузы, HistoryObject, Event, список файлов; блок 6 — проверка FK.
+-- Блок 0 — компании и пользователи; блоки 1–5 — справочники и объекты, грузы, HistoryObject, Event, список файлов; блок 6 — проверка FK;
+-- блок 7 — адреса обратного геокодинга из Cache (таблица GeocodeAddress, миграция пользователя после 2026-11-20).
 --
 -- Блок 0. Кого переносим:
 --   * компании с событиями d_Event за 6 месяцев до первого переноса — с 2026-05-18 (7 компаний; дата зафиксирована для догона, см. @since);
@@ -511,3 +512,40 @@ update dbo.Load set ReceiverId = null where ReceiverId is not null and not exist
 update dbo.Load set DispatchCompanyId = null where DispatchCompanyId is not null and not exists (select 1 from dbo.DispatchCompany d where d.EntityId = dbo.Load.DispatchCompanyId);
 dbcc checkconstraints with all_constraints;   -- отчёт по нарушениям, если есть
 exec sp_MSforeachtable 'alter table ? with check check constraint all';
+
+-------- 7. адреса обратного геокодинга: autocall.dbo.Cache -> GeocodeAddress (решено 2026-11-20, AI/wiki/data-migration.md) --------
+-- Cache V1 — общая таблица: ключи MD5 (16 байт) — часовые пояса, места, расстояния, IP, ставки DAT — не переносятся.
+-- Адрес — ключ 32 байта (V1 GeocodeService): байты 1–8 нули, 9–12 — вариант (0 — formatted_address, его читает GeocodeService;
+-- 1 — GetFormattedPlaceNames2 карты WebV1, не нужен), 17–20 и 25–28 — int32 little-endian round(lat / 0.0005) и round(lng / 0.0005).
+-- Data — UTF-16 (BinaryHelper.GetBytes), читается как nvarchar без потерь; в varchar UTF-8 переводится явно, длина проверяется
+-- в байтах UTF-8: длиннее varchar(400) и нечётная длина Data не обрезаются, а пропускаются (счётчики в итоге).
+-- Только живые (Expires > сейчас, в V1 — 2 года). Догон добавляет новые ключи, существующие (в том числе записанные сервером) не трогает.
+if object_id('tempdb..#geo') is not null drop table #geo;
+select
+    cast(substring(c.[Key], 20, 1) + substring(c.[Key], 19, 1) + substring(c.[Key], 18, 1) + substring(c.[Key], 17, 1) as int) as Lat,
+    cast(substring(c.[Key], 28, 1) + substring(c.[Key], 27, 1) + substring(c.[Key], 26, 1) + substring(c.[Key], 25, 1) as int) as Lng,
+    case when datalength(c.Data) % 2 = 0
+         then cast(cast(c.Data as nvarchar(max)) collate Latin1_General_100_CI_AI_SC_UTF8 as varchar(max)) end as Address,
+    c.CreatedDate
+into #geo
+from autocall.dbo.Cache c
+where datalength(c.[Key]) = 32
+  and substring(c.[Key], 1, 16) = 0x00000000000000000000000000000000
+  and substring(c.[Key], 21, 4) = 0x00000000 and substring(c.[Key], 29, 4) = 0x00000000
+  and c.Expires > sysutcdatetime();
+
+select count(*) as [cache addresses],
+       sum(case when Address is null then 1 else 0 end) as [skipped: odd length],
+       sum(case when datalength(Address) > 400 then 1 else 0 end) as [skipped: > 400 bytes],
+       max(datalength(Address)) as [max bytes]
+from #geo;
+
+insert into dbo.GeocodeAddress with (tablock) ([Lat], [Lng], [Address], [CreatedDate])
+select g.Lat, g.Lng, g.Address, g.CreatedDate
+from #geo g
+where g.Address is not null and datalength(g.Address) <= 400
+  and not exists (select 1 from dbo.GeocodeAddress a where a.Lat = g.Lat and a.Lng = g.Lng);
+raiserror ('GeocodeAddress: +%d', 0, 1, @@rowcount) with nowait;
+
+select 'GeocodeAddress' as [table], count(*) as [rows] from dbo.GeocodeAddress;
+drop table #geo;

@@ -6,6 +6,7 @@ using AutoDispatch.Dtos.Enums;
 using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Common.Helpers;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
@@ -143,6 +144,7 @@ public partial class DispatchService {
             }
             var dto = LoadConverter.ToDto(load);
             dto.CurrentLocation = request.Location;
+            await dto.IncludeCompaniesAsync(Db);
             return new LocationLoadChangedResponseData() {
                 Load = dto
             };

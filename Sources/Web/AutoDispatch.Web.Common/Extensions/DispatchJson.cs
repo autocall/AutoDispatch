@@ -60,7 +60,8 @@ public static class DispatchJson {
 
         public override void BindToName(Type serializedType, out string assemblyName, out string typeName) {
             base.BindToName(serializedType, out assemblyName, out typeName);
-            if (assemblyName == CoreLib) {
+            // assemblyName приходит полным именем ("System.Private.CoreLib, Version=…, PublicKeyToken=…") — сравнивается простое имя
+            if (assemblyName != null && assemblyName.Split(',')[0] == CoreLib) {
                 assemblyName = Mscorlib;
             }
             // generic-аргументы внутри typeName тоже несут имя сборки: Dictionary`2[[System.String, System.Private.CoreLib],...]

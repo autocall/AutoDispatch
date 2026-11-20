@@ -231,6 +231,8 @@ public partial class DispatchService {
             await MoveToHistoryTrailersAsync(request.UserId, dto);
         }
 
+        // имена компаний в ответе (V1 — навигации EF): App берёт из них колонку Customer и имя файла инвойса
+        await dto.IncludeCompaniesAsync(Db);
         return new SaveLoadResponseData { Load = dto };
     }
 
@@ -319,7 +321,7 @@ public partial class DispatchService {
                     await MoveToHistoryTrailersAsync(request.UserId, dto);
                 }
             }
-            return new SaveLoadsResponseData { Loads = result.Distinct().ToList() };
+            return new SaveLoadsResponseData { Loads = await result.Distinct().ToList().IncludeCompaniesAsync(Db) };
         } catch (Exception e) {
             _l.e("SaveLoads", e);
             throw;

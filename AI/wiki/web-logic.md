@@ -39,7 +39,9 @@
 - **Файлы.** `AppSettings.FilesPath/{EntityId}`, удалённые — `RecyclePath` (подкаталог `/files/_recycle`, второй volume не нужен),
   PNG для OpenAI — `TempPath` (`/files/_temp`), отдаётся по `/Temp` (этап 4).
 - **Внешние API** — `ApiResult<T>`, исключения внутри. Таймзона груза — keeppingin `TimeZone_Get`, расстояние — Google Distance Matrix,
-  геокодинг/автокомплит — Brokersnapshot (как V3). Кэши `GeocodeService` в памяти процесса — таблицы `Cache` нет.
+  геокодинг/автокомплит — Brokersnapshot (как V3). Кэши `GeocodeService` в памяти процесса — таблицы `Cache` нет;
+  адреса обратного геокодинга (с 2026-11-20) — ещё и в таблице `GeocodeAddress`: память → таблица → Safer по 8 параллельно,
+  одинаковые точки параллельных запросов идут в Safer одним вызовом, ошибки Safer не сохраняются, «адреса нет» сохраняется пустой строкой ([[plan]]).
 - **Справочники** `State/Country/Zone` — `StateHelper` (статика). `GetStatistics` без `StateBorders`: штат берётся из `DestinationCity`.
 - **Джобы.** Список снят с `Web/App_Start/JobScheduler.cs` V1 (не с прод-конфига): QuartzJob 01:00 будни → чистка истории,
   CacheLoadJob 00:10 → не переносится (таблицы `CacheLoadIndex` нет, [[plan]] 2026-11-16), LoadWaitingJob и LoadSendSmsJob по 5 мин, BnsfRailwayJob 30 мин (в V1 выключен системным флагом,

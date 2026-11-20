@@ -30,6 +30,9 @@ public class AdDbContext : IdentityDbContext<AdUser, AdRole, Guid, AdUserClaim, 
         // настройки карты пользователя (секция Map)
         modelBuilder.ApplyConfiguration(new UserSettingMap());
 
+        // кэш обратного геокодинга (V1 — адреса в таблице Cache)
+        modelBuilder.ApplyConfiguration(new GeocodeAddressMap());
+
         // 28 сущностей dispatch (этап 2)
         DispatchMap.Configure(modelBuilder);
     }
