@@ -40,13 +40,14 @@ public static class DispatchFileHelper {
     }
 
     /// <summary>
-    ///     Документ/шаблон setup packet по версии: name_02.ext, если есть (V1 GetFileByVersion) </summary>
+    ///     Документ/шаблон setup packet по версии: name_NN.ext ближайшей версии не новее packet'а, иначе name.ext (V1 GetFileByVersion
+    ///     брал только name_{version}; с версией 3 — W-9 2024, fw9_03.pdf — шаблон setup packet версии 3 остаётся _02) </summary>
     public static string GetFileByVersion(string fullpath, int version) {
-        if (version > 1) {
-            var path = Path.GetDirectoryName(fullpath);
-            var fileName = Path.GetFileNameWithoutExtension(fullpath);
-            var extension = Path.GetExtension(fullpath);
-            var newFullPath = Path.Combine(path, $"{fileName}_{version:00}" + extension);
+        var path = Path.GetDirectoryName(fullpath);
+        var fileName = Path.GetFileNameWithoutExtension(fullpath);
+        var extension = Path.GetExtension(fullpath);
+        for (var v = version; v > 1; v--) {
+            var newFullPath = Path.Combine(path, $"{fileName}_{v:00}" + extension);
             if (File.Exists(newFullPath)) {
                 return newFullPath;
             }

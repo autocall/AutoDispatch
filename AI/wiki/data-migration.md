@@ -33,13 +33,24 @@ select distinct CompanyId from autocall.dbo.d_Event where CreatedDate >= dateadd
 | Блок | Что | Способ |
 |---|---|---|
 | 0 | 7 компаний, их пользователи только с ролями AutoDispatch (Agent, Warehouse, Dispatcher, Sales, Accounting, Owner, Admin) и статусом allowed, другие роли V1 не переносятся; шаг 0.5 — настройки App по секциям `UserSetting`, только dispatch ([[user-settings]]) | **написан 2026-11-12, переписан под Guid 2026-11-13**, шаг 0.5 — 2026-11-17 (см. ниже) |
-| 1 | 19 таблиц объектов и справочников компаний (`DispatchCompany*`, `DatCompany`, `DatDriver`, `Driver`, `Truck`, `Trailer`, `Warehouse`, `Yard`, `SetupPacket*`, `Customer/ShipperReceiverCompany`, `CompanyCustomStatus`, `Defect*`) | **написан 2026-11-13**: одна транзакция, `delete` + `insert … select … where CompanyId in (#active)`; setup-packet контакты/агентства/рекомендации — по `#sp` активных компаний |
+| 1 | 19 таблиц объектов и справочников компаний (`DispatchCompany*`, `DatCompany`, `DatDriver`, `Driver`, `Truck`, `Trailer`, `Warehouse`, `Yard`, `SetupPacket*`, `Customer/ShipperReceiverCompany`, `CompanyCustomStatus`, `Defect*`) | **написан 2026-11-13**: одна транзакция, `delete` + `insert … select … where CompanyId in (#active)`; setup-packet контакты/агентства/рекомендации — по `#sp` активных компаний; **2026-11-23** — после вставки `DatCompany` чистка дублей `Contacts` (см. «Дубли контактов карриеров») |
 | 2 | `Load`, `HistoryLocationLoad/Truck/Trailer/Driver/DatDriver` | **написан 2026-11-13**: одна транзакция, `identity_insert` + reseed, история положений — по объектам активных компаний |
 | 3 | `HistoryObject` | **написан 2026-11-13**: отбор в постоянную `dbo._MigrateHistoryKeep` (с 2026-11-18 дополняется при каждом запуске — догон), пакеты по 100 000 `Id` без общей транзакции, возобновляемо с `max(Id)`, затем докачка пропущенных ниже `max(Id)`, reseed |
 | 4 | `Event` активных компаний с `HistoryId` среди перенесённых снимков (или null) | **написан 2026-11-13**: пакеты по 500 000 `Id`, возобновляемо, reseed |
 | 5 | файлы | **написан 2026-11-13, исправлен 2026-11-18**: список каталогов, нужных App, по перенесённым строкам `autodispatch` (все сущности с файлами, Guid в нижнем регистре) — для проверки; сами файлы — весь `E:\Files` FileZilla (2026-11-19), см. «Файлы» |
 | 6 | FK | на время блоков 1–5 `nocheck constraint all` (блоки идут не в порядке зависимостей: `HistoryId` → блок 3), в конце `dbcc checkconstraints` + `with check check constraint all` |
 | 7 | адреса обратного геокодинга `Cache` → `GeocodeAddress` | **написан 2026-11-20, не прогонялся** (нужна миграция пользователя): см. «Блок 7» |
+
+Новая колонка **`SetupPacket.W9ForeignPartnersHas`** (2026-11-23, форма W-9 2024) в V1 отсутствует: `insert SetupPacket` перечисляет колонки явно — онаполучает `default 0` из EF-миграции. Миграция пользователя должна быть применена до прогона переноса ([[plan]] «Форма W-9 2024»).
+### Дубли контактов карриеров (решено 2026-11-23)
+
+V1 при каждом открытии Edit Carrier добавлял телефон из FMCSA: «(323) 399-6890» сравнивался с цифрами в контактах, OK сохранял дубль
+([[app-testing]] 6.17; в App V3 исправлено — номер сравнивается после того же конвертера). В блоке 1 после `insert DatCompany`: разбор
+`Contacts.$values` (`OPENJSON`) во временную `#contacts`, из каждого списка убираются **точные** повторы (тот же `$type`, `Phone`, `Ext`,
+`Email`, `Contact`) — остаётся первый, порядок сохраняется, `STRING_AGG … WITHIN GROUP`. Тот же номер с другим `Contact` остаётся — ручные
+записи не теряются. Нужен compatibility level ≥ 140 (у `autodispatch` 150; у `autocall` 120 — поэтому не на источнике). Локальная копия
+2026-11-23: 868 карриеров из 1406, контактов 8281 → 4368 (−3899 телефонов, −13 email, −1 факс), JSON валиден, 0,4 с. Снимки `HistoryObject`
+не трогаются. Первый вариант (CTE в подзапросе `update`) пересчитывал `OPENJSON` всей таблицы на каждую строку — минуты, отменён.
 
 ### Блок 7 — адреса геокодинга (2026-11-20)
 

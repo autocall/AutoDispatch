@@ -54,6 +54,8 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
         }
 
         var setupPacket = new SetupPacketDto() {
+            // компания карриера, а не создателя: регистрация сохраняет от CreatedById, которого могло не быть в переносе (AI/wiki/app-testing.md 6.20)
+            CompanyId = carrier.CompanyId,
             Version = (byte)AppSettings.SetupPacketVersion,
             FileMC = certificate.Success ? certificate.Data.FileName : null,
             PhysicalCountryId = 0,
@@ -143,7 +145,9 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
             if (dto.EntityId == Guid.Empty) {
                 dto.EntityId = Guid.NewGuid();
             }
-            dto.CompanyId = await GetCompanyIdByUserIdAsync(userId);
+            if (dto.CompanyId == Guid.Empty) {
+                dto.CompanyId = await GetCompanyIdByUserIdAsync(userId);
+            }
             dto.CreatedById = userId;
             dto.CreatedDate = DateTime.UtcNow;
         } else {

@@ -154,7 +154,7 @@ public partial class DispatchService {
                 load.CarrierViewLink = response.Data.data.client_url;
                 load.CarrierViewPickupComment = response.Data.data.locations.First().comment;
                 load.CarrierViewDeliveryComment = response.Data.data.locations.Last().comment;
-                load.CarrierViewStatusesJson = DispatchJson.Serialize(response.Data.data.statuses, TypeNameHandling.None);
+                load.CarrierViewStatusesJson = DispatchJson.Serialize(response.Data.data.statuses); // как V1 и webhook: с $type
                 await this.LocationLoadChanged(new LocationLoadChangedRequestData(AdUser.SystemUserId) {
                     LoadId = load.EntityId,
                     Location = null,
@@ -186,6 +186,51 @@ public partial class DispatchService {
     public async Task<LoadDto> GetLoadByTrackerIdAsync(int id) {
         var model = await Alive<Load>().FirstOrDefaultAsync(e => e.TrackerId == id);
         return LoadConverter.ToDto(model);
+    }
+
+    /// <summary>
+    ///     Webhook CarrierView (V1 DispatchController.UpdateLocation): позиция водителя → положение груза; поля CarrierView* и
+    ///     CarrierViewLastUpdatedDate пишутся, если что-то изменилось или с прошлой записи прошло 5 минут </summary>
+    public async Task CarrierViewUpdateLocationAsync(CarrierViewUpdateLocationRequest model) {
+        if (model == null) {
+            throw new Exception("Undefined Request Data");
+        }
+        _l.i($"TrackerId:{model.load.id}, Phone:{model.load.driver_phone}, Load_Index:{model.load.load_id}");
+        LoadDto load = await GetLoadByTrackerIdAsync(model.load.id);
+        if (load == null) {
+            return;
+        }
+        await this.LocationLoadChanged(new LocationLoadChangedRequestData(AdUser.SystemUserId) {
+            Location = new LocationDto {
+                Latitude = model.position.latitude,
+                Longitude = model.position.longitude,
+                FormattedAddress = model.position.address,
+            },
+            DateTime = DateTime.UtcNow,
+            LoadId = load.EntityId,
+        });
+        string statusesJson = DispatchJson.Serialize(model.load.statuses);
+        bool changed = load.CarrierViewStatus != model.position.type ||
+                       load.CarrierViewPhone != model.load.driver_phone ||
+                       load.CarrierViewLate != model.load.driver_is_late ||
+                       load.CarrierViewLink != model.load.client_url ||
+                       load.CarrierViewPickupComment != model.load.locations.First().comment ||
+                       load.CarrierViewDeliveryComment != model.load.locations.Last().comment ||
+                       load.CarrierViewStatusesJson != statusesJson;
+        if (changed || DateTime.UtcNow - load.CarrierViewLastUpdatedDate > TimeSpan.FromMinutes(5)) {
+            if (changed) {
+                _l.i($"UpdateLocation: {model.load.driver_phone} {model.load.load_id} {model.position.type} ({String.Join(" ", model.load.statuses)})");
+            }
+            load.CarrierViewStatus = model.position.type;
+            load.CarrierViewPhone = model.load.driver_phone;
+            load.CarrierViewLate = model.load.driver_is_late;
+            load.CarrierViewLink = model.load.client_url;
+            load.CarrierViewPickupComment = model.load.locations.First().comment;
+            load.CarrierViewDeliveryComment = model.load.locations.Last().comment;
+            load.CarrierViewStatusesJson = statusesJson;
+            load.CarrierViewLastUpdatedDate = DateTime.UtcNow;
+            await this.SaveLoad(new SaveLoadRequestData(AdUser.SystemUserId) { Load = load });
+        }
     }
 
     #endregion [ CarrierView Tracker ]

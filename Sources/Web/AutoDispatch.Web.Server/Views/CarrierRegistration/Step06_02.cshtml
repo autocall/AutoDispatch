@@ -26,7 +26,7 @@
 <partial name="_StepHeaderPart" model="Model" />
 <p class="mt-4">We show you have not yet provided proof of the following insurance coverages. Please enter the information about your insurance agent (producer) below. We will contact your insurance producer and request your certificate with the appropriate coverage and limits.</p>
 
-<form method="post" action="/CarrierRegistration/Step06?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
+<form method="post" novalidate action="/CarrierRegistration/Step06?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
     <input type="hidden" name="GeneralLiabilityInsuranceAgencyId" value="@step.GeneralLiabilityInsuranceAgency?.EntityId" />
     <input type="hidden" name="AutoInsuranceAgencyId" value="@step.AutoInsuranceAgency?.EntityId" />
     <input type="hidden" name="CargoInsuranceAgencyId" value="@step.CargoInsuranceAgency?.EntityId" />

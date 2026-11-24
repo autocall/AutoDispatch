@@ -115,6 +115,7 @@ public class SetupPacketStep07Model : SetupPacketStepModel {
     public byte? W9CompanyType { get; set; }
     public byte? W9TaxClassification { get; set; }
     public string W9OtherTaxClassification { get; set; }
+    public bool W9ForeignPartnersHas { get; set; }
     public byte? W9ExemptPayeeCode { get; set; }
     public char? W9FATCACode { get; set; }
     public string W9Address { get; set; }

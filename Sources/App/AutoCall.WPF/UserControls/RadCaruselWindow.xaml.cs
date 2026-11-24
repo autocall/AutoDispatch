@@ -109,7 +109,7 @@ namespace AutoCall.WPF.UserControls {
             File.WriteAllBytes(fullPath, fileViewModel.Data);
             var process = new Process {
                 EnableRaisingEvents = true,
-                StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path }
+                StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path, UseShellExecute = true }
             };
             process.Start();
         }

@@ -138,6 +138,7 @@ public static class SetupPacketConverter {
         destination.W9CompanyType = source.W9CompanyType;
         destination.W9TaxClassification = source.W9TaxClassification;
         destination.W9OtherTaxClassification = source.W9OtherTaxClassification;
+        destination.W9ForeignPartnersHas = source.W9ForeignPartnersHas;
         destination.W9ExemptPayeeCode = source.W9ExemptPayeeCode;
         destination.W9FATCACode = (byte?)source.W9FATCACode;
         destination.W9Address = source.W9Address;
@@ -343,6 +344,7 @@ public static class SetupPacketConverter {
         destination.W9CompanyType = source.W9CompanyType;
         destination.W9TaxClassification = source.W9TaxClassification;
         destination.W9OtherTaxClassification = source.W9OtherTaxClassification;
+        destination.W9ForeignPartnersHas = source.W9ForeignPartnersHas;
         destination.W9ExemptPayeeCode = source.W9ExemptPayeeCode;
         destination.W9FATCACode = (char?)source.W9FATCACode;
         destination.W9Address = source.W9Address;

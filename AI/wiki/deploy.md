@@ -71,6 +71,14 @@ setup packet (`DownloadFileMC/COI`) с проверкой доступа, как
 (353 КБ, 2020): бланк пакета документов для приёма нового водителя, который диспетчер скачивает ссылкой в шапке справочника
 Drivers (`DriversDialog`) — App берёт его с `{WebUrl}/Download/`. `fw9.pdf` из той же папки V1 не нужен: W-9 сервер берёт из `DocumentsPath`. Подробнее — [[app]].
 
+## Переключение с V1 — внешние настройки
+
+- **Webhook CarrierView**: в настройках аккаунта CarrierView (компания UNITED GLOBAL — единственная с `CarrierViewToken`) сменить
+  адрес webhook с сайта V1 (`…/Dispatch/UpdateLocation` на домене V1) на `https://dispatch.myautocall.net/Dispatch/UpdateLocation`.
+  Путь в V3 тот же (`CarrierViewController`, перенесён 2026-11-22), меняется только домен. Пока адрес не сменён, позиции и статусы
+  трекеров приходят в V1, а V3 обновляет их только по Sync Tracker. Проверка после смены: `CarrierViewLastUpdatedDate` у грузов с
+  трекером в `autodispatch` растёт, в логе `UpdateLocation: …` ([[app-testing]] 6.14).
+
 ## Бэкап
 
 Файлы в `/home/autodispatch/files` сейчас нигде не бэкапятся (на Windows они под бэкапом сервера) — **решить** в [[plan]].

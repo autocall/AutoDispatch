@@ -42,7 +42,9 @@ AutoMapper 4.2.1, log4net/Common.Logging, Newtonsoft 8, System.ServiceModel. `Au
 
 **Контроллеры.** `DispatchApiController` (`[RoutePrefix("api/Dispatch")]`: CheckToken, Request, Response, RequestZip, ResponseZip);
 `DispatchController` (Dispatcher — карта, RouteLocation, OrderStops, SelectLocation, SearchLoads, SearchCustomers,
-GetPlaceAutocomplete, GetPlaceDetails, GetDistance, GetTimeZone, ExtractLoadFromPdf(2), GetHybridRate);
+GetPlaceAutocomplete, GetPlaceDetails, GetDistance, GetTimeZone, ExtractLoadFromPdf(2), GetHybridRate; **UpdateLocation** — webhook
+CarrierView `POST /Dispatch/UpdateLocation`, AllowAnonymous: позиция и статусы трекера в груз — добавлено 2026-11-22, при инвентаризации
+пропущено, перенесено 2026-11-22 (`CarrierViewController`) — [[app-testing]] 6.14);
 `SetupPacketController` (route `CarrierRegistration`: Index публичный по carrierId, View/Edit под `AutoCallAuthorize`,
 Step00..Step14, Prev01..14, DownloadFileMC/COI, FactoringCompanies); `PrintController` (Print/SetupPacket/Agreement,
 InsuranceInstructions); ActualCompanyController, DatCompanyApiController, ConfirmationController, CustomStatusController,

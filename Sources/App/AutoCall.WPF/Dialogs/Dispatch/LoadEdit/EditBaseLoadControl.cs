@@ -826,7 +826,7 @@ namespace AutoCall.WPF.Dialogs.Dispatch.UserControls {
                     File.WriteAllBytes(fullPath, wrapper.Data.Data);
                     var process = new Process {
                         EnableRaisingEvents = true,
-                        StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path }
+                        StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path, UseShellExecute = true }
                     };
                     process.Start();
                 } catch (Exception exception) {

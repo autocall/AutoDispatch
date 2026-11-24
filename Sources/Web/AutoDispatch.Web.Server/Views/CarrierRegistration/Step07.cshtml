@@ -8,10 +8,11 @@
 }
 <p class="font-semibold">@Model.StepDisplay(Model.Step) complete. Your data will not be saved until you reach the end of the registration.</p>
 
-<form method="post" action="/CarrierRegistration/Step07?CarrierId=@Model.DatCompanyId" data-controller="w9">
+<form method="post" novalidate action="/CarrierRegistration/Step07?CarrierId=@Model.DatCompanyId" data-controller="w9">
     <div class="mt-4 grid gap-4 sm:grid-cols-[1fr_2fr] items-start">
         <div>
             Form <span class="text-3xl font-bold">W-9</span><br />
+            @* W-9 Rev. November 2017 (V1) — packet'ы версий до 3, как заполняли; версия 3 — Step07_03 (Rev. March 2024), AI/wiki/plan.md *@
             <b>(Rev. November 2017)</b><br />
             Department of The Treasury Internal Revenue System
         </div>
@@ -93,18 +94,19 @@
         </div>
         <div>
             <span class="label-text"><b>4.</b> Exemptions (codes apply only to certain entities, not individuals; see instructions on page 3):</span>
-            <label class="form-control mt-2">
-                <span class="label-text">Exempt payee code (if any)</span>
-                <select class="select select-bordered w-24" name="W9ExemptPayeeCode">
+            @* daisyUI 5 без form-control: label строчный, поэтому подпись и выпадающий список — отдельными блоками *@
+            <label class="mt-2 block">
+                <span class="label-text block">Exempt payee code (if any)</span>
+                <select class="select select-bordered w-24 mt-1" name="W9ExemptPayeeCode">
                     <option value=""></option>
                     @for (byte i = 1; i <= 13; i++) {
                         <option value="@i" selected="@(step.W9ExemptPayeeCode == i)">@i</option>
                     }
                 </select>
             </label>
-            <label class="form-control mt-2">
-                <span class="label-text">Exemption from FATCA reporting code (if any)</span>
-                <select class="select select-bordered w-24" name="W9FATCACode">
+            <label class="mt-2 block">
+                <span class="label-text block">Exemption from FATCA reporting code (if any)</span>
+                <select class="select select-bordered w-24 mt-1" name="W9FATCACode">
                     <option value=""></option>
                     @foreach (var code in "ABCDEFGHIJKLM") {
                         <option value="@code" selected="@(step.W9FATCACode == code)">@code</option>

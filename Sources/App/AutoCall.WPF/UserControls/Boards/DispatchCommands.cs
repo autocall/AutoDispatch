@@ -59,7 +59,6 @@ namespace AutoCall.WPF.UserControls.Boards {
         public Command CopySummaryCommand { get; set; }
         public Command ShowTripCommand { get; set; }
         public Command ShowRatesCommand { get; set; }
-        public Command PostLoadCommand { get; set; }
         public Command PreviewImagesCommand { get; set; }
 
         public Command UnassignCommand { get; set; }
@@ -286,7 +285,6 @@ namespace AutoCall.WPF.UserControls.Boards {
             this.CopySummaryCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.User, this.da.CopySummaryAction);
             this.ShowTripCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Agent, this.da.ShowTripAction);
             this.ShowRatesCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.ShowRatesAction);
-            this.PostLoadCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.PostLoadAction);
             this.PreviewImagesCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.User, this.da.PreviewImagesAction);
             this.UnassignCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.UnassignAction);
             this.UndoCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.UndoAction);

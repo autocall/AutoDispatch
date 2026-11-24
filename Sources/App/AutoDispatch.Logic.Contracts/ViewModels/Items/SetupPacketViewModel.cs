@@ -116,6 +116,7 @@ namespace AutoDispatch.Logic.ViewModels.Items {
         private byte? _W9CompanyType;
         private byte? _W9TaxClassification;
         private string _W9OtherTaxClassification;
+        private bool _W9ForeignPartnersHas;
 
         private byte? _W9ExemptPayeeCode;
         private char? _W9FATCACode;
@@ -698,6 +699,16 @@ namespace AutoDispatch.Logic.ViewModels.Items {
             set {
                 if (_W9OtherTaxClassification != value) {
                     _W9OtherTaxClassification = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool W9ForeignPartnersHas {
+            get { return _W9ForeignPartnersHas; }
+            set {
+                if (_W9ForeignPartnersHas != value) {
+                    _W9ForeignPartnersHas = value;
                     OnPropertyChanged();
                 }
             }

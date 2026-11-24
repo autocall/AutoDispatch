@@ -361,7 +361,8 @@ namespace AutoDispatch.Logic.ViewModels.Items {
                         try {
                             var doc = XDocument.Parse(value);
                             XmlNamespaceManager namespaceManager = new XmlNamespaceManager(new NameTable());
-                            namespaceManager.AddNamespace("t", "clr-namespace:Telerik.Windows.Documents.Model;assembly=Telerik.Windows.Documents");
+                            // V1 писал assembly=Telerik.Windows.Documents, Telerik в V3 — assembly=Telerik.Windows.Controls.RichTextBox: namespace берётся из документа
+                            namespaceManager.AddNamespace("t", doc.Root.Name.NamespaceName);
                             _commentsSpans = doc.XPathSelectElements(@"t:RadDocument//t:Section//t:Paragraph//t:Span", namespaceManager).ToList();
                         } catch {
                             _commentsSpans = null;
@@ -501,7 +502,8 @@ namespace AutoDispatch.Logic.ViewModels.Items {
                 this.Contacts.CompareTo(origin.Contacts) == 0 &&
                 this.McNumber == origin.McNumber &&
                 this.InsuranceExpirationChanged == false &&
-                this.Comments == origin.Comments);
+                // текст, а не XAML: окно при открытии пересохраняет RadDocument в формате Telerik V3 (другой namespace), XAML V1 всегда отличался бы
+                this.CommentsText == origin.CommentsText);
         }
 
         public override object Clone() {

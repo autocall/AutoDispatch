@@ -31,7 +31,7 @@
 `_Layout` (поверх `_PublicLayout`: карточка карриера и меню шагов для агента, `Wide`), `_StepHeaderPart` («3/9 complete», заголовок),
 `_StepButtonsPart` (hidden `Step`/`Mode`, antiforgery, ошибка, Next/Save/previous), `_ContactPart` (×5: Confidant, Corporate, Sales, Dispatch,
 AfterHour), `_InsuranceAgencyPart` (×4, у Workers Compensation `HiddenPartial` = `_WorkersCompensationWaiverPart` — отказ с подписью при снятом
-чекбоксе), `_Agreement02Part`, `_InsuranceInstructionsPart`; шаги `Step00`, `Step01`, `Step02`, `Step04_02`, `Step05`, `Step06_02`, `Step07`,
+чекбоксе), `_Agreement02Part`, `_InsuranceInstructionsPart`; шаги `Step00`, `Step01`, `Step02`, `Step04_02`, `Step05`, `Step06_02`, `Step07` (W-9 2017, версии до 3), `Step07_03` (W-9 2024, версия 3),
 `Step13` (multipart, `IFormFile fileMC/fileCOI` → `SetupPacketService.SaveStepFileAsync`: `MC_yyyy_MM_dd.ext`, занятое имя — `UniqueFileFullPath`),
 `Step14`, `Finish`, `Error`. Модели шагов — `Logic/Dtos/Dispatch/SetupPacketStepModels.cs` (V1 `AutoCall.Logic.Contracts/Models`),
 маппинг в `DispatchMappingProfile`; страница — `Models/SetupPacketViewModels.cs` (`SetupPacketViewModel`: `Title/Enabled/Next/Prev/StepDisplay`
@@ -42,7 +42,7 @@ AfterHour), `_InsuranceAgencyPart` (×4, у Workers Compensation `HiddenPartial`
 | V1 | Теперь |
 |---|---|
 | knockout-viewmodels, `$.ajax` JSON → `{Success, Url}` → `location.href` | обычные формы POST + редирект; htmx не нужен (файлы, редиректы) |
-| knockout.validation (83 `required`) | `ModelState` в контроллере + HTML5 `required`/`maxlength`; `previous step` — `formnovalidate` |
+| knockout.validation (83 `required`) | `ModelState` в контроллере, сообщение красным под полем (`This field is required.`, как V1); формы шагов `novalidate` — атрибут `required` только помечает поле, всплывающей подсказки браузера на его языке нет (решено пользователем 2026-11-23, [[app-testing]] 6.27); `maxlength` работает |
 | `knockout-file-bindings` (base64 в JSON) | `multipart/form-data`, `IFormFile` |
 | jquery.maskedinput (телефоны, SSN, EIN) | `mask_controller.ts` (`data-mask-pattern-value`) |
 | «same as», «Pay To = Main», выбор факторинговой компании (`eval` в TS) | `copy_fields_controller.ts` (`copy`, `mirror`, `fill` по `name` полей; факторинговые компании — `<option data-*>` из `GetFactoringCompaniesAsync`, 188 строк) |
@@ -72,3 +72,32 @@ COI и `DownloadFileCOI`, шаг 14 (`Setup packet completed` в логе; пи�
 (реальный, для Safer); при прогоне 2026-11-17 Safer `api/v3/company` и `geo/google/*` отдавали 502 — предзаполнение не проверено,
 `02_Places` и `09.Test04` падали по той же причине. Попутно исправлен `09.Test03`: id события — `first.EventId` (конверт), у `EmptyEventDto`
 поле `[JsonIgnore]`, с пустой БД совпадало случайно. В браузере страницы не смотрели — только HTML в тестах.
+
+**2026-11-23** (проверка App, [[app-testing]] 6.20–6.23): пройдено по HTTP целиком для packet'а из V1 и нового карриера; исправлены
+`ConfidantContactId` на шаге 0 (не передавался — ссылка обнулялась), сохранение от `CreatedById` неперенесённого пользователя
+(AccessDenied на шагах 0/14), W-9 PDF на `iTextSharp.LGPLv2.Core` (null в `SetField`, незакрытый `BeginText`). Accept в App шлёт письмо с PDF
+контактному лицу. `Test01_Wizard` проверяет ссылку на контакт и завершение packet'а; тестовый карриер после загрузки копии компании
+восстанавливается скриптом из scratchpad (клон строки карриера).
+
+### Форма W-9 Rev. March 2024 (2026-11-23)
+
+**Версия packet'а 3** (`AppSettings.SetupPacketVersion = 3`, механизм версий V1): новые packet'ы — W-9 2024, packet'ы версий 0–2 — форма V1,
+которую карриер заполнял, и в PDF, и на шаге 7 (просмотр и правка агентом). По версии выбираются view `Step07`/`Step07_03`
+(`CarrierRegistrationController.ViewName`), шаблон `fw9.pdf` (V1: сам PDF — Rev. December 2014, страница V1 пишет «Rev. November 2017»)
+/ `fw9_03.pdf` (`DispatchFileHelper.GetFileByVersion` — теперь ближайший `_NN` не новее версии: setup packet версии 3 берёт `_02.rtf`)
+и код заполнения (`ReportService.GenerateW9Pdf` → `GenerateW9Pdf2017` — код V1 / `GenerateW9Pdf2024`). Как в V1 при смене версии:
+отправка setup packet'а агентом карриеру со старой версией (`SendSetupPacket`) переводит packet на версию 3, шаг 4, снимает Accept —
+карриер заново подписывает договор и заполняет W-9 2024. Версии на боевой БД (активные компании, 2026-11-23): 0 — 286, 1 — 1 424, 2 — 2 283.
+
+Шаблон W-9 2024 — `Resources/Documents/fw9_03.pdf` = `FormW9.pdf` из Safer (Rev. March 2024), текст шага 7 версии 3 —
+по Safer `CarrierOnboarding/Step06.cshtml` (3a/3b, Part I/II, General Instructions 2024). Новое поле **3b** — `W9ForeignPartnersHas`
+(контракт `SetupPacketDto`, сущность, конвертеры сервера и App, `SetupPacketStep07Model`, чекбокс на шаге 7) — нужна EF-миграция пользователя
+([[plan]] «Форма W-9 2024»). `ReportService.GenerateW9Pdf`: новые имена полей (`f1_01…`, `Boxes3a-b_ReadOrder[0].c1_1[0-6]/c1_2[0]/f1_03/f1_04`,
+`Address_ReadOrder[0].f1_07/08`, SSN/EIN — `f1_11…f1_15` прямо в `Page1`), галочки — чекбоксы формы по состоянию (`SetCheckbox`, как Safer),
+подпись и дата на y=195. Проверено генерацией через настоящий `ReportService` (scratch) и просмотром страницы: все поля, LLC + P, 3b, EIN/SSN,
+подпись, дата; пустые необязательные поля не роняют. **Замечание по Safer**: там SSN/EIN пишутся в `SSN[0].f1_11[0]`/`EmployerID[0].f1_14[0]` —
+в форме 2024 таких полей нет, SSN/EIN в W-9 Safer, вероятно, пустые (проверить в Safer).
+
+Раскладка шага 7 (замечания пользователя 2026-11-23, [[app-testing]] 6.26–6.27): галочка 3b — в конце последней строки текста; справа от 3a —
+пункт 4, каждая подпись и её выпадающий список с новой строки (в daisyUI 5 нет `form-control`, `label` строчный — нужны `block`);
+«Requester’s name and address» — справа от 5–6. Поле 2 (Business name) обязательное, как в V1 (решено пользователем). SSN и EIN вместе не принимаются — «Enter only SSN or EIN — not both», как Safer, отступление от V1 ([[plan]] «W-9: SSN или EIN, не оба»).

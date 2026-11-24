@@ -10,7 +10,7 @@
 <p class="mt-4">Thank you for completing the @Model.Company.LegalName. Carrier Registration.</p>
 <p class="mt-4 font-semibold">Please request your insurance producer (agent) to add @Model.Company.LegalName as certificate holder and e-mail certificate of insurance to your broker. Please note that you will NOT be an APPROVED CARRIER until the @Model.Company.LegalName insurance requirements have been satisfied.</p>
 <p class="mt-4 font-semibold">For questions regarding the registration process or insurance certificates, please contact an @Model.Company.LegalName during the business hours of 9am-8pm ET at @Model.Company.WorkPhone.</p>
-<form method="post" action="/CarrierRegistration/Step14?CarrierId=@Model.DatCompanyId" id="send-form">
+<form method="post" novalidate action="/CarrierRegistration/Step14?CarrierId=@Model.DatCompanyId" id="send-form">
     @if (autoSend) {
         <h3 class="mt-6 text-center text-lg">Processing email...</h3>
     }

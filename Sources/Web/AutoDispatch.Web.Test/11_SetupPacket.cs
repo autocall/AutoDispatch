@@ -56,6 +56,17 @@ public class SetupPacket_Test {
     }
 
     /// <summary>
+    ///     Значение из БД по тестовому карриеру (@id) </summary>
+    private async Task<object> ScalarAsync(string sql) {
+        await using var connection = new Microsoft.Data.SqlClient.SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("@id", Guid.Parse(CarrierId));
+        return await command.ExecuteScalarAsync();
+    }
+
+    /// <summary>
     ///     Страница текущего шага карриера: 200 и текст, по которому шаг узнаётся </summary>
     private async Task<string> PageAsync(HttpClient http, string expected) {
         var response = await http.GetAsync(Index);
@@ -107,12 +118,21 @@ public class SetupPacket_Test {
         var invalid = await PostAsync(http, "Step00", html, Contact("ConfidantContact", ""));
         Assert.Equal(HttpStatusCode.OK, invalid.StatusCode); // ошибка валидации — та же страница
         Assert.Contains("This field is required", await invalid.Content.ReadAsStringAsync());
-        var step00 = await PostAsync(http, "Step00", html, Contact("ConfidantContact", "John Doe"));
+        // как браузер: Id контакта и ConfidantContactId — скрытые поля страницы (без ConfidantContactId ссылка в packet'е обнулялась,
+        // письма при Accept шли бы в никуда — AI/wiki/app-testing.md 6.22)
+        var confidant = Contact("ConfidantContact", "John Doe");
+        confidant["ConfidantContact.EntityId"] = Regex.Match(html, "name=\"ConfidantContact.EntityId\" value=\"([^\"]*)\"").Groups[1].Value;
+        confidant["ConfidantContactId"] = Regex.Match(html, "name=\"ConfidantContactId\" value=\"([^\"]*)\"").Groups[1].Value;
+        Assert.NotEqual("", confidant["ConfidantContactId"]);
+        Assert.Equal(confidant["ConfidantContact.EntityId"], confidant["ConfidantContactId"]);
+        var step00 = await PostAsync(http, "Step00", html, confidant);
         if (step00.StatusCode == HttpStatusCode.OK) {
             var body = await step00.Content.ReadAsStringAsync();
             _output.WriteLine("Step00 error: " + Regex.Match(body, "alert-error[^>]*>([^<]*)<").Groups[1].Value);
         }
         Assert.Equal(HttpStatusCode.Redirect, step00.StatusCode);
+        Assert.Equal(Guid.Parse(confidant["ConfidantContactId"]),
+            await ScalarAsync("SELECT sp.ConfidantContactId FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
 
         // шаг 1: текст, Next
         html = await PageAsync(http, "Carrier Registration Service");
@@ -168,13 +188,25 @@ public class SetupPacket_Test {
         var step07 = new Dictionary<string, string> {
             ["W9Name"] = "Carpathian Eagle Inc", ["W9BusinessName"] = "Carpathian Eagle", ["W9CompanyType"] = "6", ["W9TaxClassification"] = "2",
             ["W9Address"] = "1 Main St", ["W9City"] = "Chicago", ["W9StateId"] = "32", ["W9ZipCode"] = "60604",
-            ["W9EmployerIdentificationNumber"] = "12-3456789", ["W9Agree"] = "true", ["W9Signature"] = "John Doe"
+            ["W9EmployerIdentificationNumber"] = "12-3456789", ["W9Agree"] = "true", ["W9Signature"] = "John Doe",
+            ["W9ForeignPartnersHas"] = "true" // 3b W-9 Rev. March 2024
         };
+        // незаполненное поле — как в V1, красным «This field is required.» под полем: форма novalidate, проверяет сервер
+        // (подсказка браузера была на языке браузера — замечание пользователя 2026-11-23)
+        Assert.Contains("<form method=\"post\" novalidate", html);
+        var noBusinessName = await PostAsync(http, "Step07", html, new Dictionary<string, string>(step07) { ["W9BusinessName"] = "" });
+        Assert.Equal(HttpStatusCode.OK, noBusinessName.StatusCode);
+        Assert.Contains("This field is required", await noBusinessName.Content.ReadAsStringAsync());
+        // SSN и EIN вместе — ошибка (W-9 Part I: один TIN; как Safer, отступление от V1)
+        var bothTin = await PostAsync(http, "Step07", html, new Dictionary<string, string>(step07) { ["W9SocialSecurityNumber"] = "123-45-6789" });
+        Assert.Equal(HttpStatusCode.OK, bothTin.StatusCode);
+        Assert.Contains("not both", await bothTin.Content.ReadAsStringAsync());
         var badEin = new Dictionary<string, string>(step07) { ["W9EmployerIdentificationNumber"] = "123" };
         var badEinResponse = await PostAsync(http, "Step07", html, badEin);
         Assert.Equal(HttpStatusCode.OK, badEinResponse.StatusCode);
         Assert.Contains("Must be ##-#######", await badEinResponse.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(http, "Step07", html, step07)).StatusCode);
+        Assert.Equal(true, await ScalarAsync("SELECT sp.W9ForeignPartnersHas FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
 
         // шаг 13: документы — multipart с COI
         html = await PageAsync(http, "Upload your documents");
@@ -192,6 +224,9 @@ public class SetupPacket_Test {
         var sendBody = await send.Content.ReadAsStringAsync();
         _output.WriteLine($"Step14: {send.StatusCode} {Regex.Match(sendBody, "alert-error[^>]*>([^<]*)<").Groups[1].Value}");
         Assert.True(send.StatusCode is HttpStatusCode.Redirect or HttpStatusCode.OK);
+        // письма на шаге 14 нет (оно при Accept в App) — packet должен завершиться; раньше падал AccessDenied, если создателя карриера
+        // не было среди пользователей (перенос берёт не всех — AI/wiki/app-testing.md 6.20)
+        Assert.Equal(true, await ScalarAsync("SELECT SetupPacketCompleted FROM DatCompany WHERE EntityId = @id"));
 
         // печать без логина
         var agreement = await http.GetAsync($"{AppSettings.Website}/Print/SetupPacket/Agreement?CarrierId={CarrierId}&version=2");
@@ -233,5 +268,27 @@ public class SetupPacket_Test {
         Assert.Equal(HttpStatusCode.OK, edit.StatusCode);
         Assert.Contains(">Save<", editHtml);
         Assert.DoesNotContain("<fieldset disabled", editHtml);
+
+        // шаг 13 в просмотре — без полей выбора файла, только загруженные документы; в Edit поля есть (замечание пользователя 2026-11-23)
+        var view13 = await (await http.GetAsync($"{AppSettings.Website}/CarrierRegistration/View?CarrierId={CarrierId}&step=13")).Content.ReadAsStringAsync();
+        Assert.Contains("Uploaded documents", view13);
+        Assert.DoesNotContain("type=\"file\"", view13);
+        var edit13 = await (await http.GetAsync($"{AppSettings.Website}/CarrierRegistration/Edit?CarrierId={CarrierId}&step=13")).Content.ReadAsStringAsync();
+        Assert.Contains("type=\"file\"", edit13);
+
+        // W-9 по версии packet'а: версия 3 — Rev. March 2024 с 3b, до 3 — Rev. November 2017, которую карриер заполнял (решено 2026-11-23)
+        // версия задаётся явно: packet тестового карриера мог остаться от прогона до версии 3 (порядок Test01/Test02 не гарантирован)
+        await ScalarAsync($"UPDATE sp SET Version = {AppSettings.SetupPacketVersion} FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id");
+        var view7 = await (await http.GetAsync($"{AppSettings.Website}/CarrierRegistration/View?CarrierId={CarrierId}&step=7")).Content.ReadAsStringAsync();
+        Assert.Contains("Rev. March 2024", view7);
+        Assert.Contains("W9ForeignPartnersHas", view7);
+        await ScalarAsync("UPDATE sp SET Version = 2 FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id");
+        try {
+            var view7Old = await (await http.GetAsync($"{AppSettings.Website}/CarrierRegistration/View?CarrierId={CarrierId}&step=7")).Content.ReadAsStringAsync();
+            Assert.Contains("Rev. November 2017", view7Old);
+            Assert.DoesNotContain("W9ForeignPartnersHas", view7Old);
+        } finally {
+            await ScalarAsync($"UPDATE sp SET Version = {AppSettings.SetupPacketVersion} FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id");
+        }
     }
 }

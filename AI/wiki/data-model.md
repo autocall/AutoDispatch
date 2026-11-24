@@ -37,6 +37,8 @@ Guid `EntityId`, `CreatedDate/CreatedById/LastModifiedDate/LastModifiedById`, `I
   навигаций `CreatedBy/LastModifiedBy/User` нет (как у `Company` V3): авторы могли не попасть в перенос. `CompanyId` → `Company` V3 с FK.
 - **Нет FK на `State`/`Country`**: `SetupPacket.Physical/Mailing/W9StateId`, `Physical/MailingCountryId`, `SetupPacketFactoringCompany.StateId/CountryId`
   — byte-ключи справочника в коде (этап 3), навигации `PhysicalState` и т.п. убраны.
+- **Колонки, которых нет в V1**: `SetupPacket.W9ForeignPartnersHas` (bit, 3b формы W-9 Rev. March 2024) — 2026-11-23, EF-миграция
+  пользователя, перенос оставляет `false` ([[plan]] «Форма W-9 2024»).
 - **Все FK `DeleteBehavior.NoAction`** (в V1 снята `OneToManyCascadeDeleteConvention`): иначе SQL Server отказывает из-за нескольких путей каскада.
 - **Строки — `varchar`** (решено 2026-11-13): `DispatchMap.Configure` ставит `SetIsUnicode(false)` всем string-свойствам dispatch; в V1 было вперемешку
   (`varchar` там, где `DataType("VARCHAR")` подхватили руками в миграциях, остальное `nvarchar`). БД `autodispatch` в UTF-8 collation, поэтому `varchar`

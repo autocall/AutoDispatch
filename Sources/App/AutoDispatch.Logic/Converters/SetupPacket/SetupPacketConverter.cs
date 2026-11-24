@@ -115,6 +115,7 @@ namespace AutoDispatch.Logic.Converters {
             destination.W9CompanyType = source.W9CompanyType;
             destination.W9TaxClassification = source.W9TaxClassification;
             destination.W9OtherTaxClassification = source.W9OtherTaxClassification;
+            destination.W9ForeignPartnersHas = source.W9ForeignPartnersHas;
 
             destination.W9ExemptPayeeCode = source.W9ExemptPayeeCode;
             destination.W9FATCACode = source.W9FATCACode;
@@ -324,6 +325,7 @@ namespace AutoDispatch.Logic.Converters {
             destination.W9CompanyType = source.W9CompanyType;
             destination.W9TaxClassification = source.W9TaxClassification;
             destination.W9OtherTaxClassification = source.W9OtherTaxClassification;
+            destination.W9ForeignPartnersHas = source.W9ForeignPartnersHas;
 
             destination.W9ExemptPayeeCode = source.W9ExemptPayeeCode;
             destination.W9FATCACode = source.W9FATCACode;

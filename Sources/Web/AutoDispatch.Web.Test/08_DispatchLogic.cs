@@ -8,6 +8,7 @@ using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.Dtos.Dispatch;
 using AutoDispatch.Web.Logic.Mapping;
 using AutoDispatch.Web.Logic.Mapping.Dispatch;
+using AutoDispatch.Web.Logic.Services.Dispatch;
 
 namespace AutoDispatch.Web.Test;
 
@@ -183,5 +184,52 @@ public class DispatchLogic_Test {
             Assert.Equal(entity.EntityId, back.EntityId);
         }
         Assert.Null(ObjectConverter.ToDto<LoadDto>(null, mapper));
+    }
+
+    /// <summary>
+    ///     Секции контактов setup packet по MARKER1..4: заголовки целиком, пустая секция вырезается, маркеров не остаётся.
+    ///     В V1 (и в V3 до 2026-11-23) маркеры удалялись до вырезания — съедалось по 7 символов: «ontact Information» и т.п. </summary>
+    [Theory]
+    [InlineData("000102040506071314.rtf")]
+    [InlineData("000102040506071314_02.rtf")]
+    public void Test12_SetupPacketContactSections(string template) {
+        var fields = new Dictionary<string, string> {
+            // 1x1 PNG вместо логотипа компании ([logo] → hex)
+            ["ActualCompany.LogoBig"] = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+            ["SetupPacket.SalesContact.Contact"] = "Sales Person",
+            ["SetupPacket.AfterHourContact.Contact"] = "Accounting Person"
+            // DispatchContact нет — секция вырезается
+        };
+        var rtf = ReportService.FillRtfTemplate(Path.Combine(AppSettings.DocumentsPath, template), new SetupPacketDto(), fields);
+        Assert.DoesNotContain("MARKER", rtf);
+        Assert.Contains("Sales Contact Information", rtf);
+        Assert.Contains("Accounting Contact Information", rtf);
+        Assert.DoesNotContain("No Accounting Contact Information", rtf); // это подпись галочки шага 2, не заголовок секции
+        Assert.DoesNotMatch(@"\\trbrdr[tlbrhv]\s*\\brdrs", rtf); // рамки стиля таблиц — как в V1, без них
+        Assert.DoesNotContain("Dispatch Contact Information", rtf);
+    }
+
+    /// <summary>
+    ///     Шаблоны по версии packet'а: версия 3 — W-9 Rev. March 2024 (fw9_03.pdf), setup packet — _02 (своего _03 нет);
+    ///     до 3 — W-9 Rev. November 2017 V1 (fw9.pdf). Обе формы W-9 заполняются без ошибок (решено 2026-11-23) </summary>
+    [Theory]
+    [InlineData(1, "fw9.pdf", "000102040506071314.rtf")]
+    [InlineData(2, "fw9.pdf", "000102040506071314_02.rtf")]
+    [InlineData(3, "fw9_03.pdf", "000102040506071314_02.rtf")]
+    public void Test13_SetupPacketTemplatesByVersion(byte version, string w9, string setupPacket) {
+        var w9Path = DispatchFileHelper.GetFileByVersion(Path.Combine(AppSettings.DocumentsPath, "fw9.pdf"), version);
+        Assert.Equal(w9, Path.GetFileName(w9Path));
+        Assert.Equal(setupPacket, Path.GetFileName(DispatchFileHelper.GetFileByVersion(Path.Combine(AppSettings.DocumentsPath, "000102040506071314.rtf"), version)));
+
+        var fields = new[] { "W9Name", "W9BusinessName", "W9Address", "W9City", "W9StateId", "W9ZipCode", "W9NamePerson", "W9AccountNumber", "W9ExemptPayeeCode",
+            "W9FATCACode", "W9SocialSecurityNumber", "W9EmployerIdentificationNumber", "W9CompanyType", "W9TaxClassification", "W9OtherTaxClassification",
+            "W9Signature", "W9AgreeDate" }.ToDictionary(e => "SetupPacket." + e, e => (string)null);
+        fields["SetupPacket.W9Name"] = "Carpathian Eagle Inc";
+        fields["SetupPacket.W9EmployerIdentificationNumber"] = "12-3456789";
+        fields["SetupPacket.W9CompanyType"] = "6";
+        // ReportService без ServicesHost: заполнение W-9 сервисы не использует
+        var reportService = (ReportService)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(ReportService));
+        var pdf = reportService.GenerateW9Pdf(w9Path, new SetupPacketDto { Version = version, W9CompanyType = 6, W9ForeignPartnersHas = true }, fields);
+        Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString(pdf, 0, 4));
     }
 }

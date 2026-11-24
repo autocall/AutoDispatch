@@ -70,7 +70,8 @@ public partial class DispatchService {
         #region [ Setup Packet Email ]
         {
             var destinFilePathW9 = Path.Combine(destinDir, $"fw9_{DateTime.Now:yyyy_MM_dd}.pdf");
-            var sourceFilePathW9 = Path.Combine(AppSettings.DocumentsPath, "fw9.pdf");
+            // W-9 по версии packet'а: fw9_03.pdf — Rev. March 2024 (версия 3), fw9.pdf — Rev. November 2017 V1
+            var sourceFilePathW9 = DispatchFileHelper.GetFileByVersion(Path.Combine(AppSettings.DocumentsPath, "fw9.pdf"), setupPacketDto.Version);
             var binaryW9 = reportService.GenerateW9Pdf(sourceFilePathW9, setupPacketDto, fields);
 
             var destinFilePathSP = DispatchFileHelper.GetFileByVersion(Path.Combine(destinDir, $"setup_packet_{DateTime.Now:yyyy_MM_dd}.pdf"), setupPacketDto.Version);

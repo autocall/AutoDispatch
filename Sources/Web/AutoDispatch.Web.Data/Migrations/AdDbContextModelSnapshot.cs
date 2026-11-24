@@ -2246,6 +2246,9 @@ namespace AutoDispatch.Web.Data.Migrations
                     b.Property<byte?>("W9FATCACode")
                         .HasColumnType("tinyint");
 
+                    b.Property<bool>("W9ForeignPartnersHas")
+                        .HasColumnType("bit");
+
                     b.Property<string>("W9Name")
                         .HasMaxLength(64)
                         .IsUnicode(false)

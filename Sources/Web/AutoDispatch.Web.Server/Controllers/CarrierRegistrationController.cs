@@ -161,6 +161,10 @@ public class CarrierRegistrationController : BaseController {
         if (String.IsNullOrEmpty(ssn) && String.IsNullOrEmpty(ein)) {
             ModelState.AddModelError(nameof(model.W9SocialSecurityNumber), "Social security number or employer identification number is required");
         }
+        // отступление от V1 (как Safer, решено 2026-11-23, AI/wiki/plan.md): W-9 Part I — один TIN, SSN или EIN, не оба
+        if (String.IsNullOrEmpty(ssn) == false && String.IsNullOrEmpty(ein) == false) {
+            ModelState.AddModelError(nameof(model.W9EmployerIdentificationNumber), "Enter only SSN or EIN — not both");
+        }
         if (String.IsNullOrEmpty(ssn) == false && System.Text.RegularExpressions.Regex.IsMatch(ssn, @"^[0-9]{3}-[0-9]{2}-[0-9]{4}$") == false) {
             ModelState.AddModelError(nameof(model.W9SocialSecurityNumber), "Social security number format is incorrect. Must be ###-##-####");
         }
@@ -397,6 +401,10 @@ public class CarrierRegistrationController : BaseController {
     ///     Agreement — 3 619 старых packet'ов) не перенесены: шаги 4 и 6 всегда открываются views версии 2 (AI/wiki/plan.md, «Решить») </summary>
     private static string ViewName(byte step, byte version) {
         var name = $"Step{step:00}";
+        // W-9: версия 3 — Rev. March 2024, раньше — Rev. November 2017 (форма, которую карриер заполнял)
+        if (step == 7) {
+            return version >= 3 ? name + "_03" : name;
+        }
         return step is 4 or 6 ? name + "_02" : name;
     }
 

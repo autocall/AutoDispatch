@@ -331,3 +331,79 @@ Test SMTP с формы ушёл (пароль приложения рабочи
 ## [2026-11-20] query | проверка App, сессия 5: Send Invoice, Undo, Parse Confirmation, Generate Load, Split
 
 Send Invoice с SMTP nata.kachina88@gmail.com ушёл, Undo откатил. Исправлено: `MscorlibBinder` (внешнее имя сборки оставалось `System.Private.CoreLib`, тест ужесточён), null в `ExpensesConverter.ToDto`/Gains (Split в App падал), маска пароля на странице Dispatch Companies, обрезка пробелов в SMTP-адресах. Ключ OpenAI в локальном `appsettings.Development.json` был с обёрткой `@"…"` — убрана. [[app-testing]] сессия 5, [[dispatch-companies]].
+
+## [2026-11-22] query | проверка App, сессия 6: Split, confirmation, Factoring, Issues/Bond/Paid, комментарии RadDocument
+
+Split, Resend/Edit Confirmation (только на nata.kachina88@gmail.com), Factoring Company, Send Invoice на factoring, Issues → Bond → Paid, фильтры Accounting — работают. Исправлено: колонки комментариев пустели после сохранения груза в App V3 — Telerik V3 пишет RadDocument с `assembly=Telerik.Windows.Controls.RichTextBox`, XPath искал только namespace V1; теперь namespace берётся из документа (`LoadViewModel`, `DatCompanyViewModel`). Parse Confirmation: ключ OpenAI тот же, что в V1, и отклонён — нужен действующий. Post Load в V3 не подключён (модуль AutoCall) — решить. [[app-testing]] сессия 6.
+
+## [2026-11-22] decision | Post Load убран из App, Parse Confirmation оставлен не допроверенным
+
+Post Load (V1 — переход в лоадборд DAT, модуль AutoCall) в V3 не подключён — пункты меню, команда и действие удалены. Parse Confirmation оставлен как есть: ключ OpenAI отклонён, разбор целиком проверяется только на сервере (OpenAI забирает картинки по URL сайта). Модель и температура OpenAI остаются константами `AppSettings.General` (как V1). [[app-testing]] 6.1, 6.11.
+
+## [2026-11-22] query | проверка App, сессия 6 (продолжение): CarrierView, setup packet, окно карриера
+
+Sync Tracker работает (только чтение CarrierView); Enable/Disable не протестированы — нет тестового номера. Найдено: webhook CarrierView `POST /Dispatch/UpdateLocation` V1 не перенесён и пропущен в инвентаризации — решить. Email Setup Packet ушёл только на nata.kachina88@gmail.com. Исправлено: Edit Carrier/Broker спрашивал о сохранении без правок — окно пересохраняет комментарий в формате Telerik V3, `HasChanges` теперь сравнивает текст. Комментарии в колонках после перезапуска App видны (6.3). Схема трейлера — как V1. [[app-testing]] 6.12–6.19.
+
+## [2026-11-22] decision | webhook CarrierView перенесён
+
+V1 `DispatchController.UpdateLocation` → `CarrierViewController` (`POST /Dispatch/UpdateLocation`, без логина, ответ как V1) + `DispatchService.CarrierViewUpdateLocationAsync`; `CarrierViewStatusesJson` с `$type` как в бою, Sync выровнен. Проверено на копии сервера тестовым телом. При переезде сменить адрес webhook в настройках CarrierView — [[deploy]] «Переключение с V1», [[app-testing]] 6.14, [[v1-inventory]].
+
+## [2026-11-23] query | проверка после перезапуска: ссылка setup packet, webhook, тесты
+
+Ссылка регистрации карриера из письма открывается (формат V1, на сервере — домен dispatch.myautocall.net). `/Dispatch/UpdateLocation` отвечает на запущенном Web. Тесты `DispatchLogic`+`DispatchApi`+`PublicSite` 20/20. Проверка Edit Carrier без вопроса о сохранении (6.17) не выполнена: окно RDP-сессии не принимает мышь и снимки экрана, строку грида через UIA не выбрать. [[app-testing]].
+
+## [2026-11-23] query | Edit Carrier: вопрос о сохранении — вторая причина из V1
+
+После перезапуска App вопрос «save the changes» у PINA TRUCKING LLC остался: окно при каждом открытии добавляет телефон из FMCSA (формат «(xxx) xxx-xxxx» против цифр в контактах) — так же в V1, в боевой базе у карриеров копятся одинаковые телефоны. Решение — за пользователем. [[app-testing]] 6.17.
+
+## [2026-11-23] decision | дубли телефонов карриеров: исправление App и чистка при переносе
+
+`EditCarrierDialog` сравнивает телефон/факс из FMCSA после того же конвертера, что и при сохранении — не добавляет его при каждом открытии. В блок 1 скрипта переноса добавлена чистка точных повторов `DatCompany.Contacts` (OPENJSON во временную таблицу + STRING_AGG); на локальной копии 8281 → 4368 контактов. [[app-testing]] 6.17, [[data-migration]].
+
+## [2026-11-23] query | Edit Carrier закрывается без вопроса — проверено
+
+После перезапуска App: PINA TRUCKING LLC и MSD TRUCKING INC (комментарий V1, телефон из FMCSA) закрываются без «save the changes», в БД ничего не записано. [[app-testing]] 6.17.
+
+## [2026-11-23] query | All Carriers: поиск работает, ссылки FMCSA с машины разработки — 403
+
+Поиск census проверен пользователем. safer.fmcsa.dot.gov и ai.fmcsa.dot.gov отвечают 403 (AWS ELB) на любой запрос с машины разработки (Франкфурт, AWS) — блокировка по адресу, не ошибка ссылок; шаблоны совпадают с V1. [[app-testing]] 6.18.
+
+## [2026-11-23] query | setup packet по ссылке: регистрация и Accept — три исправления
+
+Прошёл регистрацию карриера по HTTP (STRAIGHT THROUGH — packet из V1, BH GLOBAL — новый) и Accept в App: письмо с setup packet и W-9 ушло на nata.kachina88@gmail.com. Исправлено: `ConfidantContactId` в форме шага 0; `AccessDenied`, когда создателя карриера нет среди перенесённых пользователей; генерация W-9 на iTextSharp.LGPLv2.Core. Тест `11_SetupPacket` усилен, 2/2. [[app-testing]] 6.20–6.23, [[setup-packet]].
+
+## [2026-11-23] decision | форма W-9 Rev. March 2024 из Safer, поле 3b в контракте
+
+`fw9.pdf` заменён на `FormW9.pdf` Safer, текст шага 7 — по Safer Step06, `GenerateW9Pdf` переписан под новые имена полей (SSN/EIN на уровне Page1 — в Safer, похоже, заполняются по старым путям). Поле 3b `W9ForeignPartnersHas` добавлено в `SetupPacketDto` (решение пользователя — исключение «контракт не меняется»), сущность, конвертеры сервера и App, тест `11_SetupPacket`. Нужна EF-миграция пользователя. [[plan]] «Форма W-9 2024», [[setup-packet]], [[protocol]], [[data-model]], [[data-migration]], [[app-testing]] 6.24.
+
+## [2026-11-23] query | W-9 2024 после миграции: тесты и Accept
+
+Миграция пользователя `20261123092555_Alter_SetupPackage` добавила `SetupPacket.W9ForeignPartnersHas`. Тесты Web 22/22; Accept в App (STRAIGHT THROUGH, LLC+P, 3b) — письмо с setup packet и W-9 новой формы ушло на nata.kachina88@gmail.com, PDF проверен просмотром. [[app-testing]] 6.24.
+
+## [2026-11-23] query | setup_packet.pdf: обрезанные заголовки контактов — ошибка V1, исправлена
+
+Пользователь заметил обрезанные заголовки на странице Contact Information setup packet. Та же ошибка в PDF V1: `FillRtfTemplate` удалял маркеры MARKER1..4 до вырезания секций и затем резал по устаревшим позициям. Исправлено, тест `Test12_SetupPacketContactSections`. [[app-testing]] 6.25.
+
+## [2026-11-23] query | setup packet: рамки, заголовок Accounting, W-9 3b и Requester, шаг 13 View
+
+Рамки таблиц PDF (стиль Table Grid, Telerik рисует, WPF V1 нет) убраны в `FillRtfTemplate`; заголовок секции AfterHour в шаблонах — «Accounting Contact Information»; на шаге 7 галочка 3b после текста, Requester в строке с 5–6; шаг 13 в просмотре без полей файлов. Тесты дополнены, 24/24. [[app-testing]] 6.26.
+
+## [2026-11-23] query | W-9 шаг 7: 3b, пункт 4, сообщения о незаполненных полях как в V1
+
+Галочка 3b в конце текста, подписи и списки пункта 4 с новой строки (daisyUI 5 без `form-control`). «Заполните это поле» — подсказка браузера; по решению пользователя формы регистрации `novalidate`, сообщения сервера под полем, как в V1; Business name обязательный, как в V1. Обновлены [[setup-packet]] (замена инструментов, раскладка шага 7) и [[app-testing]] 6.27.
+
+## [2026-11-23] decision | W-9: SSN или EIN, не оба — отступление от V1
+
+V1 принимал оба номера; по инструкции IRS (Part I — один TIN) и как в Safer шаг 7 теперь отклоняет оба сразу. Записано в [[plan]] (решения), [[setup-packet]], [[app-testing]] 6.28.
+
+## [2026-11-23] query | шаг 13: поля загрузки файлов — daisyUI file-input-ghost
+
+По просьбе пользователя поля File MC / File COI шага 13 — `file-input file-input-ghost` вместо `file-input-bordered` ([[setup-packet]]).
+
+## [2026-11-23] query | App: документы не открывались — UseShellExecute в .NET 10
+
+`Process.Start` файла без `UseShellExecute = true` (в .NET 10 по умолчанию false) — 13 мест открытия файлов в App исправлены, [[app-testing]] 6.29.
+
+## [2026-11-23] decision | W-9 2024 — версия setup packet 3, старые packet'ы на форме V1
+
+По замечанию пользователя W-9 2024 — только для новых packet'ов через версию packet'а (как `_02` в V1): `SetupPacketVersion = 3`, view, шаблон и заполнение PDF по версии. Обновлены [[plan]] «Форма W-9 2024», [[setup-packet]], [[app-testing]] 6.30.

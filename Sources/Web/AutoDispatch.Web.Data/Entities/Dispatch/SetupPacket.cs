@@ -189,6 +189,10 @@ public class SetupPacket : BaseObjectEntity {
 
     public string W9OtherTaxClassification { get; set; }
 
+    /// <summary>
+    ///     3b W-9 Rev. March 2024 (в V1 нет) </summary>
+    public bool W9ForeignPartnersHas { get; set; }
+
     public byte? W9ExemptPayeeCode { get; set; }
 
     public byte? W9FATCACode { get; set; }

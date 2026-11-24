@@ -1142,7 +1142,8 @@ namespace AutoDispatch.Logic.ViewModels.Items {
                         try {
                             var doc = XDocument.Parse(value);
                             XmlNamespaceManager namespaceManager = new XmlNamespaceManager(new NameTable());
-                            namespaceManager.AddNamespace("t", "clr-namespace:Telerik.Windows.Documents.Model;assembly=Telerik.Windows.Documents");
+                            // V1 писал assembly=Telerik.Windows.Documents, Telerik в V3 — assembly=Telerik.Windows.Controls.RichTextBox: namespace берётся из документа
+                            namespaceManager.AddNamespace("t", doc.Root.Name.NamespaceName);
                             _comment1Spans = doc.XPathSelectElements(@"t:RadDocument//t:Section//t:Paragraph//t:Span", namespaceManager).ToList();
                         } catch {
                             _comment1Spans = null;
@@ -1167,7 +1168,8 @@ namespace AutoDispatch.Logic.ViewModels.Items {
                         try {
                             var doc = XDocument.Parse(value);
                             XmlNamespaceManager namespaceManager = new XmlNamespaceManager(new NameTable());
-                            namespaceManager.AddNamespace("t", "clr-namespace:Telerik.Windows.Documents.Model;assembly=Telerik.Windows.Documents");
+                            // V1 писал assembly=Telerik.Windows.Documents, Telerik в V3 — assembly=Telerik.Windows.Controls.RichTextBox: namespace берётся из документа
+                            namespaceManager.AddNamespace("t", doc.Root.Name.NamespaceName);
                             _comment2Spans = doc.XPathSelectElements(@"t:RadDocument//t:Section//t:Paragraph//t:Span", namespaceManager).ToList();
                         } catch {
                             _comment2Spans = null;
@@ -1192,7 +1194,8 @@ namespace AutoDispatch.Logic.ViewModels.Items {
                         try {
                             var doc = XDocument.Parse(value);
                             XmlNamespaceManager namespaceManager = new XmlNamespaceManager(new NameTable());
-                            namespaceManager.AddNamespace("t", "clr-namespace:Telerik.Windows.Documents.Model;assembly=Telerik.Windows.Documents");
+                            // V1 писал assembly=Telerik.Windows.Documents, Telerik в V3 — assembly=Telerik.Windows.Controls.RichTextBox: namespace берётся из документа
+                            namespaceManager.AddNamespace("t", doc.Root.Name.NamespaceName);
                             _consolidationSpans = doc.XPathSelectElements(@"t:RadDocument//t:Section//t:Paragraph//t:Span", namespaceManager).ToList();
                         } catch {
                             _consolidationSpans = null;

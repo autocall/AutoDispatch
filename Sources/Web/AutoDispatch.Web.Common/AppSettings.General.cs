@@ -144,8 +144,9 @@ public partial class AppSettings {
     #region [ Dispatch ]
 
     /// <summary>
-    ///     Версия setup packet: шаблоны Documents/*_02.rtf и шаги Step*_02 (V1 SetupPacketVersion = 2) </summary>
-    public const int SetupPacketVersion = 2;
+    ///     Версия setup packet: шаблоны Documents/*_NN и шаги Step*_NN (V1 SetupPacketVersion = 2). 3 — W-9 Rev. March 2024
+    ///     (Step07_03, fw9_03.pdf, поле 3b); packet'ы версий до 3 — W-9 Rev. November 2017, как заполняли (решено 2026-11-23, AI/wiki/plan.md) </summary>
+    public const int SetupPacketVersion = 3;
     /// <summary>
     ///     Снимки HistoryObject и Event старше этого срока удаляет HistoryCleanupService (V1 QuartzService historyExpires) </summary>
     public const int HistoryExpiresDays = 30;

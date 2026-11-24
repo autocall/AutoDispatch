@@ -248,7 +248,7 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
                 BusyFinish();
                 var process = new Process {
                     EnableRaisingEvents = true,
-                    StartInfo = new ProcessStartInfo(_fileName) { WorkingDirectory = Path.GetDirectoryName(_fileName) }
+                    StartInfo = new ProcessStartInfo(_fileName) { WorkingDirectory = Path.GetDirectoryName(_fileName), UseShellExecute = true }
                 };
                 process.Start();
             }

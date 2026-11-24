@@ -270,14 +270,20 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
                     //var COMPANY_REP1 = Model.Fields.ContainsKey("COMPANY_REP1") ? Model.Fields["COMPANY_REP1"] : null;
                     //var COMPANY_REP2 = Model.Fields.ContainsKey("COMPANY_REP2") ? Model.Fields["COMPANY_REP2"] : null;
 
-                    if (TEL_NUM != null && Model.Contacts.Contacts.Any(e => e is ContactPhoneViewModel phone && phone.Phone == TEL_NUM) == false) {
-                        Model.Contacts.Add(PhoneContactConverter.ToVm(TEL_NUM, Model.ContactNames));
+                    // номер из FMCSA приходит как "(323) 399-6890", в контактах — цифры: сравнивается номер после того же конвертера,
+                    // иначе V1 добавлял телефон при каждом открытии (вопрос о сохранении, дубли в контактах — AI/wiki/app-testing.md 6.17)
+                    bool HasNumber(string number) => Model.Contacts.Contacts.Any(e => e is ContactBasePhoneViewModel phone && phone.Phone == number);
+                    var tel = TEL_NUM != null ? (ContactPhoneViewModel)PhoneContactConverter.ToVm(TEL_NUM, Model.ContactNames) : null;
+                    if (tel != null && HasNumber(tel.Phone) == false) {
+                        Model.Contacts.Add(tel);
                     }
-                    if (CELL_NUM != null && Model.Contacts.Contacts.Any(e => e is ContactPhoneViewModel phone && phone.Phone == CELL_NUM) == false) {
-                        Model.Contacts.Add(PhoneContactConverter.ToVm(CELL_NUM));
+                    var cell = CELL_NUM != null ? (ContactPhoneViewModel)PhoneContactConverter.ToVm(CELL_NUM) : null;
+                    if (cell != null && HasNumber(cell.Phone) == false) {
+                        Model.Contacts.Add(cell);
                     }
-                    if (FAX_NUM != null && Model.Contacts.Contacts.Any(e => e is ContactPhoneViewModel phone && phone.Phone == FAX_NUM) == false) {
-                        Model.Contacts.Add(new ContactFaxViewModel() { Phone = ((ContactPhoneViewModel)PhoneContactConverter.ToVm(FAX_NUM)).Phone });
+                    var fax = FAX_NUM != null ? ((ContactPhoneViewModel)PhoneContactConverter.ToVm(FAX_NUM)).Phone : null;
+                    if (FAX_NUM != null && HasNumber(fax) == false) {
+                        Model.Contacts.Add(new ContactFaxViewModel() { Phone = fax });
                     }
                     if (EMAILADDRESS != null && Model.Contacts.Contacts.Any(e => e is ContactEmailViewModel email && email.Email == EMAILADDRESS) == false) {
                         Model.Contacts.Add(new ContactEmailViewModel() { Email = EMAILADDRESS });
@@ -353,7 +359,7 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
                     File.WriteAllBytes(fullPath, wrapper.Data.InsuranceFileData);
                     var process = new Process {
                         EnableRaisingEvents = true,
-                        StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path }
+                        StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path, UseShellExecute = true }
                     };
                     process.Start();
                 } catch (Exception exception) {

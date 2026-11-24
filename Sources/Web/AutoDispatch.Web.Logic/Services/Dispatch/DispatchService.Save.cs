@@ -566,11 +566,13 @@ public partial class DispatchService {
     }
 
     private async Task<bool> DatCompanyCheckExists(DatCompanyDto datCompany, Guid userId) {
-        Guid companyId = await GetCompanyIdByUserIdAsync(userId);
         var oldCompany = await GetByIdAsync<DatCompany>(datCompany.EntityId);
         if (oldCompany != null) {
             return false;
         }
+        // компания пользователя — только для нового карриера: регистрация по ссылке сохраняет карриера от CreatedById, а создателя
+        // могло не быть в переносе (не allowed / без входа за год) — тогда здесь был AccessDenied и шаг 14 не завершался (AI/wiki/app-testing.md 6.20)
+        Guid companyId = await GetCompanyIdByUserIdAsync(userId);
         return await Table<DatCompany>().AnyAsync(c => c.IsDeleted == false &&
             c.CompanyId == companyId &&
             c.DispatchCompanyId == datCompany.ActualCompanyId &&

@@ -297,6 +297,29 @@ select s.[EntityId], s.[ActualCompanyId], s.[McNumber], s.[DotNumber], s.[Name],
 from autocall.dbo.d_DatCompany s
 where s.CompanyId in (select Id from #active);
 
+-- дубли контактов карриеров (решено 2026-11-23, AI/wiki/app-testing.md 6.17): V1 при каждом открытии Edit Carrier добавлял телефон из FMCSA
+-- ("(323) 399-6890" сравнивался с цифрами в контактах), OK сохранял дубль — до 19 копий одного номера. Из $values убираются только точные
+-- повторы (тот же $type, Phone, Ext, Email, Contact) — остаётся первый, порядок сохраняется; тот же номер с другим Contact остаётся.
+-- Нужен compatibility level >= 140 (OPENJSON, STRING_AGG WITHIN GROUP) — у autodispatch 150. Локальная копия 2026-11-23: 868 карриеров из 1406,
+-- −3913 контактов из 8281 (3899 телефонов, 13 email, 1 факс).
+-- разбор во временную таблицу: подзапрос с CTE в update пересчитывал OPENJSON всей таблицы на каждую строку (минуты на 1400 карриерах)
+if object_id('tempdb..#contacts') is not null drop table #contacts;
+select c.EntityId, cast(j.[key] as int) as pos, j.[value],
+       row_number() over (partition by c.EntityId, json_value(j.[value], '$."$type"'), json_value(j.[value], '$.Phone'),
+                          json_value(j.[value], '$.Ext'), json_value(j.[value], '$.Email'), ltrim(rtrim(json_value(j.[value], '$.Contact')))
+                          order by cast(j.[key] as int)) as rn
+into #contacts
+from dbo.DatCompany c
+cross apply openjson(c.Contacts, '$."$values"') j
+where isjson(c.Contacts) = 1;
+
+update c set Contacts = '{"$type":"' + json_value(c.Contacts, '$."$type"') + '","$values":[' + k.[values] + ']}'
+from dbo.DatCompany c
+join (select EntityId, string_agg(case when rn = 1 then [value] end, ',') within group (order by pos) as [values]
+      from #contacts group by EntityId having max(rn) > 1) k on k.EntityId = c.EntityId;
+
+drop table #contacts;
+
 -- d_DatDriver -> DatDriver
 insert into dbo.DatDriver ([EntityId], [UserId], [Name], [TruckNumber], [TrailerNumber], [ContactPhone], [Comments], [CarrierViewId], [CarrierViewLoadId], [CarrierViewLink], [CarrierViewLastUpdatedDate], [CarrierViewStatus], [CarrierViewStatusesJson], [CarrierViewLate], [CarrierViewPickupId], [CarrierViewDeliveryId], [CarrierViewPickupComment], [CarrierViewDeliveryComment], [CreatedDate], [CreatedById], [LastModifiedDate], [LastModifiedById], [IsDeleted], [HistoryId], [CompanyId], [CurrentLatitude], [CurrentLongitude])
 select s.[EntityId], s.[UserId], s.[Name], s.[TruckNumber], s.[TrailerNumber], s.[ContactPhone], s.[Comments], s.[CarrierViewId], s.[CarrierViewLoadId], s.[CarrierViewLink], s.[CarrierViewLastUpdatedDate], s.[CarrierViewStatus], s.[CarrierViewStatusesJson], s.[CarrierViewLate], s.[CarrierViewPickupId], s.[CarrierViewDeliveryId], s.[CarrierViewPickupComment], s.[CarrierViewDeliveryComment], s.[CreatedDate], s.[CreatedById], s.[LastModifiedDate], s.[LastModifiedById], s.[IsDeleted], s.[HistoryId], s.[CompanyId], s.CurrentLocation.Lat, s.CurrentLocation.Long

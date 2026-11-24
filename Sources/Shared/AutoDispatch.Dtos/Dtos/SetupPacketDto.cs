@@ -147,6 +147,8 @@ namespace AutoDispatch.Dtos.Dtos {
         [DataMember] public byte? W9CompanyType { get; set; }
         [DataMember] public byte? W9TaxClassification { get; set; }
         [DataMember] public string W9OtherTaxClassification { get; set; }
+        // 3b (W-9 Rev. March 2024): иностранные партнёры, владельцы или бенефициары — добавлено 2026-11-23 (AI/wiki/plan.md «Форма W-9 2024»)
+        [DataMember] public bool W9ForeignPartnersHas { get; set; }
 
         [DataMember] public byte? W9ExemptPayeeCode { get; set; }
         [DataMember] public char? W9FATCACode { get; set; }

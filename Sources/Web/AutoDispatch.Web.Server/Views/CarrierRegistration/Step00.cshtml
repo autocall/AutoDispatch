@@ -3,11 +3,15 @@
 @{
     Layout = "_Layout";
     var step = Model.Model<SetupPacketStep00Model>();
-    var confidant = new SetupPacketContactPartModel { Prefix = nameof(step.ConfidantContact), Contact = step.ConfidantContact, Title = "Confidant" };
+    // один Id и для контакта, и для ConfidantContactId: новый карриер приходит без контакта (Index), _ContactPart сгенерировал бы свой
+    var contact = step.ConfidantContact ?? new AutoDispatch.Dtos.Dtos.SetupPacketContactDto { EntityId = Guid.NewGuid() };
+    var confidant = new SetupPacketContactPartModel { Prefix = nameof(step.ConfidantContact), Contact = contact, Title = "Confidant" };
 }
 <h2 class="text-center text-2xl font-semibold">Carrier Registration Service - @Model.Title(Model.Step)</h2>
 <p class="mt-4">confidant member's request form</p>
-<form method="post" action="/CarrierRegistration/Step00?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
+<form method="post" novalidate action="/CarrierRegistration/Step00?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
+    @* V1 SetupPacketStep00Model.ts: ConfidantContactId = ConfidantContact.EntityId — без него ссылка в пакете обнулялась (письма при Accept) *@
+    <input type="hidden" name="ConfidantContactId" value="@contact.EntityId" />
     <partial name="_ContactPart" model="confidant" />
     <partial name="_StepButtonsPart" model="Model" />
 </form>

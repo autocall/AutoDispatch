@@ -1649,7 +1649,7 @@ Do you want to link the loads?",
                     File.WriteAllBytes(fullPath, wrapper.Data.Data);
                     var process = new Process {
                         EnableRaisingEvents = true,
-                        StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path }
+                        StartInfo = new ProcessStartInfo(fullPath) { WorkingDirectory = path, UseShellExecute = true }
                     };
                     process.Start();
                 } catch (IOException exception) {
@@ -2169,12 +2169,6 @@ Do you want to link the loads?",
             //    }
             //};
             //dialog.Show();
-        }
-
-        public Action<Wrapper1LoadViewModel> PostLoadAction2;
-        public void PostLoadAction(Wrapper1LoadViewModel wrapper) {
-            StackLogger.Push($"PostLoadAction");
-            PostLoadAction2(wrapper);
         }
 
         public void PreviewImagesAction(Wrapper1LoadViewModel wrapper) {

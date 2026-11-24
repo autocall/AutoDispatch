@@ -24,7 +24,7 @@
 <p class="mt-2">You must complete the fields listed below.<br />If you have any problems completing this form, please contact an @Model.Company.LegalName representative at @Model.Company.WorkPhone.</p>
 <p class="mt-2">Please update the Pay To and Contact information. The main business information is locked. Please contact @Model.Company.LegalName for assistance if this is incorrect.</p>
 
-<form method="post" action="/CarrierRegistration/Step02?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
+<form method="post" novalidate action="/CarrierRegistration/Step02?CarrierId=@Model.DatCompanyId" data-controller="copy-fields">
     @* основной адрес *@
     <div class="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2">
         <label class="form-control sm:col-span-2">

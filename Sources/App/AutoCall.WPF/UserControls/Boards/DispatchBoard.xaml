@@ -720,8 +720,6 @@
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ShowRatesCommand}"/>-->
                         <uc:RadMenuItem CommandParameter="{Binding Data.SelectedPatterns, Source={StaticResource sProxy}}" Header="Go To Linked Load"
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.GoToLinkedWrapperCommand}"/>
-                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedPatterns, Source={StaticResource sProxy}}" Header="Post Load"
-                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PostLoadCommand}"/>
                         <telerik:RadMenuSeparatorItem/>
                         <uc:RadMenuItem CommandParameter="{Binding Data.SelectedPatterns, Source={StaticResource sProxy}}" Header="Delete Confirmation"
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.DeleteConfirmationCommand}"/>
@@ -769,8 +767,6 @@
                         <!--
                         <uc:RadMenuItem CommandParameter="{Binding Data.SelectedPatterns, Source={StaticResource sProxy}}" Header="Show Rates"
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ShowRatesCommand}"/>-->
-                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedPatterns, Source={StaticResource sProxy}}" Header="Post Load"
-                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PostLoadCommand}"/>
                     </telerik:RadContextMenu>
                     <dispatch:MenuConverter x:Key="ContextMenuSwitcherConverter"
                           Carrier_PatternsMenu="{StaticResource rowContextMenuCarrier}"
@@ -1666,8 +1662,6 @@
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ShowRatesCommand}"/>-->
                         <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Preview Images"
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PreviewImagesCommand}"/>
-                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Post Load"
-                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PostLoadCommand}"/>
                         <telerik:RadMenuSeparatorItem/>
                         <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Move to Accounting (canceled)"
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.MoveToAccountingCommand}"/>
@@ -1714,8 +1708,6 @@
                         <!--
                         <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Show Rates"
                             Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.ShowRatesCommand}"/>-->
-                        <uc:RadMenuItem CommandParameter="{Binding Data.SelectedLoads, Source={StaticResource sProxy}}" Header="Post Load"
-                            Command="{Binding Source={StaticResource rootProxy}, Path=Data.dc.PostLoadCommand}"/>
                     </telerik:RadContextMenu>
                     <dispatch:MenuConverter x:Key="ContextMenuSwitcherConverter"
                           Carrier_PatternsMenu="{StaticResource rowContextMenuCarrier}"

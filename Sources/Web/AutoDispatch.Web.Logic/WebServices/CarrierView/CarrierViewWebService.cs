@@ -73,6 +73,13 @@ public class CarrierViewWebService : BaseWebService {
 
 #region [ models (имена полей — как в JSON carrierview.com) ]
 
+/// <summary>
+///     Тело webhook CarrierView → POST /Dispatch/UpdateLocation (V1 CarrierViewUpdateLocationModel) </summary>
+public class CarrierViewUpdateLocationRequest {
+    public DataResponse load { get; set; }
+    public PositionResponse position { get; set; }
+}
+
 public class Response {
     public bool success { get; set; }
     public DataResponse data { get; set; }

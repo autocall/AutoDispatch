@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using AutoDispatch.Dtos.Dtos;
@@ -256,8 +257,12 @@ public class ReportService : BaseService {
     /// <summary>
     ///     Подстановка полей, логотипа и вырезание пустых контактов по MARKER* в RTF-шаблон (общая часть V1 GenerateSetupPacketPdf и
     ///     GenerateInsuranceInstructionsPdf) </summary>
-    private static string FillRtfTemplate(string path, SetupPacketDto setupPacket, Dictionary<string, string> fields) {
+    public static string FillRtfTemplate(string path, SetupPacketDto setupPacket, Dictionary<string, string> fields) {
         var sb = new StringBuilder(File.ReadAllText(path));
+        // таблицы шаблонов — стиль Table Grid (\ts23: \trbrdr* \brdrs\brdrw10), ячейки границ не задают (\brdrtbl): WPF RadDocument V1
+        // рисовал без рамок, Telerik Document Processing рисует рамки стиля — у стилей таблиц границы убираются, как в PDF V1
+        // (линии абзацев \brdrt/\brdrb не трогаются) — AI/wiki/app-testing.md 6.26
+        sb = new StringBuilder(Regex.Replace(sb.ToString(), @"(\\trbrdr[tlbrhv]\s*)\\brdrs\\brdrw\d+", "$1\\brdrnone"));
 
         foreach (var field in fields) {
             sb.Replace(field.Key, WebUtility.HtmlDecode(field.Value));
@@ -304,22 +309,14 @@ public class ReportService : BaseService {
         if (marker23 != -1) {
             sb.Remove(marker23, 8);
         }
+        // секции контактов: MARKER1 Sales MARKER2 Dispatch MARKER3 «No Accounting» (AfterHour) MARKER4. В V1 здесь маркеры сначала
+        // удалялись, а fixContact потом вырезал по старым позициям ещё по 7 символов — в PDF «ontact Information», «h Contact
+        // Information», «unting Contact…» и лишняя «h» (так и в PDF V1). Маркеры убирает только fixContact (с конца) и MARKER1 ниже
+        // (AI/wiki/app-testing.md 6.25)
         marker1 = sb.IndexOf("MARKER1");
-        if (marker1 != -1) {
-            sb.Remove(marker1, 7);
-        }
         marker2 = sb.IndexOf("MARKER2");
-        if (marker2 != -1) {
-            sb.Remove(marker2, 7);
-        }
         marker3 = sb.IndexOf("MARKER3");
-        if (marker3 != -1) {
-            sb.Remove(marker3, 7);
-        }
         marker4 = sb.IndexOf("MARKER4");
-        if (marker4 != -1) {
-            sb.Remove(marker4, 7);
-        }
         var fixContact = new Action<int, int, string>((m1, m2, contactName) => {
             if (m1 != -1 && m2 != -1) {
                 if (fields.ContainsKey($"SetupPacket.{contactName}.Contact")) {
@@ -348,7 +345,16 @@ public class ReportService : BaseService {
         return TelerikPdfHelper.RtfToPdf(rtf);
     }
 
+    /// <summary>
+    ///     W-9 по версии packet'а: версия 3 — Rev. March 2024 (Documents/fw9_03.pdf), до 3 — Rev. November 2017 V1 (Documents/fw9.pdf):
+    ///     карриер получает PDF той формы, которую заполнял (решено 2026-11-23, AI/wiki/plan.md) </summary>
     public byte[] GenerateW9Pdf(string path, SetupPacketDto setupPacket, Dictionary<string, string> fields) {
+        return setupPacket.Version >= 3 ? GenerateW9Pdf2024(path, setupPacket, fields) : GenerateW9Pdf2017(path, fields);
+    }
+
+    /// <summary>
+    ///     W-9 Rev. November 2017 — код V1; null в SetField и несбалансированный BeginText роняют iTextSharp.LGPLv2.Core (AI/wiki/app-testing.md 6.21) </summary>
+    private static byte[] GenerateW9Pdf2017(string path, Dictionary<string, string> fields) {
         using var ms = new MemoryStream();
         var pdfReader = new PdfReader(path);
         var pdfStamper = new PdfStamper(pdfReader, ms);
@@ -370,14 +376,14 @@ public class ReportService : BaseService {
         FederalClassification[0].f1_3[0]: 3. Tax classification
         */
 
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_1[0]", fields["SetupPacket.W9Name"]);
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_2[0]", fields["SetupPacket.W9BusinessName"]);
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Address[0].f1_7[0]", fields["SetupPacket.W9Address"]);
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_1[0]", fields["SetupPacket.W9Name"] ?? "");
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_2[0]", fields["SetupPacket.W9BusinessName"] ?? "");
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Address[0].f1_7[0]", fields["SetupPacket.W9Address"] ?? "");
         pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Address[0].f1_8[0]", $"{fields["SetupPacket.W9City"]}, {fields["SetupPacket.W9StateId"]} {fields["SetupPacket.W9ZipCode"]}");
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_9[0]", fields["SetupPacket.W9NamePerson"]);
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_10[0]", fields["SetupPacket.W9AccountNumber"]);
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Exemptions[0].f1_5[0]", fields["SetupPacket.W9ExemptPayeeCode"]);
-        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Exemptions[0].f1_6[0]", fields["SetupPacket.W9FATCACode"]);
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_9[0]", fields["SetupPacket.W9NamePerson"] ?? "");
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].f1_10[0]", fields["SetupPacket.W9AccountNumber"] ?? "");
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Exemptions[0].f1_5[0]", fields["SetupPacket.W9ExemptPayeeCode"] ?? "");
+        pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].Exemptions[0].f1_6[0]", fields["SetupPacket.W9FATCACode"] ?? "");
         var arr1 = fields["SetupPacket.W9SocialSecurityNumber"]?.Split('-');
         if (fields["SetupPacket.W9SocialSecurityNumber"] != null && arr1.Length == 3) {
             pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].SSN[0].f1_11[0]", arr1[0]);
@@ -394,20 +400,23 @@ public class ReportService : BaseService {
         #region  writes check
         {
             try {
+                // позиция до BeginText: без типа компании GetFieldPositions даёт null, и незакрытый BeginText ронял PDF
                 // iTextSharp 4.x: float[] { page, llx, lly, urx, ury }
                 var position = pdfStamper.AcroFields.GetFieldPositions($"topmostSubform[0].Page1[0].FederalClassification[0].c1_1[{fields["SetupPacket.W9CompanyType"]}]");
-                PdfContentByte pdfContentByte = pdfStamper.GetOverContent(1);
-                pdfContentByte.SetColorFill(BaseColor.Black);
-                BaseFont bfTimes = BaseFont.CreateFont(BaseFont.ZAPFDINGBATS, BaseFont.CP1252, false);
-                pdfContentByte.SetFontAndSize(bfTimes, 12);
-                pdfContentByte.BeginText();
-                pdfContentByte.ShowTextAligned(Element.ALIGN_LEFT, "3", position[1], position[2], 0);
-                pdfContentByte.EndText();
+                if (position != null) {
+                    PdfContentByte pdfContentByte = pdfStamper.GetOverContent(1);
+                    pdfContentByte.SetColorFill(BaseColor.Black);
+                    BaseFont bfTimes = BaseFont.CreateFont(BaseFont.ZAPFDINGBATS, BaseFont.CP1252, false);
+                    pdfContentByte.SetFontAndSize(bfTimes, 12);
+                    pdfContentByte.BeginText();
+                    pdfContentByte.ShowTextAligned(Element.ALIGN_LEFT, "3", position[1], position[2], 0);
+                    pdfContentByte.EndText();
+                }
             } catch (Exception) {
             }
 
-            pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].FederalClassification[0].f1_4[0]", fields["SetupPacket.W9OtherTaxClassification"]);
-            pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].FederalClassification[0].f1_3[0]", fields["SetupPacket.W9TaxClassification"]);
+            pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].FederalClassification[0].f1_4[0]", fields["SetupPacket.W9OtherTaxClassification"] ?? "");
+            pdfStamper.AcroFields.SetField("topmostSubform[0].Page1[0].FederalClassification[0].f1_3[0]", fields["SetupPacket.W9TaxClassification"] ?? "");
         }
         #endregion  writes check
 
@@ -438,5 +447,91 @@ public class ReportService : BaseService {
         pdfReader.Close();
 
         return ms.ToArray();
+    }
+
+    private static byte[] GenerateW9Pdf2024(string path, SetupPacketDto setupPacket, Dictionary<string, string> fields) {
+        using var ms = new MemoryStream();
+        var pdfReader = new PdfReader(path);
+        var pdfStamper = new PdfStamper(pdfReader, ms);
+
+        /*
+        Форма W-9 Rev. March 2024 (Documents/fw9_03.pdf, как в Safer FormW9.pdf; версия packet'а 3), в форме 2017 другие имена полей:
+        f1_01[0]: 1. Name, f1_02[0]: 2. Business name
+        Boxes3a-b_ReadOrder[0].c1_1[0-6]: 3a. тип (состояния "1".."7"), .f1_03[0]: LLC tax classification, .f1_04[0]: Other,
+        Boxes3a-b_ReadOrder[0].c1_2[0]: 3b. foreign partners (состояние "1")
+        f1_05[0], f1_06[0]: 4. Exempt payee code, FATCA
+        Address_ReadOrder[0].f1_07[0], .f1_08[0]: 5., 6.; f1_09[0]: Requester; f1_10[0]: 7. Account numbers
+        f1_11/12/13[0]: SSN, f1_14/15[0]: EIN — на верхнем уровне Page1 (в форме 2017 были в SSN[0]/EmployerID[0])
+        */
+        const string page = "topmostSubform[0].Page1[0].";
+        var form = pdfStamper.AcroFields;
+
+        // iTextSharp.LGPLv2.Core на null бросает ArgumentNullException (iTextSharp 5 V1 оставлял поле пустым) — пустые W9NamePerson, W9AccountNumber и т.п. роняли Accept (AI/wiki/app-testing.md 6.21)
+        form.SetField(page + "f1_01[0]", fields["SetupPacket.W9Name"] ?? "");
+        form.SetField(page + "f1_02[0]", fields["SetupPacket.W9BusinessName"] ?? "");
+        form.SetField(page + "Address_ReadOrder[0].f1_07[0]", fields["SetupPacket.W9Address"] ?? "");
+        form.SetField(page + "Address_ReadOrder[0].f1_08[0]", $"{fields["SetupPacket.W9City"]}, {fields["SetupPacket.W9StateId"]} {fields["SetupPacket.W9ZipCode"]}");
+        form.SetField(page + "f1_09[0]", fields["SetupPacket.W9NamePerson"] ?? "");
+        form.SetField(page + "f1_10[0]", fields["SetupPacket.W9AccountNumber"] ?? "");
+        form.SetField(page + "f1_05[0]", fields["SetupPacket.W9ExemptPayeeCode"] ?? "");
+        form.SetField(page + "f1_06[0]", fields["SetupPacket.W9FATCACode"] ?? "");
+        var arr1 = fields["SetupPacket.W9SocialSecurityNumber"]?.Split('-');
+        if (fields["SetupPacket.W9SocialSecurityNumber"] != null && arr1.Length == 3) {
+            form.SetField(page + "f1_11[0]", arr1[0]);
+            form.SetField(page + "f1_12[0]", arr1[1]);
+            form.SetField(page + "f1_13[0]", arr1[2]);
+        }
+        var arr2 = fields["SetupPacket.W9EmployerIdentificationNumber"]?.Split('-');
+        if (fields["SetupPacket.W9EmployerIdentificationNumber"] != null && arr2.Length == 2) {
+            form.SetField(page + "f1_14[0]", arr2[0]);
+            form.SetField(page + "f1_15[0]", arr2[1]);
+        }
+
+        // 3a, 3b — настоящие чекбоксы формы (в форме 2017 галочка рисовалась поверх символом ZapfDingbats); W9CompanyType 1..7 → c1_1[0..6]
+        if (setupPacket.W9CompanyType is >= 1 and <= 7) {
+            SetCheckbox(form, $"{page}Boxes3a-b_ReadOrder[0].c1_1[{setupPacket.W9CompanyType - 1}]");
+        }
+        if (setupPacket.W9ForeignPartnersHas) {
+            SetCheckbox(form, $"{page}Boxes3a-b_ReadOrder[0].c1_2[0]");
+        }
+        form.SetField(page + "Boxes3a-b_ReadOrder[0].f1_03[0]", fields["SetupPacket.W9TaxClassification"] ?? "");
+        form.SetField(page + "Boxes3a-b_ReadOrder[0].f1_04[0]", fields["SetupPacket.W9OtherTaxClassification"] ?? "");
+
+        #region signature
+        {
+            PdfContentByte pdfContentByte = pdfStamper.GetOverContent(1);
+            // signature
+            string fontPath = Path.Combine(AppSettings.FontsPath, "DancingScript-Bold.ttf");
+            BaseFont font = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            pdfContentByte.SetColorFill(BaseColor.Black);
+            pdfContentByte.SetFontAndSize(font, 20);
+            pdfContentByte.BeginText();
+            pdfContentByte.ShowTextAligned(Element.ALIGN_LEFT, fields["SetupPacket.W9Signature"] ?? "-", 125, 195, 0);
+            pdfContentByte.EndText();
+            // date
+            font = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+            pdfContentByte.SetColorFill(BaseColor.Black);
+            pdfContentByte.SetFontAndSize(font, 10);
+            pdfContentByte.BeginText();
+            pdfContentByte.ShowTextAligned(Element.ALIGN_LEFT, fields["SetupPacket.W9AgreeDate"] ?? "-", 410, 195, 0);
+            pdfContentByte.EndText();
+        }
+        #endregion signature
+
+        pdfStamper.SetFullCompression();
+        pdfStamper.FormFlattening = true;
+        pdfStamper.Close();
+        pdfReader.Close();
+
+        return ms.ToArray();
+    }
+
+    /// <summary>
+    ///     Включает чекбокс формы: значение «включено» у каждого чекбокса W-9 своё ("1".."7"), берётся из состояний (как Safer PdfService) </summary>
+    private static void SetCheckbox(AcroFields form, string field) {
+        var on = form.GetAppearanceStates(field)?.FirstOrDefault(s => s != "Off");
+        if (on != null) {
+            form.SetField(field, on);
+        }
     }
 }
