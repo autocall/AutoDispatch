@@ -1,0 +1,52 @@
+@model FactoringCompanyFormViewModel
+@{
+    var states = (List<AutoDispatch.Web.Logic.Helpers.Dispatch.StateHelper.State>)ViewData["States"];
+}
+@* форма V1 «Add/Edit Factoring Company»: Name, Address, City, State, Zip, Email *@
+<form hx-post="/Admin/FactoringCompanies/Save" hx-target="this" hx-swap="outerHTML" class="flex flex-col gap-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="EntityId" />
+    <input type="hidden" asp-for="CountryId" />
+    <h3 class="text-lg font-semibold">@(Model.EntityId == 0 ? "New factoring company" : "Edit factoring company")</h3>
+    <label class="block">
+        <span class="label-text block">Name</span>
+        <input asp-for="Name" class="input input-bordered w-full" autofocus />
+        <span asp-validation-for="Name" class="text-error text-xs"></span>
+    </label>
+    <label class="block">
+        <span class="label-text block">Address</span>
+        <input asp-for="Address" class="input input-bordered w-full" />
+        <span asp-validation-for="Address" class="text-error text-xs"></span>
+    </label>
+    <div class="grid gap-3 sm:grid-cols-2">
+        <label class="block">
+            <span class="label-text block">City</span>
+            <input asp-for="City" class="input input-bordered w-full" />
+            <span asp-validation-for="City" class="text-error text-xs"></span>
+        </label>
+        <label class="block">
+            <span class="label-text block">State</span>
+            <select asp-for="StateId" class="select select-bordered w-full">
+                <option value="">Select State...</option>
+                @foreach (var state in states) {
+                    <option value="@state.Id" selected="@(Model.StateId == state.Id)">@state.Name</option>
+                }
+            </select>
+            <span asp-validation-for="StateId" class="text-error text-xs"></span>
+        </label>
+        <label class="block">
+            <span class="label-text block">Zip</span>
+            <input asp-for="ZipCode" class="input input-bordered w-full" />
+            <span asp-validation-for="ZipCode" class="text-error text-xs"></span>
+        </label>
+        <label class="block">
+            <span class="label-text block">Email</span>
+            <input asp-for="Email" type="text" class="input input-bordered w-full" />
+            <span asp-validation-for="Email" class="text-error text-xs"></span>
+        </label>
+    </div>
+    <div class="modal-action">
+        <button type="button" class="btn" data-action="modal#close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>

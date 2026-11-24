@@ -1,11 +1,11 @@
 import { Controller } from "@hotwired/stimulus";
-import { MapSettings, createMap, pinIcon, postToApp, readJson, reloadOnThemeChange, whenGoogleReady } from "../map_common";
+import { MapSettings, announceMap, createMap, pinIcon, postToApp, readJson, reloadOnThemeChange, whenGoogleReady } from "../map_common";
 
 // Выбор места для App — Map/SelectLocation (Views/Map/SelectLocation.cshtml), замена Dispatch/SelectLocation V1.
 // Клик по карте или выбор подсказки → Map/Location (Safer) → адрес (улица) и город «City, ST ZIP» раздельно, как
 // GeocodeHelper.getCityAndAddress V1. Каждый выбор уходит в App сообщением { type: "location", … } через WebView2
 // postMessage — вместо разбора HTML страницы по id address/city/latlng в EO.WebBrowser; OK в App берёт последнее.
-// Начальная точка из ссылки (место груза/склада) показывается сразу с зумом 18, как в V1.
+// Начальная точка из ссылки (место груза/склада) показывается сразу с зумом 18, как в V1. Раскладка и Map options — как у /Map.
 
 declare const google: any;
 
@@ -21,10 +21,11 @@ interface Location {
 }
 
 export default class SelectLocationController extends Controller<HTMLElement> {
-    static targets = ["map", "busy", "address", "city", "latlng", "search", "searchClear", "suggestions", "error"];
+    static targets = ["map", "panel", "busy", "address", "city", "latlng", "search", "searchClear", "suggestions", "error"];
     static values = { token: String, point: Object, settings: Object, embedded: Boolean };
 
     declare readonly mapTarget: HTMLElement;
+    declare readonly panelTarget: HTMLElement;
     declare readonly busyTarget: HTMLElement;
     declare readonly addressTarget: HTMLElement;
     declare readonly cityTarget: HTMLElement;
@@ -41,6 +42,7 @@ export default class SelectLocationController extends Controller<HTMLElement> {
 
     private map: any = null;
     private marker: any = null;
+    private selected: { lat: number; lng: number } | null = null;
     private searchTimer: number | null = null;
     private suggestions: { placeId: string; display: string }[] = [];
     private activeSuggestion = -1;
@@ -58,6 +60,7 @@ export default class SelectLocationController extends Controller<HTMLElement> {
             ? createMap(this.mapTarget, settings, { lat: point.latitude, lng: point.longitude }, INITIAL_ZOOM)
             : createMap(this.mapTarget, settings);
         this.map.addListener("click", (e: any) => this.select(e.latLng.lat(), e.latLng.lng(), false));
+        announceMap(this.map);
         if (point) {
             this.select(point.latitude, point.longitude, false);
         }
@@ -67,6 +70,7 @@ export default class SelectLocationController extends Controller<HTMLElement> {
 
     private async select(lat: number, lng: number, center: boolean): Promise<void> {
         const id = ++this.requestId;
+        this.selected = { lat, lng };
         this.placeMarker(lat, lng);
         if (center) {
             this.map.setCenter({ lat, lng });
@@ -100,6 +104,18 @@ export default class SelectLocationController extends Controller<HTMLElement> {
     private placeMarker(lat: number, lng: number): void {
         if (this.marker) this.marker.setMap(null);
         this.marker = new google.maps.Marker({ map: this.map, position: { lat, lng }, icon: pinIcon(SELECTED_COLOR), zIndex: 10 });
+    }
+
+    // ---------- panel ----------
+
+    togglePanel(): void {
+        this.panelTarget.classList.toggle("hidden");
+    }
+
+    center(): void {
+        if (!this.selected) return;
+        this.map.setCenter(this.selected);
+        this.map.setZoom(INITIAL_ZOOM);
     }
 
     // ---------- search (как на /Map) ----------

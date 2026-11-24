@@ -35,6 +35,12 @@ namespace AutoPhoneV2 {
             playDtmf(ref dtmf);
         }
 
+        // Scope на сервере: app.sip (как AutoCall V3)
+        private static Serilog.ILogger Logger => Serilog.Log.ForContext(LogProperties.Scope, LogScopes.Sip);
+
+        /// <summary> Последнее состояние регистрации SIP: в лог только его смена, не каждое событие SDK (AutoCall V3) </summary>
+        private string _registration;
+
         private CAbtoPhone AbtoPhone;
         private AutoPhoneV2CallService CallService;
 
@@ -267,10 +273,11 @@ namespace AutoPhoneV2 {
             notificationsListBox.MeasureItem += lst_MeasureItem;
             notificationsListBox.DrawItem += lst_DrawItem;
 
-            var cm = new ContextMenu();
-            cm.MenuItems.Clear();
-            cm.MenuItems.Add("Copy", (_sender, _e) => Clipboard.SetText(String.Join("\n", notificationsListBox.Items.Cast<string>())));
-            notificationsListBox.ContextMenu = cm;
+            // V1 ContextMenu — в .NET 10 WinForms тип оставлен только для совместимости и бросает PlatformNotSupportedException: исключение
+            // в Load формы роняло App (0xc000041d, 2026-11-24). ContextMenuStrip — как в AutoCall V3
+            var cm = new ContextMenuStrip();
+            cm.Items.Add("Copy", null, (_sender, _e) => Clipboard.SetText(String.Join("\n", notificationsListBox.Items.Cast<string>())));
+            notificationsListBox.ContextMenuStrip = cm;
             notificationsListBox.ReadOnly = true;
 
             numberComboBox.GotFocus += NumberComboBox_GotFocus;
@@ -405,6 +412,31 @@ namespace AutoPhoneV2 {
 
         #endregion [ Load / Close Events ]
 
+        /// <summary>
+        ///     CAbtoPhone с проверкой COM-регистрации (AutoCall V3): неудачный QueryInterface COM кеширует до перезапуска процесса, поэтому
+        ///     интерфейс регистрируется заранее; при отказе активации — перерегистрация для пользователя и ещё одна попытка </summary>
+        private static CAbtoPhone CreateAbtoPhone() {
+            if (SipVoipSdk.IsProxyRegistered(typeof(CAbtoPhone).GUID) == false) {
+                Logger.ForContext(LogProperties.Details, SipVoipSdk.ComDiagnostics(typeof(CAbtoPhone).GUID))
+                    .Warning("SIPVoipSDK interface is not registered for marshaling, re-registering for current user");
+                SipVoipSdk.Register();
+            }
+            try {
+                return new CAbtoPhone();
+            } catch (Exception e) when (e is UnauthorizedAccessException or COMException or InvalidCastException) {
+                // InvalidCastException (E_NOINTERFACE) — нет регистрации интерфейса для proxy между потоками
+                Logger.Warning(e, "AbtoPhone activation failed, re-registering SIPVoipSDK for current user");
+                LogComDiagnostics("before re-registering");
+                SipVoipSdk.Register();
+                return new CAbtoPhone();
+            }
+        }
+
+        // Отдельной записью: при исключении сервер кладёт в Details стек, а не это значение
+        private static void LogComDiagnostics(string stage) =>
+            Logger.ForContext(LogProperties.Details, SipVoipSdk.ComDiagnostics(typeof(CAbtoPhone).GUID))
+                .Warning("SIPVoipSDK registration {Stage}", stage);
+
         public bool ConfigurePhone(AutoPhoneV2CallService callService) {
             // V1: ServiceLocator.Current.GetInstance<IAutoPhoneV2CallService>() ниже по методу
             CallService = callService;
@@ -415,12 +447,10 @@ namespace AutoPhoneV2 {
             } catch (Exception e) {
                 displayNotifyMsg($"Err: {e.Message}");
             }
-#if DEBUG
-            return false;
-#endif
+            // V1: #if DEBUG return false — в Debug-сборке телефон не создавался (из VS не проверить); в AutoCall V3 убрано — убрано и здесь
             try {
                 //Assign event handlers
-                AbtoPhone = new CAbtoPhone();
+                AbtoPhone = CreateAbtoPhone();
                 this.AbtoPhone.OnInitialized += this.AbtoPhone_OnInitialized;
                 this.AbtoPhone.OnLineSwiched += this.AbtoPhone_OnLineSwiched;
                 this.AbtoPhone.OnEstablishedCall += this.AbtoPhone_OnEstablishedCall;
@@ -498,9 +528,14 @@ namespace AutoPhoneV2 {
 
                 return true;
             } catch (FileNotFoundException e) {
+                // форма ещё не показана — без записи в лог причина терялась
+                Logger.Error(e, "AbtoPhone initialization failed");
                 this.ExternalExceptionHandler(e);
                 return false;
-            } catch (COMException e) {
+            } catch (Exception e) when (e is COMException or InvalidCastException) {
+                // InvalidCastException — QueryInterface к CAbtoPhone не прошёл (E_NOINTERFACE): без catch роняет App (как в AutoCall V3)
+                Logger.Error(e, "AbtoPhone initialization failed");
+                LogComDiagnostics("after failed initialization");
                 displayNotifyMsg(e.Message);
                 this.ExternalExceptionHandler(e);
                 return false;
@@ -1461,10 +1496,18 @@ namespace AutoPhoneV2 {
                 if (ln.TransferPhone != null) {
                     CallService.Notification(abtophone_state.Transferred, ln.Phone, ln.Number, ln.Model);
                 } else {
-                    CallService.Notification(abtophone_state.Ended, ln.Phone, ln.Number, ln.Model);
+                    // Failed — для метрики ошибок телефонии; занято, не ответили и сброс остаются обычным Ended (AutoCall V3)
+                    CallService.Notification(IsCallError(status) ? abtophone_state.Failed : abtophone_state.Ended, ln.Phone, ln.Number, ln.Model);
                 }
                 UpdateShortcuts();
             }
+        }
+
+        /// <summary>
+        ///     SIP-код завершения: ошибка — отказ PBX или сети (401/403/407 доступ, 404/484 номер, 488, 5xx).
+        ///     408/480/486/487/603 — не ответили, занято, отмена: это обычный исход звонка (AutoCall V3) </summary>
+        private static bool IsCallError(int status) {
+            return status is 401 or 403 or 404 or 407 or 484 or 488 || status >= 500 && status != 603;
         }
 
         private void AbtoPhone_OnRegistered(string Msg) {
@@ -1477,16 +1520,34 @@ namespace AutoPhoneV2 {
                 //Unregistered
             }
 
+            // метрика «SIP не зарегистрирован» (AutoCall V3): снятая регистрация (выход) — состояние не известно
             CConfig phoneCfg = AbtoPhone.Config;
+            string state = null;
             if (Msg.Contains("Registration removed")) {
+                AutoDispatch.Data.Metrics.ClientMetrics.SetSipRegistered(null);
+                state = "removed";
                 //toolStripStatusLabel1.Text = "Unknown";
                 //this.toolStripStatusLabel1.Image = Properties.Resources.unknown;
             } else if (Msg.Contains("Registration success")) {
+                AutoDispatch.Data.Metrics.ClientMetrics.SetSipRegistered(true);
+                state = "registered";
                 toolStripStatusLabel1.Text = $"Online {phoneCfg.RegUser}";
                 this.toolStripStatusLabel1.Image = Properties.Resources.online;
             } else if (Msg.Contains("Registration failure")) {
+                AutoDispatch.Data.Metrics.ClientMetrics.SetSipRegistered(false);
+                state = "failed";
                 toolStripStatusLabel1.Text = "Offline";
                 this.toolStripStatusLabel1.Image = Properties.Resources.offline;
+            }
+
+            // SDK повторяет регистрацию периодически: в лог только смена состояния
+            if (state != null && state != _registration) {
+                _registration = state;
+                if (state == "failed") {
+                    Logger.Warning("SIP registration failed: {Message}", Msg);
+                } else {
+                    Logger.Information("SIP registration {State}: {User}", state, phoneCfg.RegUser);
+                }
             }
 
             displayNotifyMsg(Msg);

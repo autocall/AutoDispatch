@@ -1,0 +1,36 @@
+@model List<AutoDispatch.Dtos.Dtos.CompanyCustomStatusDto>
+@{
+    // V1 CustomStatus/Index «Dispatch Custom Load Statuses»: Id, Name, правка в модалке (там же удаление в V1) — здесь удаление в строке
+    ViewData["Title"] = "Custom Statuses";
+}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Dispatch Custom Load Statuses</h1>
+    <button class="btn btn-primary btn-sm" hx-get="/Admin/CustomStatuses/Create" hx-target="#modal-content">+ Add</button>
+</div>
+@* App получает статусы компании при входе (SessionDto.CustomStatuses) *@
+<p class="text-sm opacity-60 mb-2">Statuses of your company for the Custom Status column of the App boards. Changes take effect in the App after restart.</p>
+<div class="card bg-base-100 shadow-sm overflow-x-auto">
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Id</th><th>Name</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var status in Model) {
+            <tr>
+                <td class="text-base-content/60">@status.EntityId</td>
+                <td>@status.Name</td>
+                <td class="text-right whitespace-nowrap">
+                    <button class="btn btn-ghost btn-xs" hx-get="/Admin/CustomStatuses/Edit/@status.EntityId" hx-target="#modal-content">Edit</button>
+                    <form class="inline" hx-post="/Admin/CustomStatuses/Delete/@status.EntityId" hx-confirm="Delete @status.Name?">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-ghost btn-xs text-error">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Count == 0) {
+            <tr><td colspan="3" class="text-center opacity-60">Nothing here</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

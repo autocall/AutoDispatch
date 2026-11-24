@@ -54,3 +54,15 @@ Dispatch Company, сервис `DispatchCompanyService` (V1 `ActualCompanyServic
 - Шаблон invoice: загрузка и скачивание побайтно; логотип 500x100 вместо малого — ошибка «must be lesser than 64x64».
 - Admin: колонка Company, `+ Add`; создание (дефолты V1) и удаление — тестовая строка удалена из БД.
 - В браузере страница глазами не смотрелась — проверено через HTTP (форма разбиралась скриптом).
+
+## Custom Statuses (`/Admin/CustomStatuses`, 2026-11-24)
+
+Перенос V1 `CustomStatus/Index` «Dispatch Custom Load Statuses»: свои статусы груза компании пользователя — колонка и пункт Custom Status
+бордов App. Доступ как V1 — Admin и Owner (меню у обоих, рядом с Dispatch Companies); статусы — только компании текущего пользователя
+(у Admin — системной), чужой статус не открывается (`AccessDeniedException` → 400). Контроллер `AdminCustomStatusesController` на перенесённом
+`CustomStatusService` (`SimpleDispatchServices.cs`): таблица Id, Name, «+ Add»/Edit в модалке htmx, удаление с подтверждением (в V1 — кнопка
+в модалке), Name обязателен, ≤ 64. Удаление жёсткое, как V1: у грузов остаётся `CustomStatusId` (FK нет — «do not user foreign key to the load»).
+App берёт статусы при входе (`SessionDto.CustomStatuses`) — изменения видны после перезапуска App. При переносе найдено: имена статусов
+не доходили до App — исправлено `[DataMember]` в `CompanyCustomStatusDto` ([[plan]] «Имена Custom Status при входе App»). В бою V1
+(2026-11-24): 5 статусов у 4 компаний, 11 грузов с ними. Тест `13_CustomStatuses` (без логина — LogIn, обязательное имя, добавление в
+компанию пользователя, правка, имя в `customStatuses` входа App, чужой статус — не открывается и не удаляется, удаление).

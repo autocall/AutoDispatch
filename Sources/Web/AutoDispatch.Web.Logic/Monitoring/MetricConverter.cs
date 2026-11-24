@@ -14,6 +14,8 @@ public static class MetricConverter {
                 return MetricKindEnum.Median;
             case MetricTypeEnum.OnlineUsers:
                 return MetricKindEnum.DistinctUsers;
+            case MetricTypeEnum.AbtoPhoneUnregisteredUsers:
+                return MetricKindEnum.LastPerUser;
             default:
                 return MetricKindEnum.Sum;
         }
@@ -45,5 +47,18 @@ public static class MetricConverter {
             step++;
         }
         return step;
+    }
+
+    /// <summary>
+    ///     Телефония клиента (CallServiceType App) → метрики звонков (как AutoCall V3) </summary>
+    public static (MetricTypeEnum Calls, MetricTypeEnum Errors)? CallTypes(string service) {
+        switch (service) {
+            case "MicroSIP":
+                return (MetricTypeEnum.MicroSipCallCounter, MetricTypeEnum.MicroSipCallErrorCounter);
+            case "AbtoPhone":
+                return (MetricTypeEnum.AbtoPhoneCallCounter, MetricTypeEnum.AbtoPhoneCallErrorCounter);
+            default:
+                return null;
+        }
     }
 }

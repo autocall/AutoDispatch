@@ -11,10 +11,26 @@ public class ServerMetricDto {
 
 /// <summary>
 ///     Отчёт App за последние 30 с (Api/Metrics). Сам факт отчёта — пользователь онлайн.
-///     Не накапливается: неотправленный отчёт теряется. Показатели dispatch — этап 8 плана </summary>
+///     Не накапливается: неотправленный отчёт теряется. Показатели dispatch — этап 8 плана; телефония — как AutoCall V3 </summary>
 public class ClientMetricsDto {
+
+    /// <summary>
+    ///     По телефонии: MicroSIP, AbtoPhone (CallServiceType App) </summary>
+    public List<ClientCallMetricsDto> Calls { get; set; } = [];
+
+    /// <summary>
+    ///     Регистрация софтфона на PBX; null — не известна (телефония не запущена или не сообщает) </summary>
+    public bool? SipRegistered { get; set; }
 
     /// <summary>
     ///     Необработанные исключения App за 30 с </summary>
     public int Exceptions { get; set; }
+}
+
+public class ClientCallMetricsDto {
+    public string Service { get; set; }
+    /// <summary>
+    ///     Дозвонился или не ответили </summary>
+    public int Calls { get; set; }
+    public int Errors { get; set; }
 }

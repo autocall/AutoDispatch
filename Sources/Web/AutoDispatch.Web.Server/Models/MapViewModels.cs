@@ -35,6 +35,16 @@ public class MapOrderStopsLinkRequest {
 }
 
 /// <summary>
+///     Панель «Map options» (_MapOptionsPart): токен ссылки для Map/Settings, настройки, ключи радара погоды </summary>
+public class MapOptionsPartModel {
+    public string Token { get; set; }
+    public MapSettingsDto Settings { get; set; }
+    public string AerisWeatherId { get; set; }
+    public string AerisWeatherSecret { get; set; }
+    public bool Embedded { get; set; }
+}
+
+/// <summary>
 ///     Map/SelectLocation: начальная точка из ссылки (kind Location) или null — пустая карта </summary>
 public class MapSelectLocationViewModel {
     public string Token { get; set; }
@@ -42,6 +52,7 @@ public class MapSelectLocationViewModel {
     public MapSettingsDto Settings { get; set; }
     public string GoogleMapJsKey { get; set; }
     public bool Embedded { get; set; }
+    public MapOptionsPartModel Options { get; set; }
 }
 
 /// <summary>
@@ -53,6 +64,7 @@ public class MapOrderStopsViewModel {
     public string GoogleMapJsKey { get; set; }
     public int MaxStops { get; set; }
     public bool Embedded { get; set; }
+    public MapOptionsPartModel Options { get; set; }
 }
 
 /// <summary>

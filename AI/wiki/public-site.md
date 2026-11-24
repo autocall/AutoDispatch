@@ -24,7 +24,7 @@
 `RouteLocation`/`RouteLocation2` заменяет готовый `/Map` ([[map]] V3; ссылка `Api/Maps/Link`). Две новые страницы — по той же схеме:
 `[AllowAnonymous]`, пропуск — токен `r` в каждом запросе, `embedded=true` для WebView2 (`_EmbeddedLayout`, тема из настроек карты),
 без параметра — `_Layout` сайта; настройки карты пользователя (тип, traffic) — `UserSetting` секция `Map`. Общий код страниц —
-`Client/map_common.ts` (карта по настройкам, маркеры-кружки, `readJson`, `postToApp`); `map_controller.ts` `/Map` не трогался.
+`Client/map_common.ts` (карта по настройкам, маркеры-кружки, `readJson`, `postToApp`, `announceMap`) и панель «Map options» (`_MapOptionsPart`, `map_options_controller.ts`); `map_controller.ts` `/Map` не трогался.
 
 | Страница | Ссылка для App | Токен | Запросы страницы |
 |---|---|---|---|
@@ -36,6 +36,16 @@
 («City, ST ZIP» — как собирал `GeocodeHelper.getCityAndAddress` V1 из address_components). Каждый выбор уходит в App
 `window.chrome.webview.postMessage({ type: "location", latitude, longitude, formattedAddress, address, city })` — вместо разбора HTML
 по id `address/city/latlng` через `GetHtml()` EO.WebBrowser в V1 `EditLocationDialog`; OK в App берёт последнее сообщение (этап 7).
+
+**Единый вид карт (2026-11-24, замечание пользователя):** SelectLocation сделан как `/Map` — слева кнопки (свернуть карточку, «Center on location»)
+и карточка Location под ними (раньше карточка стояла на уровне поиска и при окне App 900 px наезжала на него), справа «Map options».
+Кнопки Copy/Google Maps в карточке и строку ссылки сверху (как у `MapWindow` Show Trip) пользователь решил не делать (2026-11-24):
+страница только возвращает точку в App, открытая в браузере ссылка ничего не вернёт.
+«Map options» (тип карты Default/Satellite, Traffic, Weather — радар Aeris, тема в embedded) — общий кусок `Views/Map/_MapOptionsPart.cshtml`
+(`MapOptionsPartModel`) и Stimulus `map_options_controller.ts` на SelectLocation и OrderStops; карту страница отдаёт событием `map:created`
+(`map_common.ts announceMap`), слои ведёт панель (из `createMap` Traffic убран). `Map/Settings` принимает и токен OrderStops
+(`ParseLink ?? ParseOrderStopsLink`). `/Map` (`Index.cshtml`, `map_controller.ts` — копия V3) не менялся: разметка панели та же.
+Тесты `10_PublicSite` Test01/Test02: панель на страницах, сохранение настроек токеном OrderStops, поддельный токен — 403.
 
 **OrderStops** (`order_stops_controller.ts`): остановки считает сервер `MapService.GetOrderStopsAsync` как V1 `DispatchController.OrderStops` —
 грузы Carrier-борда компании пользователя с этим трейлером, AtPickUp → pickup (PickupOrder) и delivery, InTransit → delivery, сортировка по Order;

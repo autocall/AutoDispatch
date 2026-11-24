@@ -42,6 +42,11 @@
                 @* V1 Menu.cshtml: Dispatch Companies — у Admin в меню Admin, у Owner отдельным пунктом *@
                 @if (User.IsInRole(nameof(RoleEnum.Admin)) || User.IsInRole(nameof(RoleEnum.Owner))) {
                     <a class="btn btn-ghost btn-sm" href="/Admin/DispatchCompanies">Dispatch Companies</a>
+                    <a class="btn btn-ghost btn-sm" href="/Admin/CustomStatuses">Custom Statuses</a>
+                }
+                @* V1 Menu.cshtml: Factoring Companies — в меню Admin сразу после Dispatch Companies *@
+                @if (User.IsInRole(nameof(RoleEnum.Admin))) {
+                    <a class="btn btn-ghost btn-sm" href="/Admin/FactoringCompanies">Factoring Companies</a>
                 }
             </div>
             @* flex-1 (basis 0) на узком: группа не уходит на свою строку, длинный email обрезается *@

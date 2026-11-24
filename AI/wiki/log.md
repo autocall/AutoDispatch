@@ -407,3 +407,87 @@ V1 принимал оба номера; по инструкции IRS (Part I �
 ## [2026-11-23] decision | W-9 2024 — версия setup packet 3, старые packet'ы на форме V1
 
 По замечанию пользователя W-9 2024 — только для новых packet'ов через версию packet'а (как `_02` в V1): `SetupPacketVersion = 3`, view, шаблон и заполнение PDF по версии. Обновлены [[plan]] «Форма W-9 2024», [[setup-packet]], [[app-testing]] 6.30.
+
+## [2026-11-23] fix | Регистрация: «same as» по колонке полей, дата подписи Agreement по умолчанию
+
+«same as» в контактах (шаг 2) и агентствах (шаг 6) — над полем, в колонке First & Last Name / Company Name; дата подписи шага 4 — сегодня с первого показа (V1 `moment(null)`), поле только для чтения, как в V1. [[app-testing]] 6.31.
+
+## [2026-11-24] decision | App: убрана мигающая метка «new» у кнопок My Carriers
+
+По решению пользователя `new.gif` (`IsNewDatCompany` — есть завершённые, но не принятые setup packet'ы) снят с кнопок My Carriers в `DispatchBoard` и `DispatchAccountBoard`; App собирается. [[plan]] «Метка «new» у My Carriers», [[app-testing]] 6.32.
+
+## [2026-11-24] decision | App: метка «new» у My Carriers остаётся, как в V1
+
+Решение предыдущей записи отменено пользователем: удаление `new.gif` откачено, строка в [[plan]] убрана, [[app-testing]] 6.32 обновлена.
+
+## [2026-11-24] test | Setup packet: Accept v2/v3, повторная отправка, Workers Compensation «No», Insurance Instructions
+
+Проверено через `Api/Dispatch` на копии сервера: W-9 по версии packet'а, переход v2→v3 с шага 4, возврат на шаг 6, все письма (в том числе Insurance Instructions) — на тестовый адрес. Найдено: Release-сборка тестов и сервера берёт боевой `Website` — записано в [[app-testing]] «Окружение». [[app-testing]] 6.33.
+
+## [2026-11-24] fix | Test01 SetupPacket: скрытые Id контактов/агентств и даты — как браузер
+
+Пустые контакты в setup_packet.pdf тестового карриера — тест не отправлял скрытые `*ContactId`/`*InsuranceAgencyId`, `W9AgreeDate`, `WorkersCompensationSignatureDate`; регистрация в браузере не затронута. Тест исправлен, 6.33 уточнена. [[app-testing]] 6.34.
+
+## [2026-11-24] fix | Снимок setup packet для App — с контактами и агентствами (Accept давал «error»)
+
+`SaveWithHistoryAsync` писал снимок из сущности LinqToDB без связей (в V1 их подтягивал EF); App обновлял packet из события и терял `WorkersCompensationInsuranceAgency` — Accept после правки в Web падал. `SaveSetupPacket` перезаписывает снимок со связями. [[app-testing]] 6.35.
+
+## [2026-11-24] test | Брокерские борды: полный цикл брокерского груза в App
+
+Broker Dispatch → Broker Accounting на тестовых грузах 13170/13171: Assign/Unassign Carrier, Create/Send/Delete Confirmation, BOL, статусы, Attach Invoice/Check, Paid/Unpaid, canceled, Undo, Delete — ошибок нет; письмо — только на тестовый адрес. [[app-testing]] сессия 7.
+
+## [2026-11-24] test | Брокерские борды: Line Haul, Expenses, Accessorial, Change Location, Copy Summary, Export
+
+Тестовый груз 13172: правки ставок и расходов (форматы JSON как V1), выбор места на карте и история мест, сводка в буфер, выгрузка в Excel — ошибок нет; груз удалён. [[app-testing]] 7.11–7.17.
+
+## [2026-11-24] change | Карты App в едином виде: SelectLocation и OrderStops как /Map
+
+По замечанию пользователя: карточка места не наезжает на поиск (раскладка /Map), панель «Map options» (спутник, Traffic, Weather, тема) — общий `_MapOptionsPart` + `map_options_controller.ts`, координаты — Copy и Google Maps (в App — системный браузер). [[public-site]] «Единый вид карт», [[app-testing]] 7.18.
+
+## [2026-11-24] change | Карта выбора места: без Copy/Google Maps и строки ссылки
+
+По решению пользователя кнопки координат убраны (App снова без перехвата NewWindowRequested), строку ссылки как у Show Trip не добавлять; раскладка и Map options остаются. [[public-site]] «Единый вид карт».
+
+## [2026-11-24] change | Перенесена страница Factoring Companies (`/Admin/FactoringCompanies`, только Admin)
+
+Справочник факторинговых компаний для шага 2 setup packet — V1 `FactoringCompany/Index`: список с поиском и сортировкой, добавление, правка, удаление; доступ только Admin (решение пользователя; в V1 страница была без авторизации). [[setup-packet]], [[plan]], [[app-testing]] 7.19.
+
+## [2026-11-24] change | Перенесена страница Custom Statuses; имена статусов при входе App
+
+`/Admin/CustomStatuses` (Admin, Owner — как V1) на перенесённом `CustomStatusService`. Найдено и исправлено: `SessionDto.CustomStatuses` уходил в App без имён (`BaseDto` — `[DataContract]`, у `Name/CompanyId` не было `[DataMember]`) — по решению пользователя атрибуты добавлены в контракт. [[dispatch-companies]], [[plan]], [[protocol]], [[app-testing]] 7.20.
+
+## [2026-11-24] fix | App: ссылка на Custom Statuses в окне фильтров — на новый сайт
+
+`FiltersDialog` открывал V1 `https://myautocall.net/CustomStatus`; теперь `Settings.WebUrl` + `Admin/CustomStatuses`. [[app-testing]] 7.20.
+
+## [2026-11-24] fix | App: ссылки окна новой версии — на dispatch.myautocall.net
+
+`NewVersionDialog` вёл на `v3.myautocall.net/Download/setup.exe` и `AutoCall.application` (AutoCall V3) — теперь `dispatch.myautocall.net/Download/setup.exe` и `AutoDispatch.application`. Окно в App не открывается (вызов убран с модулем AutoCall), текст — про AutoCall V2/DAT. Ссылки Settings (DeskPins, ABTO VoIP SDK, Vodia, расширение Chrome) — обработчики без разметки и в V1, на экране их нет; не трогались. [[app]]
+
+## [2026-11-24] change | App: удалены NewVersionDialog и неиспользуемые ссылки Settings
+
+По решению пользователя: `NewVersionDialog` (AutoCall V1 — переход пользователей на AutoCall V2, в AutoDispatch не открывался) удалён вместе с правкой его ссылок из предыдущей записи; из `SettingsDialog` удалены обработчики без разметки (Vodia, расширение Chrome, DeskPins, ABTO VoIP SDK) и ненужный `using System.Diagnostics`. App собирается. [[app]]
+
+## [2026-11-24] fix | App: AutoPhone v.2 не запускался в Debug-сборке
+
+`PhoneForm.ConfigurePhone` (V1) возвращал false под `#if DEBUG` — софтфон Abto не создавался, ошибок нет. Заглушка убрана, как в AutoCall V3; ошибки настройки телефона пишутся в лог. [[app-testing]] 7.21.
+
+## [2026-11-24] fix | App: заглушка AutoPhone v.2 для Debug возвращена
+
+Без `#if DEBUG return false` App из VS (F5) падал при старте `0xc000041d` — AutoPhone v.2 выбран в настройках и стартует вместе с App. Заглушка V1 возвращена с предупреждением в логе; AutoPhone v.2 проверять Release-сборкой без отладчика. [[app-testing]] 7.21.
+
+## [2026-11-24] fix | App: AutoPhone v.2 — ContextMenu → ContextMenuStrip (причина падения по F5)
+
+Падение `0xc000041d` вызывал не отладчик, а `new ContextMenu()` в `SIPPhone_Load` (V1): в .NET 10 WinForms бросает `PlatformNotSupportedException`. Как в AutoCall V3 — `ContextMenuStrip`; заглушка `#if DEBUG` снова убрана, `InvalidCastException` при создании телефона перехватывается. Прежняя запись о проверке потоков под отладчиком — неверная гипотеза. [[app-testing]] 7.21.
+
+## [2026-11-24] change | Софтфоны: лог (Scope sip) и метрики звонков/регистрации как в AutoCall V3
+
+App: `CallService` (звонки, ошибки), `MicroSIPHelper`/`AbtoPhoneHelper`, `PhoneForm` (регистрация SIP, `IsCallError` → Failed, `CreateAbtoPhone` + диагностика COM; регистрация SDK вынесена в `AutoPhoneV2/Services/SipVoipSdk`), `ClientMetrics` звонков и SIP. Сервер: `MetricTypeEnum` 42–46, `ClientMetricsDto.Calls/SipRegistered`, `MetricCollector`, колонки на `/Admin/Metrics`; миграция не нужна (строки Metric по типу). [[app]], [[plan]], [[app-testing]] 7.21–7.22.
+
+## [2026-11-24] fix | Web: место склада при Move To Warehouse (keepLocation)
+
+`BindLoads` (склад) и `SaveParentAsync` ставили `CurrentLocation`, а `_saveWithHistory_SpecialUpdate` возвращал место из БД (V1 EF-сущность уже несла изменение, V3 перечитывает БД). Добавлен флаг `keepLocation` в `BaseSaveAsync`/`BaseSavesAsync`/`SaveWithHistory(ies)Async`. Проверено на копии сервера, тесты 46/46; в Web пользователя — после перезапуска. [[web-logic]], [[app-testing]] 8.5.
+
+## [2026-11-24] test | App: сессия 8 — Carrier Dispatch (трейлер и склад, документы, несколько точек, связка с брокерским грузом)
+
+16 проверок на грузах 20 и 13173 (части /1, /2): Assign Driver с confirmation, окно Trailer, OrderStops (0 остановок у assigned — как V1; 4 остановки, перетаскивание меняет маршрут 2 505 → 2 170 mi и сохраняет порядок), Assign Brokerage Load (Shipment как V1), Go To Linked Load (по Pro#, не по ShipmentId), Edit Consolidation на контейнере. Найдена и исправлена одна ошибка (8.5); как V1 — перенос строки между таблицами только по Refresh, View Trailer у груза на складе ничего не делает. [[app-testing]].

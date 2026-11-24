@@ -101,3 +101,17 @@ COI и `DownloadFileCOI`, шаг 14 (`Setup packet completed` в логе; пи�
 Раскладка шага 7 (замечания пользователя 2026-11-23, [[app-testing]] 6.26–6.27): галочка 3b — в конце последней строки текста; справа от 3a —
 пункт 4, каждая подпись и её выпадающий список с новой строки (в daisyUI 5 нет `form-control`, `label` строчный — нужны `block`);
 «Requester’s name and address» — справа от 5–6. Поле 2 (Business name) обязательное, как в V1 (решено пользователем). SSN и EIN вместе не принимаются — «Enter only SSN or EIN — not both», как Safer, отступление от V1 ([[plan]] «W-9: SSN или EIN, не оба»).
+
+## Справочник Factoring Companies (`/Admin/FactoringCompanies`, 2026-11-24)
+
+Перенос страницы V1 `FactoringCompany/Index` (меню Admin): справочник `SetupPacketFactoringCompany` (188 записей), из которого карриер
+выбирает Pay To на шаге 2 (`copy-fields#fill` по data-атрибутам option) и App — Factoring Company (`Api/SetupPacket/FactoringCompanies`).
+Общий для всех компаний. Контроллер `AdminFactoringCompaniesController`, сервис — уже перенесённый `FactoringCompanyService`
+(`SimpleDispatchServices.cs`, V1 `LookupAsync`/`GetByIdAsync`/`SaveAsync`/`DeleteAsync`): таблица Name, Address, City, State, Zip Code,
+Email с поиском по подстроке во всех колонках и штате и сортировкой по колонке (номер колонки — как DataTables V1; страниц нет — строк ≈190),
+добавление и правка в модалке htmx (как `/Admin/Companies`), удаление с подтверждением. Обязательные — Name, Address, City, State
+(V1 `FactoringCompanyModel.ts`), длины — колонки; формата email V1 не проверял — и здесь нет. Новый Id = max + 1 (ключ без identity, как V1);
+страны в форме нет — `CountryId` сохраняется как был (у всех 0). Удаление, как V1: packet'ы держат `FactoringCompanyId` без FK и свои копии Pay To.
+**Доступ — только Admin (решено 2026-11-24, [[plan]])**: в V1 пункт меню был у Admin, но контроллер без авторизации — править и удалять мог
+любой со ссылкой. Тест `12_FactoringCompanies` (без логина — LogIn, список = число строк, сортировка, обязательный штат, добавление max + 1,
+поиск, правка, удаление; тестовая запись убирается).

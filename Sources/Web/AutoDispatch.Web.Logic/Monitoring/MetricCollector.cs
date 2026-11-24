@@ -62,6 +62,17 @@ public class MetricCollector {
     public void AddClientReport(Guid userId, ClientMetricsDto dto) {
         // отчёт приходит, пока App открыт, — уже онлайн
         this.AddUser(MetricTypeEnum.OnlineUsers, userId, true);
+        // телефония — как AutoCall V3
+        foreach (var call in dto.Calls ?? []) {
+            if (MetricConverter.CallTypes(call.Service) is not { } types) {
+                continue;
+            }
+            this.Add(types.Calls, call.Calls);
+            this.Add(types.Errors, call.Errors);
+        }
+        if (dto.SipRegistered is { } registered) {
+            this.AddUser(MetricTypeEnum.AbtoPhoneUnregisteredUsers, userId, registered == false);
+        }
         this.Add(MetricTypeEnum.AppExceptions, dto.Exceptions);
     }
 

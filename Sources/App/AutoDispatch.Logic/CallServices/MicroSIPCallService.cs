@@ -152,7 +152,7 @@ namespace AutoCall.Logic.Services {
                             sw.WriteLine(JsonExtension.SerializeObject(obj));
                         }
                     } catch (IOException e) {
-                        _webl.e($"ERROR: {e.Message}");
+                        Logger.Error(e, "MicroSIP StartAction {Action}", action);
                     }
                 }
             });
@@ -240,7 +240,7 @@ namespace AutoCall.Logic.Services {
                         }
                     }
                 } catch (Exception e) {
-                    _webl.e($"ERROR: {e.Message}");
+                    Logger.Error(e, "MicroSIP StartNotification");
                 } finally {
                     NotificationStarted = false;
                 }
@@ -248,7 +248,7 @@ namespace AutoCall.Logic.Services {
         }
 
         public override async Task<bool> StartCallAsync(string phoneNumber, string recordId = null, string company = null, string origin = null, string destination = null, object model = null) {
-            await base.StartCallAsync(phoneNumber);
+            await base.StartCallAsync(phoneNumber, recordId, company);
             lock (_lock) {
                 if (base.CallType == CallType.SingleCall) {
                     if (_currentCalls.Any()) {

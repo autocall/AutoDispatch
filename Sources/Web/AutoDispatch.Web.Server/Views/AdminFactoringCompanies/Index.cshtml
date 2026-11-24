@@ -1,0 +1,60 @@
+@model FactoringCompaniesIndexViewModel
+@{
+    // V1 FactoringCompany/Index: таблица Name, Address, City, State, Zip Code, Email с поиском и сортировкой, добавление/правка в модалке, удаление
+    ViewData["Title"] = "Factoring Companies";
+}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Factoring Companies</h1>
+    <button class="btn btn-primary btn-sm" hx-get="/Admin/FactoringCompanies/Create" hx-target="#modal-content">+ Add</button>
+</div>
+<p class="text-sm opacity-60 mb-2">The list a carrier chooses the Pay To factoring company from at the Contact Information step of the setup packet.</p>
+
+@* поиск как на Companies: Enter или крестик очистки; сортировка сохраняется *@
+<div class="card bg-base-100 shadow-sm p-3 mb-4">
+    <form method="get" class="flex flex-row flex-wrap items-end gap-2">
+        <input type="hidden" name="sort" value="@Model.Sort" />
+        <input type="hidden" name="desc" value="@Model.Desc.ToString().ToLower()" />
+        <label class="input input-sm w-64">
+            <span class="label">Search</span>
+            <input type="search" name="search" value="@Model.Search" onchange="this.form.requestSubmit()" onsearch="this.form.requestSubmit()" />
+        </label>
+        @if (String.IsNullOrEmpty(Model.Search) == false) {
+            <a class="btn btn-ghost btn-sm" href="/Admin/FactoringCompanies">Reset</a>
+        }
+        <span class="text-sm opacity-60 ml-auto">@Model.Companies.Count</span>
+    </form>
+</div>
+<div class="card bg-base-100 shadow-sm overflow-x-auto">
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                @foreach (var (column, title) in new[] { ("name", "Name"), ("address", "Address"), ("city", "City"), ("state", "State"), ("zip", "Zip Code"), ("email", "Email") }) {
+                    <th><a class="link link-hover" href="@Model.SortLink(column)">@title@Model.SortMark(column)</a></th>
+                }
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var company in Model.Companies) {
+            <tr>
+                <td>@company.Name</td>
+                <td>@company.Address</td>
+                <td>@company.City</td>
+                <td>@FactoringCompaniesIndexViewModel.StateCode(company.StateId)</td>
+                <td>@company.ZipCode</td>
+                <td>@company.Email</td>
+                <td class="text-right whitespace-nowrap">
+                    <button class="btn btn-ghost btn-xs" hx-get="/Admin/FactoringCompanies/Edit/@company.EntityId" hx-target="#modal-content">Edit</button>
+                    <form class="inline" hx-post="/Admin/FactoringCompanies/Delete/@company.EntityId" hx-confirm="Delete @company.Name?">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-ghost btn-xs text-error">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Companies.Count == 0) {
+            <tr><td colspan="7" class="text-center opacity-60">Nothing here</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -43,10 +43,12 @@ export function createMap(element: HTMLElement, settings: MapSettings, center = 
         zoomControl: true,
         zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER }
     });
-    if (settings.traffic) {
-        new google.maps.TrafficLayer().setMap(map);
-    }
     return map;
+}
+
+// Слои (Traffic, Weather) и переключатели — у панели Map options (map_options_controller.ts): страница отдаёт ей карту
+export function announceMap(map: any): void {
+    window.dispatchEvent(new CustomEvent("map:created", { detail: { map } }));
 }
 
 // В браузере смена темы сайта перезагружает страницу: colorScheme задаётся только при создании карты (как /Map)

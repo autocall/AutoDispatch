@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Xunit.Abstractions;
 using AutoDispatch.Web.Common;
+using AutoDispatch.Web.Common.Extensions;
 
 namespace AutoDispatch.Web.Test;
 
@@ -49,7 +50,7 @@ public class SetupPacket_Test {
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "DECLARE @packet uniqueidentifier = (SELECT SetupPacketId FROM DatCompany WHERE EntityId = @id);" +
-            " UPDATE DatCompany SET SetupPacketId = NULL, SetupPacketCompleted = 0 WHERE EntityId = @id;" +
+            " UPDATE DatCompany SET SetupPacketId = NULL, SetupPacketCompleted = 0, SetupPacketAccept = 0, W9File = NULL, SetupPacketFile = NULL WHERE EntityId = @id;" +
             " DELETE FROM SetupPacketReference WHERE SetupPacketId = @packet; DELETE FROM SetupPacket WHERE EntityId = @packet;";
         command.Parameters.AddWithValue("@id", Guid.Parse(CarrierId));
         await command.ExecuteNonQueryAsync();
@@ -158,10 +159,24 @@ public class SetupPacket_Test {
         foreach (var pair in Contact("DispatchContact", "Jane Roe")) step02[pair.Key] = pair.Value;
         foreach (var pair in Contact("AfterHourContact", "", has: false)) step02[pair.Key] = pair.Value;
         step02["DispatchSameAs"] = "Corporate";
+        // как браузер: EntityId контакта и ссылка packet'а на него (скрытые {name}Id, V1 SetupPacketStep02Model.ts) — со страницы;
+        // без {name}Id ссылка обнулялась и в setup_packet.pdf оставались «SetupPacket.CorporateContact.Contact» (2026-11-24)
+        foreach (var name in new[] { "CorporateContact", "SalesContact", "DispatchContact", "AfterHourContact" }) {
+            var id = Regex.Match(html, $"name=\"{name}.EntityId\" value=\"([^\"]*)\"").Groups[1].Value;
+            Assert.Equal(id, Regex.Match(html, $"name=\"{name}Id\" value=\"([^\"]*)\"").Groups[1].Value);
+            step02[$"{name}.EntityId"] = id;
+            step02[$"{name}Id"] = id;
+        }
         Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(http, "Step02", html, step02)).StatusCode);
+        Assert.Equal(Guid.Parse(step02["CorporateContactId"]),
+            await ScalarAsync("SELECT sp.CorporateContactId FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
+        Assert.Equal(Guid.Parse(step02["DispatchContactId"]),
+            await ScalarAsync("SELECT sp.DispatchContactId FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
 
         // шаг 4 (версия 2): две подписи
         html = await PageAsync(http, "BROKER - CARRIER AGREEMENT");
+        // дата подписи — сегодня с первого показа шага (V1 moment(null)), не только после Next
+        Assert.Equal(2, Regex.Matches(html, "value=\"[^\"]+\" placeholder=\"Signature Date\"").Count);
         var unsigned = await PostAsync(http, "Step04", html, new() { ["Agreement_02Signature"] = "" });
         Assert.Equal(HttpStatusCode.OK, unsigned.StatusCode);
         Assert.Contains("You must sign the agreement", await unsigned.Content.ReadAsStringAsync());
@@ -173,15 +188,22 @@ public class SetupPacket_Test {
 
         // шаг 6: агентства; workers compensation без страховки — отказ с подписью
         html = await PageAsync(http, "Producer Requirements");
-        var step06 = new Dictionary<string, string> { ["WorkersCompensationSignature"] = "John Doe" };
+        var step06 = new Dictionary<string, string> { ["WorkersCompensationSignature"] = "John Doe",
+            ["WorkersCompensationSignatureDate"] = Regex.Match(html, "name=\"WorkersCompensationSignatureDate\" value=\"([^\"]*)\"").Groups[1].Value };
         foreach (var (prefix, has) in new[] { ("GeneralLiabilityInsuranceAgency", true), ("AutoInsuranceAgency", true), ("CargoInsuranceAgency", true), ("WorkersCompensationInsuranceAgency", false) }) {
-            step06[$"{prefix}.EntityId"] = Guid.NewGuid().ToString();
+            // как браузер: EntityId агентства и ссылка packet'а на него ({prefix}Id) — со страницы
+            var id = Regex.Match(html, $"name=\"{prefix}.EntityId\" value=\"([^\"]*)\"").Groups[1].Value;
+            Assert.Equal(id, Regex.Match(html, $"name=\"{prefix}Id\" value=\"([^\"]*)\"").Groups[1].Value);
+            step06[$"{prefix}.EntityId"] = id;
+            step06[$"{prefix}Id"] = id;
             step06[$"{prefix}.HasInsurance"] = has ? "true" : "false";
             step06[$"{prefix}.CompanyName"] = has ? "Acme Insurance" : "";
             step06[$"{prefix}.Phone"] = has ? "(312) 555-0101" : "";
             step06[$"{prefix}.Number"] = has ? "POL-1" : "";
         }
         Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(http, "Step06", html, step06)).StatusCode);
+        Assert.Equal(Guid.Parse(step06["AutoInsuranceAgencyId"]),
+            await ScalarAsync("SELECT sp.AutoInsuranceAgencyId FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
 
         // шаг 7: W-9 — EIN в формате, согласие, подпись
         html = await PageAsync(http, "Request for Taxpayer");
@@ -189,8 +211,10 @@ public class SetupPacket_Test {
             ["W9Name"] = "Carpathian Eagle Inc", ["W9BusinessName"] = "Carpathian Eagle", ["W9CompanyType"] = "6", ["W9TaxClassification"] = "2",
             ["W9Address"] = "1 Main St", ["W9City"] = "Chicago", ["W9StateId"] = "32", ["W9ZipCode"] = "60604",
             ["W9EmployerIdentificationNumber"] = "12-3456789", ["W9Agree"] = "true", ["W9Signature"] = "John Doe",
-            ["W9ForeignPartnersHas"] = "true" // 3b W-9 Rev. March 2024
+            ["W9ForeignPartnersHas"] = "true", // 3b W-9 Rev. March 2024
+            ["W9AgreeDate"] = Regex.Match(html, "name=\"W9AgreeDate\" value=\"([^\"]*)\"").Groups[1].Value // скрытое поле, дата в W-9
         };
+        Assert.NotEqual("", step07["W9AgreeDate"]);
         // незаполненное поле — как в V1, красным «This field is required.» под полем: форма novalidate, проверяет сервер
         // (подсказка браузера была на языке браузера — замечание пользователя 2026-11-23)
         Assert.Contains("<form method=\"post\" novalidate", html);
@@ -207,6 +231,7 @@ public class SetupPacket_Test {
         Assert.Contains("Must be ##-#######", await badEinResponse.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(http, "Step07", html, step07)).StatusCode);
         Assert.Equal(true, await ScalarAsync("SELECT sp.W9ForeignPartnersHas FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
+        Assert.IsType<DateTime>(await ScalarAsync("SELECT sp.W9AgreeDate FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
 
         // шаг 13: документы — multipart с COI
         html = await PageAsync(http, "Upload your documents");
@@ -227,6 +252,14 @@ public class SetupPacket_Test {
         // письма на шаге 14 нет (оно при Accept в App) — packet должен завершиться; раньше падал AccessDenied, если создателя карриера
         // не было среди пользователей (перенос берёт не всех — AI/wiki/app-testing.md 6.20)
         Assert.Equal(true, await ScalarAsync("SELECT SetupPacketCompleted FROM DatCompany WHERE EntityId = @id"));
+        // контакты шага 2 пережили шаги 4–14 (их формы контактов не несут)
+        Assert.Equal(Guid.Parse(step02["CorporateContactId"]),
+            await ScalarAsync("SELECT sp.CorporateContactId FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id"));
+        // снимок события, из которого App обновляет packet, — с контактами и агентствами, как в V1 (без агентства Accept в App давал «error»)
+        var snapshot = BinaryHelper.GetString(ZipExtension.Decompress((byte[])await ScalarAsync(
+            "SELECT h.Data FROM HistoryObject h JOIN SetupPacket sp ON sp.HistoryId = h.Id JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id")));
+        Assert.Contains("\"CorporateContact\":{", snapshot);
+        Assert.Contains("\"AutoInsuranceAgency\":{", snapshot);
 
         // печать без логина
         var agreement = await http.GetAsync($"{AppSettings.Website}/Print/SetupPacket/Agreement?CarrierId={CarrierId}&version=2");

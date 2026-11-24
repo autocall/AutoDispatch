@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using AutoCall.Logic.Contracts.Settings;
@@ -75,22 +74,6 @@ namespace AutoCall.WPF.Dialogs {
                 SipPasswordTb.IsEnabled = false;
                 Model.SettingsCallServiceViewModel.MicroSIPPassword = session.MicroSIPPassword;
             }
-        }
-
-        private void VodiaLink_Click(object sender, RoutedEventArgs e) {
-            Process.Start(new ProcessStartInfo("chrome.exe", "https://phone.myautocall.net/usr_portal.htm") { UseShellExecute = true });
-        }
-
-        private void ExtensionLink_Click(object sender, RoutedEventArgs e) {
-            Process.Start(new ProcessStartInfo("chrome.exe", "https://chrome.google.com/webstore/detail/lgagpmpgbieimldhcgbjhdebaipmaafk") { UseShellExecute = true });
-        }
-
-        private void DeskPinsLink_Click(object sender, RoutedEventArgs e) {
-            Process.Start(new ProcessStartInfo("https://myautocall.net/Download/DeskPins-1.32-setup.exe") { UseShellExecute = true });
-        }
-
-        private void ABTO_VoIP_SDKLink_Click(object sender, RoutedEventArgs e) {
-            Process.Start(new ProcessStartInfo("https://myautocall.net/Home/Download") { UseShellExecute = true });
         }
 
         #region [ Private Methods ]

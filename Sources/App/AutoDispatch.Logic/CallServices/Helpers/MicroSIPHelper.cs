@@ -1,4 +1,5 @@
-﻿using AutoDispatch.Data;
+﻿using AutoCall.Common;
+using AutoDispatch.Data;
 using AutoCall.Logic.Contracts.Settings;
 using AutoCall.Logic.Enums;
 using AutoCall.Logic.Settings;
@@ -14,12 +15,16 @@ namespace AutoCall.Logic.Helpers {
     /// <summary>
     ///     AutoPhone (MicroSIP, внешний Resourcesphoneutophone.exe), V1 модуля AutoCall. Настройки — параметром (V1 — ServiceLocator) </summary>
     public static class MicroSIPHelper {
+        // Scope на сервере: app.sip (как AutoCall V3)
+        private static Serilog.ILogger Logger => Serilog.Log.ForContext(LogProperties.Scope, LogScopes.Sip);
+
         public static void TryClose() {
             try {
                 // Closes MicroSIP
                 var proc = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "autophone");
                 proc?.CloseMainWindow();
-            } catch (Exception) {
+            } catch (Exception e) {
+                Logger.Error(e, "MicroSIPHelper.TryClose failed");
             }
         }
 
@@ -31,7 +36,8 @@ namespace AutoCall.Logic.Helpers {
                     await Task.Delay(TimeSpan.FromSeconds(2));
                     StartProcess(settings);
                 }
-            } catch (Exception) {
+            } catch (Exception e) {
+                Logger.Error(e, "MicroSIPHelper.TryRestart failed");
             }
         }
 
@@ -43,14 +49,21 @@ namespace AutoCall.Logic.Helpers {
                 CallServiceSettings callSettings = settings.GetCallServiceSettings();
 
                 var session = UserSession.Current;
-                if (String.IsNullOrEmpty(session.MicroSIPLogin) == false) {
-                    Process.Start(path, "settings:" + callSettings.MicroSIPSettings);
-                    if (number != null) {
-                        Task.Factory.StartNew(async () => {
-                            await Task.Delay(TimeSpan.FromSeconds(1));
-                            Process.Start(path, "tel:" + number);
-                        });
+                if (String.IsNullOrEmpty(session?.MicroSIPLogin) == false) {
+                    try {
+                        Logger.Information("MicroSIP: starting {Path}", path);
+                        Process.Start(path, "settings:" + callSettings.MicroSIPSettings);
+                        if (number != null) {
+                            Task.Factory.StartNew(async () => {
+                                await Task.Delay(TimeSpan.FromSeconds(1));
+                                Process.Start(path, "tel:" + number);
+                            });
+                        }
+                    } catch (Exception e) {
+                        Logger.Error(e, "MicroSIP: failed to start {Path}", path);
                     }
+                } else {
+                    Logger.Warning("MicroSIP: UserSession.SipLogin is empty, autophone.exe not started");
                 }
                 return true;
             } else {

@@ -422,7 +422,8 @@ public partial class DispatchService {
             oldContainerType != parent.ContainerType ||
             oldDivideType != parent.DivideType) {
             LoadDto dto = LoadConverter.ToDto(parent);
-            parent = await BaseSaveAsync<LoadDto, Load>(userId, dto, groupId);
+            // место контейнера сброшено выше (V1: отслеживаемая EF-сущность) — сохранить сброс
+            parent = await BaseSaveAsync<LoadDto, Load>(userId, dto, groupId, keepLocation: true);
             var result = await this._saveEventHistoryLoadAsync(EventTypeModel.BookedLoad, parent, null, LoadParentType.None, userId);
             return result.loads.Select(LoadConverter.ToDto).ToList();
         }
@@ -495,8 +496,12 @@ public partial class DispatchService {
         SetupPacket entity = await BaseSaveAsync<SetupPacketDto, SetupPacket>(request.UserId, request.SetupPacket);
         // loads contacts
         await Host.GetService<SetupPacketService>().LoadRelationsAsync(new[] { entity });
+        // снимок события — с контактами и агентствами: SaveWithHistoryAsync пишет его из сущности без связей (LinqToDB), в V1 EF
+        // подтягивал их в Mapper.Map<TDto>(entity). App берёт packet из снимка: без WorkersCompensationInsuranceAgency Accept давал «error»
+        var dto = SetupPacketConverter.ToDto(entity, this.Mapper);
+        await Table<HistoryObject>().Where(e => e.Id == entity.HistoryId).Set(e => e.Data, ZipExtension.SerializeObject(dto)).UpdateAsync();
         await this._saveEventSetupPacketAsync(entity, request.UserId);
-        return new SaveSetupPacketResponseData() { SetupPacket = SetupPacketConverter.ToDto(entity, this.Mapper) };
+        return new SaveSetupPacketResponseData() { SetupPacket = dto };
     }
 
     public async Task<SaveDatCompanyResponseData> SaveDatCompany(SaveDatCompanyRequestData request) {
@@ -656,7 +661,7 @@ public partial class DispatchService {
     }
 
     // Save history without location
-    private async Task<TEntity> BaseSaveAsync<TDto, TEntity>(Guid userId, TDto dto, Guid? groupId = null)
+    private async Task<TEntity> BaseSaveAsync<TDto, TEntity>(Guid userId, TDto dto, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto, IBaseEventDto where TEntity : BaseObjectEntity {
         if (dto.CompanyId == Guid.Empty) {
             dto.CompanyId = await this.GetCompanyIdByUserIdAsync(userId);
@@ -664,10 +669,11 @@ public partial class DispatchService {
         if (dto is LoadDto lDto) {
             await SaveCompaniesAsync(lDto, userId);
         }
-        return await this.SaveWithHistoryAsync<TDto, TEntity>(dto, userId, groupId);
+        return await this.SaveWithHistoryAsync<TDto, TEntity>(dto, userId, groupId, keepLocation);
     }
 
-    private async Task<List<TEntity>> BaseSavesAsync<TDto, TEntity>(Guid userId, List<TDto> dtos, Guid? groupId = null)
+    // keepLocation — место из DTO выставил сервер (BindLoads): сохранить его, а не вернуть из БД (см. _saveWithHistory_SpecialUpdate)
+    private async Task<List<TEntity>> BaseSavesAsync<TDto, TEntity>(Guid userId, List<TDto> dtos, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto, IBaseEventDto where TEntity : BaseObjectEntity {
         foreach (var dto in dtos) {
             if (dto.CompanyId == Guid.Empty) {
@@ -677,7 +683,7 @@ public partial class DispatchService {
                 await SaveCompaniesAsync(lDto, userId);
             }
         }
-        return await this.SaveWithHistoriesAsync<TDto, TEntity>(dtos, userId, groupId);
+        return await this.SaveWithHistoriesAsync<TDto, TEntity>(dtos, userId, groupId, keepLocation);
     }
 
     private Task<List<TEntity>> BaseDeletesAsync<TDto, TEntity>(Guid userId, List<TDto> dtos, Guid? groupId = null)
@@ -687,7 +693,7 @@ public partial class DispatchService {
 
     /// <summary>
     ///     Снимок DTO в HistoryObject + вставка/полное обновление сущности с HistoryId (V1 SaveWithHistoryAsync) </summary>
-    public async Task<TEntity> SaveWithHistoryAsync<TDto, TEntity>(TDto dto, Guid userId, Guid? groupId = null)
+    public async Task<TEntity> SaveWithHistoryAsync<TDto, TEntity>(TDto dto, Guid userId, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto
         where TEntity : BaseObjectEntity {
         #region Save HistoryObject
@@ -718,7 +724,7 @@ public partial class DispatchService {
             TEntity entity2 = ObjectConverter.ToModel<TEntity>(dto);
             entity2.CreatedById = entity.CreatedById;
             entity2.CreatedDate = entity.CreatedDate;
-            _saveWithHistory_SpecialUpdate(entity, entity2, userId);
+            _saveWithHistory_SpecialUpdate(entity, entity2, userId, keepLocation);
             entity = entity2;
             dto.LastModifiedById = entity.LastModifiedById = userId;
             dto.LastModifiedDate = entity.LastModifiedDate = DateTime.UtcNow;
@@ -736,12 +742,12 @@ public partial class DispatchService {
         return entity;
     }
 
-    public async Task<List<TEntity>> SaveWithHistoriesAsync<TDto, TEntity>(List<TDto> dtos, Guid userId, Guid? groupId = null)
+    public async Task<List<TEntity>> SaveWithHistoriesAsync<TDto, TEntity>(List<TDto> dtos, Guid userId, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto
         where TEntity : BaseObjectEntity {
         var result = new List<TEntity>();
         foreach (TDto dto in dtos) {
-            result.Add(await SaveWithHistoryAsync<TDto, TEntity>(dto, userId, groupId));
+            result.Add(await SaveWithHistoryAsync<TDto, TEntity>(dto, userId, groupId, keepLocation));
         }
         return result;
     }
@@ -785,12 +791,15 @@ public partial class DispatchService {
         }
     }
 
-    private static void _saveWithHistory_SpecialUpdate(BaseObjectEntity old, BaseObjectEntity @new, Guid userId) {
+    /// <summary>
+    ///     keepLocation: в V1 место из БД возвращалось из отслеживаемой EF-сущности — если сервер уже изменил её (BindLoads: склад, трейлер),
+    ///     «восстановленное» место было новым. LinqToDB читает запись заново, поэтому такие вызовы передают keepLocation (2026-11-24) </summary>
+    private static void _saveWithHistory_SpecialUpdate(BaseObjectEntity old, BaseObjectEntity @new, Guid userId, bool keepLocation = false) {
         if (@new.CreatedById == Guid.Empty) {
             @new.CreatedById = userId;
         }
         // restore location
-        if (@new is BaseDispatchEntity newDispatch && old is BaseDispatchEntity oldDispatch) {
+        if (keepLocation == false && @new is BaseDispatchEntity newDispatch && old is BaseDispatchEntity oldDispatch) {
             newDispatch.CurrentLatitude = oldDispatch.CurrentLatitude;
             newDispatch.CurrentLongitude = oldDispatch.CurrentLongitude;
         }

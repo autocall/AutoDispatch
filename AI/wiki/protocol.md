@@ -45,7 +45,7 @@ if (result is Task) { await task; result = task.GetType().GetProperty("Result").
 
 - **Контракт как есть.** `AutoDispatch.Dtos` — общий проект `Sources/Shared`, **имя сборки и namespace не меняются**: иначе
   `$type` старого клиента и нового сервера не совпадут. Сервер — Newtonsoft (`AddNewtonsoftJson` уже есть в V3), не System.Text.Json.
-  Исключения (только добавление свойств, по решению пользователя): `SetupPacketDto.W9ForeignPartnersHas` — 2026-11-23, форма W-9 2024 ([[plan]] «Форма W-9 2024»).
+  Исключения (только добавление свойств, по решению пользователя): `SetupPacketDto.W9ForeignPartnersHas` — 2026-11-23, форма W-9 2024 ([[plan]] «Форма W-9 2024»); `[DataMember]` у `CompanyCustomStatusDto.Name/CompanyId` — 2026-11-24, без них Newtonsoft (`BaseDto` — `[DataContract]`) не писал и не читал имена статусов при входе App ([[plan]] «Имена Custom Status при входе App»).
 - **`SerializationBinder`** на входе: `TypeNameHandling.All` позволяет клиенту назвать любой тип; ограничить типами из сборки
   `AutoDispatch.Dtos`. Контракт не меняет.
 - **Таблица `Name → handler` вместо reflection на каждый запрос** (рекомендация): при старте один раз пройти `IDispatchService`

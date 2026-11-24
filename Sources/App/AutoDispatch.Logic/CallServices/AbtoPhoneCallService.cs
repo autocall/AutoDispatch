@@ -151,10 +151,15 @@ namespace AutoCall.Logic.Services {
                             }
                             break;
                         case abtophone_state.Transferred:
+                        case abtophone_state.Failed:
                         case abtophone_state.Ended:
                             if (call != null) {
                                 if (state == abtophone_state.Ended) {
                                     OnCallChanged(call.RecordId, CallStatus.CallEnded, line);
+                                }
+                                // Failed — SIP-отказ (PhoneForm.IsCallError): для борда конец звонка, в метрике — ошибка (AutoCall V3)
+                                if (state == abtophone_state.Failed) {
+                                    OnCallFailed(call.RecordId, line);
                                 }
                                 if (state == abtophone_state.Transferred) {
                                     OnCallChanged(call.RecordId, CallStatus.Transferred, line);
@@ -195,7 +200,7 @@ namespace AutoCall.Logic.Services {
                 string origin = null,
                 string destination = null,
                 object model = null) {
-            await base.StartCallAsync(phoneNumber);
+            await base.StartCallAsync(phoneNumber, recordId, company);
             if (base.CallType == CallType.SingleCall) {
                 if (_currentCalls.Any()) {
                     return false;

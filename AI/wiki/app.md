@@ -41,6 +41,13 @@ AutoCall V3 (`AutoCallV3/Repo/AI/wiki/app-v3.md`). Сделано 2026-11-19; с
   выбор места — `EditLocationDialog` (`Map/SelectLocation`, результат `postMessage`), остановки — `EditStopsDialog` (`Map/OrderStops`, `window.reorder`) — [[public-site]].
 - **Софтфоны** — AutoPhone (MicroSIP), AutoPhone v.2 (Abto), None; окно Settings — только Call Services. Под .NET 10 из V3: `Application.ExitThread` вместо
   `Thread.Abort`, COM SIPVoipSDK регистрируется для пользователя (HKCU). `AutoPhoneV2CallService` — синглтон DI, форма получает его в `ConfigurePhone`.
+  `PhoneForm` — `ContextMenuStrip` вместо `ContextMenu` V1 (в .NET 10 бросает `PlatformNotSupportedException`, App падал при старте), без
+  `#if DEBUG return false` V1. **Лог и метрики как в V3 (2026-11-24):** Scope `sip` — запуск/ошибки софтфонов (`MicroSIPHelper`, `AbtoPhoneHelper`),
+  звонки (`CallService.OnCallChanged/OnCallFailed`, начало звонка с записью и компанией), смена регистрации SIP, сбой инициализации Abto с
+  диагностикой COM в Details; `CreateAbtoPhone` проверяет регистрацию интерфейса и перерегистрирует (код регистрации — `AutoPhoneV2/Services/SipVoipSdk`,
+  т. к. `AutoDispatch.Logic` ссылается на AutoPhoneV2); `IsCallError` (SIP 401/403/404/407/484/488/5xx кроме 603) → `abtophone_state.Failed`.
+  `ClientMetrics`: `CallEnded/CallFailed` по `CallServiceType`, `SetSipRegistered` → сервер `MicroSip/AbtoPhone Call(Error)Counter`,
+  `AbtoPhoneUnregisteredUsers` (номера 42–46 как V3), колонки MicroSIP и AbtoPhone на `/Admin/Metrics`.
 - **Telerik R1 2022** — `RichTextBoxUI` слит в `Telerik.Windows.Controls.RichTextBox.dll`, иконки ленты редактора — `…RichTextBox;component/RichTextBoxUI/Images/MSOffice/`
   (`RichTextEditor.xaml`, 185 иконок сверены с ресурсами сборки 2026-11-19).
 - **Сканер** — TwainDotNet по `HintPath` + log4net пакетом; `Process.Start` с `UseShellExecute = true` (Paint, файлы, ссылки — во всём App).

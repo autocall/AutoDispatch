@@ -167,8 +167,9 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
 
         #endregion [ Ok/Cancel Event Handlers ]
 
+        // V1 — https://myautocall.net/CustomStatus (NavigateUri в разметке); страница перенесена на сервер App — /Admin/CustomStatuses
         private void CustomStatusLink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e) {
-            Process.Start(new ProcessStartInfo(e.Uri.ToString()) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(new Uri(AutoCall.Common.Settings.WebUrl + "Admin/CustomStatuses").AbsoluteUri) { UseShellExecute = true });
         }
     }
 }

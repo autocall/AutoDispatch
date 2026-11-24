@@ -31,6 +31,10 @@
 - **EF6 → LinqToDB.** Сущности dispatch читаются `Table<T>()`/`Alive<T>()`, пишутся `InsertAsync/UpdateAsync` целиком (как `Update(entity)`
   V1), identity `Event`/`HistoryObject`/`HistoryLocation*` — `InsertWithInt32IdentityAsync`. Навигации не грузятся — связи достаются join'ами
   или вторым запросом (`DispatchCompanyService.GetByIdAsync` с Customizes, `SetupPacketService.LoadRelationsAsync`).
+- **Место груза при сохранении** (`_saveWithHistory_SpecialUpdate`): место (`CurrentLatitude/Longitude`) берётся из записи в БД, а не из
+  DTO клиента. V1 делал так же, но его EF-сущность уже несла изменения сервера, а V3 перечитывает БД, и место, выставленное самим
+  сервером, терялось. Поэтому есть флаг `keepLocation` (`BaseSaveAsync`/`BaseSavesAsync` → `SaveWithHistory(ies)Async`): `true` в `BindLoads`
+  (место склада при Move To Warehouse) и `SaveParentAsync`; [[app-testing]] 8.5 (2026-11-24).
 - **Снимки истории** — тот же формат `HistoryObject.Data`: gzip + UTF-16 JSON с `$type` (`ZipExtension`). `DispatchJson.MscorlibBinder` пишет
   `System.Private.CoreLib` как `mscorlib`, читает оба — иначе клиент на .NET Framework не десериализует `List<Guid>` и т.п.
 - **Пользователи.** `UserNameCache` и `GetUsers` — по `AdUser`/`AdUserRole`; роль склада в `SaveLoads` — `RoleEnum.Warehouse.ToRoleId()`;

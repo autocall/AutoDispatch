@@ -367,6 +367,8 @@ public class CarrierRegistrationController : BaseController {
             case 4:
                 if (packet.Version >= 2) {
                     packet.Agreement_02Date ??= PacificNow();
+                    // V1 SetupPacketStep04_02Model.ts: moment(null) — сегодня; поле только для чтения, сохраняется при Next
+                    packet.Agreement_02SignatureDate ??= PacificNow();
                 } else {
                     packet.AgreementDate ??= PacificNow();
                 }

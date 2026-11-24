@@ -23,6 +23,19 @@ public enum MetricTypeEnum : byte {
     [Description("Online")]
     OnlineUsers = 30,
 
+    // телефония App (как AutoCall V3, номера те же; DAT/Truckstop 31–41 к AutoDispatch не относятся)
+    [Description("MicroSIP")]
+    MicroSipCallCounter = 42,
+    [Description("MicroSIP")]
+    MicroSipCallErrorCounter = 43,
+    [Description("AbtoPhone")]
+    AbtoPhoneCallCounter = 44,
+    [Description("AbtoPhone")]
+    AbtoPhoneCallErrorCounter = 45,
+    /// <summary> Пользователи, у которых AbtoPhone не зарегистрирован на PBX (последний отчёт минуты); на странице — в ошибках AbtoPhone </summary>
+    [Description("AbtoPhone")]
+    AbtoPhoneUnregisteredUsers = 46,
+
     [Description("App exceptions")]
     AppExceptions = 47
 }

@@ -1,0 +1,45 @@
+@using AutoDispatch.Web.Common.Extensions
+@model MapOptionsPartModel
+@* Справа сверху: «Map options» — тип карты, Traffic, Weather, тема; как на /Map (Index.cshtml), для Map/SelectLocation и Map/OrderStops.
+   Карту панель получает событием map:created (map_common.ts announceMap) *@
+<div class="absolute top-3 right-3 z-10 flex flex-col items-end gap-2"
+     data-controller="map-options"
+     data-map-options-token-value="@Model.Token"
+     data-map-options-settings-value="@JsonExtension.Serialize(Model.Settings)"
+     data-map-options-aeris-id-value="@Model.AerisWeatherId"
+     data-map-options-aeris-secret-value="@Model.AerisWeatherSecret"
+     data-action="map:created@window->map-options#attach">
+    <button type="button" class="btn btn-sm btn-square bg-base-100 shadow" title="Map options" data-action="map-options#toggleOptions">
+        <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M12 2 1 8l11 6 11-6-11-6zm0 14.5L3.3 11.8 1 13l11 6 11-6-2.3-1.2L12 16.5z" /></svg>
+    </button>
+    <div class="card bg-base-100 shadow w-56 hidden" data-map-options-target="options">
+        <div class="card-body p-3 gap-2 text-sm">
+            <span class="font-semibold">Map type</span>
+            <div class="flex justify-center gap-2">
+                <button type="button" class="flex flex-col items-center gap-1" data-action="map-options#setType" data-type="roadmap">
+                    <img src="~/images/map/default.svg" class="w-24 rounded border-4 border-transparent" data-map-options-target="typeRoadmap" alt="" />
+                    <span>Default</span>
+                </button>
+                <button type="button" class="flex flex-col items-center gap-1" data-action="map-options#setType" data-type="hybrid">
+                    <img src="~/images/map/satellite.svg" class="w-24 rounded border-4 border-transparent" data-map-options-target="typeHybrid" alt="" />
+                    <span>Satellite</span>
+                </button>
+            </div>
+            <div class="divider my-0 h-1"></div>
+            <span class="font-semibold">Show on map</span>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-sm" data-map-options-target="traffic" data-action="map-options#toggleTraffic" /> Traffic
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-sm" data-map-options-target="weather" data-action="map-options#toggleWeather" /> Weather
+            </label>
+            @if (Model.Embedded) {
+                @* в браузере тема переключается в навигации сайта *@
+                <div class="divider my-0 h-1"></div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="toggle toggle-sm" data-map-options-target="dark" data-action="map-options#toggleTheme" /> Dark theme
+                </label>
+            }
+        </div>
+    </div>
+</div>

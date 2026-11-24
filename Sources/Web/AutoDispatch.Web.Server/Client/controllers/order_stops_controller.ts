@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
-import { METERS_IN_MILE, MapSettings, createMap, markerIcon, readJson, reloadOnThemeChange, whenGoogleReady } from "../map_common";
+import { METERS_IN_MILE, MapSettings, announceMap, createMap, markerIcon, readJson, reloadOnThemeChange, whenGoogleReady } from "../map_common";
 
 // Остановки трейлера для App — Map/OrderStops (Views/Map/OrderStops.cshtml), замена Dispatch/OrderStops V1.
 // Остановки приходят с страницей в порядке PickupOrder/DeliveryOrder; маркер — кружок цветов груза с его номером;
@@ -65,6 +65,7 @@ export default class OrderStopsController extends Controller<HTMLElement> {
     private init(): void {
         const settings: MapSettings = { type: 0, traffic: false, weather: false, theme: 0, ...(this.settingsValue as Partial<MapSettings>) };
         this.map = createMap(this.mapTarget, settings);
+        announceMap(this.map);
         this.renderMarkers();
         this.renderPanel();
         this.route(true);

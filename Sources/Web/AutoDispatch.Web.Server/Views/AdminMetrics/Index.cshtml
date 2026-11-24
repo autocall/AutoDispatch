@@ -8,8 +8,16 @@
     // CPU и задержка: показывается среднее (Values), цвет — по максимуму за период (StepClass).
     // Колонки dispatch (long-polling, Request, внешние сервисы) — этап 8 плана
 
-    // период + Server (3) + Users (1) + App exceptions
-    var columns = 1 + 3 + 1 + 1;
+    // телефония — как AutoCall V3: звонки и ошибки; у AbtoPhone в ошибки входят пользователи без регистрации на PBX
+    var phones = new (string Name, MetricTypeEnum Calls, MetricTypeEnum Errors, MetricTypeEnum? Unregistered)[] {
+        ("MicroSIP", MetricTypeEnum.MicroSipCallCounter, MetricTypeEnum.MicroSipCallErrorCounter, null),
+        ("AbtoPhone", MetricTypeEnum.AbtoPhoneCallCounter, MetricTypeEnum.AbtoPhoneCallErrorCounter, MetricTypeEnum.AbtoPhoneUnregisteredUsers)
+    };
+    (int Failed, int Unregistered) PhoneErrors(Dictionary<MetricTypeEnum, int> values,
+        (string Name, MetricTypeEnum Calls, MetricTypeEnum Errors, MetricTypeEnum? Unregistered) phone) =>
+        (Get(values, phone.Errors) ?? 0, phone.Unregistered is { } type ? Get(values, type) ?? 0 : 0);
+    // период + Server (3) + Users (1) + телефония + App exceptions
+    var columns = 1 + 3 + 1 + phones.Length + 1;
 
     // в БД время в UTC, на странице — локальное время сервера (в контейнере это TZ контейнера)
     // InvariantCulture: AM/PM не зависит от культуры контейнера
@@ -137,6 +145,9 @@
                     <th rowspan="2" class="text-left z-10">@period</th>
                     <td colspan="3" class="border-l">Server</td>
                     <td class="border-l">Users</td>
+                    @foreach (var phone in phones) {
+                        <td class="border-l">@phone.Name</td>
+                    }
                     <td rowspan="2" class="border-l">App<br /><span class="font-normal">exceptions</span></td>
                 </tr>
                 <tr>
@@ -144,6 +155,9 @@
                     <td title="Average, colored by peak: @Model.StepsHint(MetricTypeEnum.DbCpu, e => e.ToString(), "%")">DB CPU</td>
                     <td title="Average latency in seconds, colored by peak: @Model.StepsHint(MetricTypeEnum.GeoLatency, e => Model.Seconds(e), "s") · calls">Geocoding<br /><span class="font-normal">latency, s · calls</span></td>
                     <td class="border-l" title="App open (peak)">Online</td>
+                    @foreach (var phone in phones) {
+                        <td class="border-l"><span class="font-normal">calls</span></td>
+                    }
                 </tr>
             </thead>
             <tbody>
@@ -167,6 +181,15 @@
                             @ErrorBadge(Get(values, MetricTypeEnum.GeoErrorCounter))
                         </td>
                         <td class="border-l @Model.ActiveClass(Get(values, MetricTypeEnum.OnlineUsers))">@Number(Get(values, MetricTypeEnum.OnlineUsers))</td>
+                        @foreach (var phone in phones) {
+                            var (failed, unregistered) = PhoneErrors(values, phone);
+                            @* у AbtoPhone в ошибки входят и пользователи без регистрации на PBX — MicroSIP о ней не сообщает *@
+                            <td class="border-l whitespace-nowrap @Model.ActiveClass(Get(values, phone.Calls))"
+                                title="@(phone.Unregistered != null ? $"Calls failed {failed}, not registered {unregistered}" : $"Calls failed {failed}")">
+                                @Number(Get(values, phone.Calls))
+                                @ErrorBadge(failed + unregistered)
+                            </td>
+                        }
                         @* исключения App — плашка, если они были *@
                         <td class="border-l">
                             @(Get(values, MetricTypeEnum.AppExceptions) > 0

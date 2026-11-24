@@ -22,6 +22,10 @@ namespace AutoCall.Logic.Services {
         #region [ private ]
 
         /// <summary>
+        ///     Scope на сервере: app.sip (как AutoCall V3) </summary>
+        protected static Serilog.ILogger Logger => Serilog.Log.ForContext(LogProperties.Scope, LogScopes.Sip);
+
+        /// <summary>
         ///     Regex pattern for phone numbers from DAT Power server </summary>
         private const string PhoneNumberPattern =
             @"^\(?(?<region>\d{3})\D{1,2}(?<localNumberPart1>\d{3})\D?(?<localNumberPart2>\d{4})(?<extension>\D?(\((\d+)\)|x\d+))?$";
@@ -92,7 +96,20 @@ namespace AutoCall.Logic.Services {
         /// <summary>
         ///     Raise call changed event </summary>
         protected void OnCallChanged(string recordId, CallStatus status, int? line = null) {
+            // метрика (как AutoCall V3): звонок закончен — дозвонился или не ответили (неудачный идёт через OnCallFailed)
+            if (status is CallStatus.CallEnded or CallStatus.Transferred) {
+                AutoDispatch.Data.Metrics.ClientMetrics.CallEnded(CallServiceType.ToString());
+            }
+            Logger.Information("Call {Status}. Record {RecordId}, line {Line}, {Service}", status, recordId, line, CallServiceType.GetDescription());
             CallChanged?.Invoke(recordId, status, line);
+        }
+
+        /// <summary>
+        ///     Звонок оборвался ошибкой (SIP-отказ, сбой софтфона): для борда это тот же конец звонка, в метрике — ошибка (AutoCall V3) </summary>
+        protected void OnCallFailed(string recordId, int? line = null) {
+            AutoDispatch.Data.Metrics.ClientMetrics.CallFailed(CallServiceType.ToString());
+            Logger.Warning("Call failed. Record {RecordId}, line {Line}, {Service}", recordId, line, CallServiceType.GetDescription());
+            CallChanged?.Invoke(recordId, CallStatus.CallEnded, line);
         }
         /// <summary>
         ///     Raise phone ringing event </summary>
@@ -157,6 +174,7 @@ namespace AutoCall.Logic.Services {
                 string company = null, string origin = null,
                 string destination = null, object model = null) {
             CallingRecordId = String.Empty;
+            Logger.Information("Call started. Record {RecordId}, {Company}, {Service}", recordId, company, CallServiceType.GetDescription());
             return true;
         }
 

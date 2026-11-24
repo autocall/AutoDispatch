@@ -344,7 +344,8 @@ public partial class DispatchService {
 
         var dtos = loads.Select(LoadConverter.ToDto).ToList();
         // Saves of datas
-        List<Load> entities = await this.BaseSavesAsync<LoadDto, Load>(request.UserId, dtos, groupId);
+        // место склада/трейлера выставлено выше — сохранить его (V1: отслеживаемая EF-сущность, AI/wiki/app-testing.md 8.5)
+        List<Load> entities = await this.BaseSavesAsync<LoadDto, Load>(request.UserId, dtos, groupId, keepLocation: true);
         await this._saveEventHistoriesLoadsAsync(EventTypeModel.BookedLoad,
             entities.ToDictionary(e => e, e => historyId), request.ParentType, request.UserId);
         return new BindLoadsResponseData() { Loads = entities.Select(LoadConverter.ToDto).ToList() };

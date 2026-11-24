@@ -18,9 +18,14 @@ public class Metrics_Test {
 
     private DateTime _now = new DateTime(2026, 10, 15, 10, 0, 10, DateTimeKind.Utc);
 
-    private static readonly Guid User1 = Guid.NewGuid(), User2 = Guid.NewGuid();
+    private static readonly Guid User1 = Guid.NewGuid(), User2 = Guid.NewGuid(), User3 = Guid.NewGuid();
 
-    private static ClientMetricsDto Report(int exceptions = 0) => new() { Exceptions = exceptions };
+    // телефония — как AutoCall V3: каждый отчёт с одним звонком MicroSIP
+    private static ClientMetricsDto Report(int exceptions = 0, bool? sip = null, int abtoErrors = 0) => new() {
+        Exceptions = exceptions,
+        Calls = [new ClientCallMetricsDto { Service = "MicroSIP", Calls = 1 }, new ClientCallMetricsDto { Service = "AbtoPhone", Errors = abtoErrors }],
+        SipRegistered = sip
+    };
 
     private static int Value(List<Metric> rows, MetricTypeEnum type) => rows.Single(e => e.MetricId == type).Value;
 
@@ -29,17 +34,22 @@ public class Metrics_Test {
     [Fact]
     public void Test01_TwoReportsPerMinute() {
         var collector = new MetricCollector(() => _now);
-        collector.AddClientReport(User1, Report(exceptions: 1));
+        collector.AddClientReport(User1, Report(exceptions: 1, sip: true));
         _now = _now.AddSeconds(30);
-        collector.AddClientReport(User1, Report(exceptions: 2));
-        collector.AddClientReport(User2, Report());
+        collector.AddClientReport(User1, Report(exceptions: 2, sip: false, abtoErrors: 2));
+        collector.AddClientReport(User2, Report(sip: true));
+        collector.AddClientReport(User3, Report());
         Assert.Empty(collector.TakeClosed());
 
         _now = _now.AddMinutes(1);
         var rows = collector.TakeClosed();
 
-        Assert.Equal(2, Value(rows, MetricTypeEnum.OnlineUsers));
+        Assert.Equal(3, Value(rows, MetricTypeEnum.OnlineUsers));
         Assert.Equal(3, Value(rows, MetricTypeEnum.AppExceptions));
+        Assert.Equal(4, Value(rows, MetricTypeEnum.MicroSipCallCounter));
+        Assert.Equal(2, Value(rows, MetricTypeEnum.AbtoPhoneCallErrorCounter));
+        // SIP — по последнему отчёту: у 1 регистрация пропала, у 2 есть, 3 не сообщает
+        Assert.Equal(1, Value(rows, MetricTypeEnum.AbtoPhoneUnregisteredUsers));
         Assert.Empty(collector.TakeClosed());
     }
 

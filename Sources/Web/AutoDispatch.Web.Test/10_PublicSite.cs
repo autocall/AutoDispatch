@@ -73,6 +73,8 @@ public class PublicSite_Test {
         Assert.Contains("data-controller=\"select-location\"", html);
         Assert.Contains("41.85", html);
         Assert.DoesNotContain("navbar", html);
+        // раскладка как у /Map: панель Map options (тип карты, Traffic, Weather, тема)
+        Assert.Contains("data-controller=\"map-options\"", html);
         var browser = await http.GetAsync(url);
         Assert.Equal(HttpStatusCode.OK, browser.StatusCode);
 
@@ -116,6 +118,16 @@ public class PublicSite_Test {
         var html = await page.Content.ReadAsStringAsync();
         Assert.Contains("data-controller=\"order-stops\"", html);
         Assert.Contains("data-order-stops-stops-value=\"[]\"", html);
+        // панель Map options и сохранение настроек токеном OrderStops (те же настройки, что пришли со страницей — без изменений)
+        Assert.Contains("data-controller=\"map-options\"", html);
+        var settings = System.Net.WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Match(html, "data-map-options-settings-value=\"([^\"]*)\"").Groups[1].Value);
+        var token = url.Substring(url.IndexOf("?r=") + 3);
+        var save = await http.PostAsync($"{AppSettings.Website}/Map/Settings", new StringContent(
+            $"{{\"r\":\"{token}\",\"settings\":{settings}}}", System.Text.Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.OK, save.StatusCode);
+        var forgedSave = await http.PostAsync($"{AppSettings.Website}/Map/Settings", new StringContent(
+            $"{{\"r\":\"AAAA\",\"settings\":{settings}}}", System.Text.Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.Forbidden, forgedSave.StatusCode);
 
         // токены страниц не взаимозаменяемы: токен OrderStops на /Map и SelectLocation — 403, токен /Map на OrderStops — 403
         var r = url.Substring(url.IndexOf("?r=") + 3);

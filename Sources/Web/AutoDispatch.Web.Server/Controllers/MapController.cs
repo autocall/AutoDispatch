@@ -74,13 +74,22 @@ public class MapController : BaseController {
     ///     Настройки карты пользователя, выдавшего ссылку (секция Map в UserSetting) </summary>
     [HttpPost("Settings")]
     public async Task<ActionResult> SaveSettings([FromBody] MapRequest model) {
-        var link = Service.ParseLink(model?.R);
-        if (link == null) {
+        // токен /Map и SelectLocation или токен OrderStops — панель Map options есть на всех трёх страницах
+        var userId = Service.ParseLink(model?.R)?.UserId ?? Service.ParseOrderStopsLink(model?.R)?.UserId;
+        if (userId == null) {
             return Forbidden(model?.R);
         }
-        await Settings.SetMapAsync(link.UserId, model.Settings);
+        await Settings.SetMapAsync(userId.Value, model.Settings);
         return JsonSuccess();
     }
+
+    private static MapOptionsPartModel OptionsPart(string token, MapSettingsDto settings, bool embedded) => new() {
+        Token = token,
+        Settings = settings,
+        AerisWeatherId = AppSettings.AerisWeatherId,
+        AerisWeatherSecret = AppSettings.AerisWeatherSecret,
+        Embedded = embedded
+    };
 
     /// <summary>
     ///     Маршрут по точкам и остановкам ссылки </summary>
@@ -139,12 +148,14 @@ public class MapController : BaseController {
         if (embedded == false) {
             _l.i($"Select location opened in browser: user {link.UserId}, {Request.GetIp()}, {Request.GetUserAgent()}");
         }
+        var settings = await Settings.GetMapAsync(link.UserId);
         return View(new MapSelectLocationViewModel {
             Token = r,
             Point = point,
-            Settings = await Settings.GetMapAsync(link.UserId),
+            Settings = settings,
             GoogleMapJsKey = AppSettings.GoogleMapJsKey,
-            Embedded = embedded
+            Embedded = embedded,
+            Options = OptionsPart(r, settings, embedded)
         });
     }
 
@@ -174,13 +185,15 @@ public class MapController : BaseController {
         if (embedded == false) {
             _l.i($"Order stops opened in browser: user {link.UserId}, trailer {link.TrailerId}, {Request.GetIp()}, {Request.GetUserAgent()}");
         }
+        var settings = await Settings.GetMapAsync(link.UserId);
         return View(new MapOrderStopsViewModel {
             Token = r,
             Stops = await Service.GetOrderStopsAsync(link),
-            Settings = await Settings.GetMapAsync(link.UserId),
+            Settings = settings,
             GoogleMapJsKey = AppSettings.GoogleMapJsKey,
             MaxStops = AppSettings.MapMaxStops,
-            Embedded = embedded
+            Embedded = embedded,
+            Options = OptionsPart(r, settings, embedded)
         });
     }
 
