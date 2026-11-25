@@ -1,4 +1,5 @@
 using AutoDispatch.Web.Common;
+using AutoDispatch.Web.Common.Exceptions;
 
 namespace AutoDispatch.Web.Logic.Helpers.Dispatch;
 
@@ -6,7 +7,19 @@ namespace AutoDispatch.Web.Logic.Helpers.Dispatch;
 ///     Документы dispatch: каталог {FilesPath}/{EntityId} груза, карриера, трейлера, дефекта (V1 DispatchService.FileGetFullPath) </summary>
 public static class DispatchFileHelper {
 
+    /// <summary>
+    ///     Имя документа приходит от клиента: только имя файла, без каталогов — иначе «..» или абсолютный путь выводят
+    ///     за пределы каталога сущности (AI/wiki/audit.md A1) </summary>
+    public static void CheckFileName(string name) {
+        if (String.IsNullOrWhiteSpace(name) || name == "." || name == ".." || name != Path.GetFileName(name)) {
+            throw new InfoException("Invalid file name");
+        }
+    }
+
     public static string FileGetFullPath(Guid entityId, string name = null) {
+        if (name != null) {
+            CheckFileName(name);
+        }
         return name != null
             ? Path.Combine(AppSettings.FilesPath, entityId.ToString(), name)
             : Path.Combine(AppSettings.FilesPath, entityId.ToString());
@@ -16,6 +29,7 @@ public static class DispatchFileHelper {
     ///     Страховка карриера: старые файлы в подкаталоге Insurance, новые — в каталоге карриера </summary>
     public static string InsuranceGetFullPath(Guid entityId, string name = null) {
         if (name != null) {
+            CheckFileName(name);
             var path1 = Path.Combine(AppSettings.FilesPath, entityId.ToString(), "Insurance", name);
             if (File.Exists(path1)) {
                 return path1;

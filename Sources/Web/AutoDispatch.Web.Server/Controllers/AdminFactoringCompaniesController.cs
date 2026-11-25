@@ -11,9 +11,9 @@ using AutoDispatch.Web.Server.Models;
 namespace AutoDispatch.Web.Server.Controllers;
 
 /// <summary>
-///     Factoring Companies (V1 FactoringCompanyController, ÑÑ‚Ñ€Ð°Ð½Ð¸Ñ†Ð° FactoringCompany/Index Ð² Ð¼ÐµÐ½ÑŽ Admin): ÑÐ¿Ñ€Ð°Ð²Ð¾Ñ‡Ð½Ð¸Ðº, Ð¸Ð· ÐºÐ¾Ñ‚Ð¾Ñ€Ð¾Ð³Ð¾ ÐºÐ°Ñ€Ñ€Ð¸ÐµÑ€
-///     Ð²Ñ‹Ð±Ð¸Ñ€Ð°ÐµÑ‚ Pay To Ð½Ð° ÑˆÐ°Ð³Ðµ 2 setup packet. Ð¢Ð¾Ð»ÑŒÐºÐ¾ Admin (Ñ€ÐµÑˆÐµÐ½Ð¾ 2026-11-24): ÑÐ¿Ñ€Ð°Ð²Ð¾Ñ‡Ð½Ð¸Ðº Ð¾Ð±Ñ‰Ð¸Ð¹ Ð´Ð»Ñ Ð²ÑÐµÑ… ÐºÐ¾Ð¼Ð¿Ð°Ð½Ð¸Ð¹; Ð² V1 ÐºÐ¾Ð½Ñ‚Ñ€Ð¾Ð»Ð»ÐµÑ€
-///     Ð±Ñ‹Ð» Ð±ÐµÐ· Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ð¸ â€” Ð¿ÑƒÐ½ÐºÑ‚ Ð¼ÐµÐ½ÑŽ Ð²Ð¸Ð´ÐµÐ» Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Admin, Ð½Ð¾ Ð¿Ñ€Ð°Ð²Ð¸Ñ‚ÑŒ Ð¸ ÑƒÐ´Ð°Ð»ÑÑ‚ÑŒ Ð¼Ð¾Ð³ Ð»ÑŽÐ±Ð¾Ð¹ ÑÐ¾ ÑÑÑ‹Ð»ÐºÐ¾Ð¹ </summary>
+///     Factoring Companies (V1 FactoringCompanyController, страница FactoringCompany/Index в меню Admin): справочник, из которого карриер
+///     выбирает Pay To на шаге 2 setup packet. Только Admin (решено 2026-11-24): справочник общий для всех компаний; в V1 контроллер
+///     был без авторизации — пункт меню видел только Admin, но править и удалять мог любой со ссылкой </summary>
 [Authorize(Roles = nameof(RoleEnum.Admin))]
 [Route("Admin/FactoringCompanies/[action]")]
 public class AdminFactoringCompaniesController : BaseController {
@@ -21,7 +21,7 @@ public class AdminFactoringCompaniesController : BaseController {
     private const string IndexUrl = "/Admin/FactoringCompanies";
 
     /// <summary>
-    ///     ÐšÐ¾Ð»Ð¾Ð½ÐºÐ¸ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ¸ â€” Ð½Ð¾Ð¼ÐµÑ€Ð° ÐºÐ¾Ð»Ð¾Ð½Ð¾Ðº V1 LookupAsync (DataTables order[0][column]) </summary>
+    ///     Колонки сортировки — номера колонок V1 LookupAsync (DataTables order[0][column]) </summary>
     private static readonly string[] SortColumns = { "name", "address", "city", "state", "zip", "email" };
 
     private FactoringCompanyService Service => Host.GetService<FactoringCompanyService>();
@@ -38,7 +38,7 @@ public class AdminFactoringCompaniesController : BaseController {
             Search = search,
             Sort = sort,
             Desc = desc,
-            // V1 LookupAsync: Ð¿Ð¾Ð¸ÑÐº Ð¿Ð¾ Ð²ÑÐµÐ¼ ÐºÐ¾Ð»Ð¾Ð½ÐºÐ°Ð¼ Ð¸ ÑˆÑ‚Ð°Ñ‚Ñƒ, ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð¿Ð¾ Ð½Ð¾Ð¼ÐµÑ€Ñƒ ÐºÐ¾Ð»Ð¾Ð½ÐºÐ¸; pageSize 0 â€” Ð²ÑÐµ ÑÑ‚Ñ€Ð¾ÐºÐ¸ (â‰ˆ190, Ð±ÐµÐ· ÑÑ‚Ñ€Ð°Ð½Ð¸Ñ†)
+            // V1 LookupAsync: поиск по всем колонкам и штату, сортировка по номеру колонки; pageSize 0 — все строки (≈190, без страниц)
             Companies = (await Service.LookupAsync(0, 0, String.IsNullOrWhiteSpace(search) ? null : search.Trim(), desc ? "desc" : "asc",
                 Math.Max(Array.IndexOf(SortColumns, sort), 0))).Item1
         });

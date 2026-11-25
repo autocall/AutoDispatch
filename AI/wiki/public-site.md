@@ -44,7 +44,7 @@
 «Map options» (тип карты Default/Satellite, Traffic, Weather — радар Aeris, тема в embedded) — общий кусок `Views/Map/_MapOptionsPart.cshtml`
 (`MapOptionsPartModel`) и Stimulus `map_options_controller.ts` на SelectLocation и OrderStops; карту страница отдаёт событием `map:created`
 (`map_common.ts announceMap`), слои ведёт панель (из `createMap` Traffic убран). `Map/Settings` принимает и токен OrderStops
-(`ParseLink ?? ParseOrderStopsLink`). `/Map` (`Index.cshtml`, `map_controller.ts` — копия V3) не менялся: разметка панели та же.
+(`ParseLink ?? ParseOrderStopsLink`). `/Map` (`Index.cshtml`, `map_controller.ts` — копия V3) тогда не менялся: разметка панели та же (с 2026-11-25 в нём история положений груза, см. ниже).
 Тесты `10_PublicSite` Test01/Test02: панель на страницах, сохранение настроек токеном OrderStops, поддельный токен — 403.
 
 **OrderStops** (`order_stops_controller.ts`): остановки считает сервер `MapService.GetOrderStopsAsync` как V1 `DispatchController.OrderStops` —
@@ -53,6 +53,27 @@
 цвета груза `Background/Foreground` (ARGB → `#rrggbb`, V1 `Base64ToColor`). Маркер — кружок цветов груза с номером, панель слева со списком и
 длиной маршрута (мили, `geometry.spherical`). Порядок меняет App drag&drop-ом в своём списке и вызывает `window.reorder([{loadId, type}…])`
 (V1 — `reorder(stops)` через ExecuteScript): страница переставляет остановки и пересчитывает маршрут.
+
+## История положений груза на `/Map` (Show Trip, 2026-11-25)
+
+В V1 Show Trip открывал `Dispatch/RouteLocation?t=…&DispatchLoadId=`, и сервер вместе с маршрутом отдавал `DispatchLoad` — точки
+`LoadHistoryLocationLoad`; страница рисовала их зелёными кругами без подписи (адрес — в подсказке), пропуская подряд идущие точки с одним
+адресом. При замене на `/Map` V3 это выпало ([[audit]] B2); возвращено по решению пользователя «функционал как в V1»:
+
+- **Ссылка.** `POST Api/Maps/Link?loadId=` — необязательный груз; в токене `r` это блок `[kind Load = 5, Guid 16 байт, 0]` перед точками
+  длиной в две точки (18 байт), поэтому правило `(длина − 16) % 9 = 0` и невзаимозаменяемость с токеном OrderStops сохраняются.
+  `MapLinkDto.LoadId`; `Map/Link` (перевыпуск с остановками) груз сохраняет. Точку с kind `Load` от клиента `CreateToken` не принимает.
+- **Данные.** `POST Map/History {r}` → `[{latitude, longitude, address}]` — `MapService.GetLoadHistoryAsync`: `DispatchService.LoadHistoryLocationLoad`
+  от пользователя ссылки, как в V1; дубли по адресу убирает сервер. Отдельным запросом, а не со страницей: у груза с трекером сотни точек,
+  адреса новых точек запрашиваются у Safer по одной (локально: 740 точек — 42 с при пустом кэше адресов, 0.01 с повторно).
+- **Страница.** `data-map-history-value` (есть ли груз в ссылке) → `map_controller.ts loadHistory()`: маркеры как у точек груза, без подписи,
+  `title` — адрес; участвуют в «Fit to map». В панель Route не выводятся (в V1 тоже были только на карте).
+- **App.** `MapApi.CreateLinkAsync(points, loadId)`, `MapRouteHelper.OpenAsync(…, loadId)`, `ShowTripAction` передаёт `load.EntityId`.
+  Остальные вызовы карты (кнопка Map, маршруты машин) — без груза, как в V1.
+- Проверки принадлежности груза компании пользователя нет — как в V1 и в `LoadHistoryLocationLoad` канала App (Id — Guid).
+- `/Map` теперь отличается от копии AutoCall V3 (`map_controller.ts`, `MapService`, `MapController`, `Index.cshtml`).
+
+Тест `10_PublicSite.Test02`: ссылка с грузом — страница с `history=true`, `Map/History` пустого груза — `[]`, токен на OrderStops — 403.
 
 ## Попутно найдено и исправлено
 

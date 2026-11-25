@@ -15,7 +15,10 @@ public enum MapPointKindEnum {
     /// <summary>
     ///     Начальная точка страницы Map/SelectLocation (V1 Dispatch/SelectLocation?latlng=): место груза, склада или ярда
     ///     из App; без неё — пустая карта. На /Map не встречается </summary>
-    Location = 4
+    Location = 4,
+    /// <summary>
+    ///     Не точка: блок ссылки /Map с Id груза (MapLinkDto.LoadId), занимает место двух точек </summary>
+    Load = 5
 }
 
 /// <summary>
@@ -31,6 +34,17 @@ public class MapPointDto {
 public class MapLinkDto {
     public Guid UserId { get; set; }
     public List<MapPointDto> Points { get; set; }
+    /// <summary>
+    ///     Груз Show Trip: на карте — его история положений (V1 RouteLocation?DispatchLoadId=) </summary>
+    public Guid? LoadId { get; set; }
+}
+
+/// <summary>
+///     Положение груза из истории (HistoryLocationLoad) для /Map </summary>
+public class MapHistoryPointDto {
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+    public string Address { get; set; }
 }
 
 public class MapLatLngDto {

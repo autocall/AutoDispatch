@@ -24,6 +24,7 @@ public class MapService : BaseService {
     private const int NonceSize = 12;
     private const int TagSize = 16;
     private const int PointSize = 9; // kind byte + lat int32 + lng int32
+    private const int LoadSize = 2 * PointSize; // kind byte (Load) + Guid 16 байт + 1 байт запаса
     private const int CoordinateScale = 1_000_000;
 
     private BrokersnapshotWebService Brokersnapshot => Host.GetService<BrokersnapshotWebService>();
@@ -39,8 +40,8 @@ public class MapService : BaseService {
 
     /// <summary>
     ///     Абсолютный URL страницы; точек может не быть — пустая карта (кнопка Map в App) </summary>
-    public string CreateLink(Guid userId, IReadOnlyList<MapPointDto> points) {
-        return $"{AppSettings.Website}{AppSettings.MapPath}?r={CreateToken(userId, points)}";
+    public string CreateLink(Guid userId, IReadOnlyList<MapPointDto> points, Guid? loadId = null) {
+        return $"{AppSettings.Website}{AppSettings.MapPath}?r={CreateToken(userId, points, loadId)}";
     }
 
     /// <summary>
@@ -53,20 +54,26 @@ public class MapService : BaseService {
         var points = link.Points.Where(p => p.Kind != MapPointKindEnum.Stop)
             .Concat(stops.Select(s => new MapPointDto { Kind = MapPointKindEnum.Stop, Latitude = s.Latitude, Longitude = s.Longitude }))
             .ToList();
-        return CreateToken(link.UserId, points);
+        return CreateToken(link.UserId, points, link.LoadId);
     }
 
     /// <summary>
     ///     r = base64url(nonce + AES-GCM(userId Guid 16 байт, [kind byte, lat int32, lng int32]…) + tag), без срока действия;
-    ///     координаты — целые с 6 знаками, little-endian; ~80 символов на 3 точки против ~200 у Data Protection </summary>
-    private string CreateToken(Guid userId, IReadOnlyList<MapPointDto> points) {
+    ///     координаты — целые с 6 знаками, little-endian; ~80 символов на 3 точки против ~200 у Data Protection.
+    ///     Груз Show Trip — блок [kind Load, Guid 16 байт, 0] перед точками, длиной в две точки </summary>
+    private string CreateToken(Guid userId, IReadOnlyList<MapPointDto> points, Guid? loadId = null) {
         foreach (var point in points) {
-            if (point.Kind == MapPointKindEnum.Unknown) throw new InfoException("Point kind is required");
+            if (point.Kind == MapPointKindEnum.Unknown || point.Kind == MapPointKindEnum.Load) throw new InfoException("Point kind is required");
             Validate(point.Latitude, point.Longitude);
         }
-        var payload = new byte[16 + points.Count * PointSize];
+        var payload = new byte[16 + (loadId == null ? 0 : LoadSize) + points.Count * PointSize];
         userId.TryWriteBytes(payload);
         var offset = 16;
+        if (loadId != null) {
+            payload[offset] = (byte)MapPointKindEnum.Load;
+            loadId.Value.TryWriteBytes(payload.AsSpan(offset + 1));
+            offset += LoadSize;
+        }
         foreach (var point in points) {
             payload[offset] = (byte)point.Kind;
             BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(offset + 1), ToInt(point.Latitude));
@@ -85,6 +92,14 @@ public class MapService : BaseService {
         }
         var link = new MapLinkDto { UserId = new Guid(payload.AsSpan(0, 16)), Points = new List<MapPointDto>() };
         for (var offset = 16; offset < payload.Length; offset += PointSize) {
+            if (payload[offset] == (byte)MapPointKindEnum.Load) {
+                if (offset + LoadSize > payload.Length) {
+                    return null;
+                }
+                link.LoadId = new Guid(payload.AsSpan(offset + 1, 16));
+                offset += PointSize;
+                continue;
+            }
             link.Points.Add(new MapPointDto {
                 Kind = (MapPointKindEnum)payload[offset],
                 Latitude = (decimal)BinaryPrimitives.ReadInt32LittleEndian(payload.AsSpan(offset + 1)) / CoordinateScale,
@@ -166,6 +181,31 @@ public class MapService : BaseService {
     private static int ToInt(decimal value) => (int)Math.Round(value * CoordinateScale);
 
     #endregion [ Link ]
+
+    #region [ Load history ]
+
+    /// <summary>
+    ///     Положения груза ссылки для Show Trip — как V1 DispatchController.RouteLocation с dispatchLoadId (LoadHistoryLocationLoad);
+    ///     подряд идущие точки с одним адресом — одна (в V1 их пропускала страница). Груза в ссылке нет — пусто </summary>
+    public async Task<List<MapHistoryPointDto>> GetLoadHistoryAsync(MapLinkDto link) {
+        var result = new List<MapHistoryPointDto>();
+        if (link.LoadId == null) {
+            return result;
+        }
+        var data = await Host.GetService<DispatchService>().LoadHistoryLocationLoad(
+            new LoadHistoryLocationLoadRequestData(link.UserId) { LoadId = link.LoadId.Value });
+        foreach (var location in data.History.Select(h => h.Location).Where(l => l != null)) {
+            if (result.Count > 0 && result[^1].Address == location.FormattedAddress) {
+                continue;
+            }
+            result.Add(new MapHistoryPointDto {
+                Latitude = (decimal)location.Latitude, Longitude = (decimal)location.Longitude, Address = location.FormattedAddress
+            });
+        }
+        return result;
+    }
+
+    #endregion [ Load history ]
 
     #region [ OrderStops ]
 

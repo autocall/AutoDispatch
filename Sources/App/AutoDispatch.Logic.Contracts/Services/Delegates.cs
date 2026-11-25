@@ -13,6 +13,9 @@ namespace AutoDispatch.Logic.Services {
     ///     Event if connection was changed </summary>
     public delegate void EngineStateChangedHandler(ConnectionStatus status);
     /// <summary>
+    ///     Сервер ответил 401 (токен истёк, пользователь удалён): true — выполнен повторный вход, false — App закрывается </summary>
+    public delegate System.Threading.Tasks.Task<bool> SessionExpiredHandler();
+    /// <summary>
     ///     Message received delegate </summary>
     public delegate void MessageReceivedHandler(MessageDto message);
     ///// <summary>

@@ -10,6 +10,9 @@ public class MapIndexViewModel {
     ///     Точки маршрута без остановок; остановки из ссылки (Stop) — отдельно, страница ведёт их как поставленные кликом </summary>
     public List<MapPointDto> Points { get; set; }
     public List<MapLatLngDto> Stops { get; set; }
+    /// <summary>
+    ///     В ссылке есть груз Show Trip — страница запросит историю его положений (Map/History) </summary>
+    public bool History { get; set; }
     public MapSettingsDto Settings { get; set; }
     public string GoogleMapJsKey { get; set; }
     public string AerisWeatherId { get; set; }

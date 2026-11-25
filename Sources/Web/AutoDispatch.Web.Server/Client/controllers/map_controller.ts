@@ -4,7 +4,8 @@ import { Controller } from "@hotwired/stimulus";
 // токен r из ссылки вместо cookie-логина. Поведение как у Dispatch/RouteLocation V1: клик по карте ставит остановку,
 // клик по остановке убирает её, маршрут пересчитывается; вид — как Dashboard GpsV4 (слои, поиск, Fit to map).
 // Остановки уходят в ссылку (Map/Link, kind Stop) и подставляются в адрес страницы — скопированная ссылка открывает
-// карту уже с ними. Настройки (тип карты, слои, тема) — секция Map в UserSetting пользователя ссылки: приходят с страницей,
+// карту уже с ними. Show Trip: история положений груза (V1 DispatchLoad) — зелёные точки без подписи, адрес в подсказке.
+// Настройки (тип карты, слои, тема) — секция Map в UserSetting пользователя ссылки: приходят с страницей,
 // сохраняются через Map/Settings. Цвет карты — по data-theme страницы (embedded: из настроек, браузер: тема сайта), тема
 // применяется перезагрузкой: colorScheme задаётся только при создании карты. В браузере (embedded=false) свой переключатель
 // не показывается, сохранённая тема не меняется, смена темы в навигации тоже перезагружает страницу.
@@ -46,7 +47,7 @@ const COLORS: Record<Kind, string> = { record: "#15803d", pattern: "#dc2626", st
 export default class MapController extends Controller<HTMLElement> {
     static targets = ["map", "panel", "points", "distance", "busy", "search", "searchClear", "suggestions",
         "options", "typeRoadmap", "typeHybrid", "traffic", "weather", "dark", "error"];
-    static values = { token: String, points: Array, stops: Array, settings: Object, aerisId: String, aerisSecret: String, maxStops: Number,
+    static values = { token: String, points: Array, stops: Array, history: Boolean, settings: Object, aerisId: String, aerisSecret: String, maxStops: Number,
         embedded: Boolean };
 
     declare readonly mapTarget: HTMLElement;
@@ -69,6 +70,7 @@ export default class MapController extends Controller<HTMLElement> {
     declare tokenValue: string; // меняется при остановках: новый токен от Map/Link
     declare readonly pointsValue: LinkPoint[];
     declare readonly stopsValue: { latitude: number; longitude: number }[];
+    declare readonly historyValue: boolean; // в ссылке есть груз — запросить историю его положений
     declare readonly settingsValue: Settings;
     declare readonly aerisIdValue: string;
     declare readonly aerisSecretValue: string;
@@ -83,6 +85,7 @@ export default class MapController extends Controller<HTMLElement> {
     private labels: string[] = []; // подписи точек ссылки, считаются один раз
     private pointMarkers: any[] = [];
     private stopMarkers: any[] = [];
+    private historyMarkers: any[] = [];
     private polylines: any[] = [];
     private searchMarker: any = null;
     private loading = false;
@@ -132,6 +135,7 @@ export default class MapController extends Controller<HTMLElement> {
         this.applyWeather();
 
         this.renderPointMarkers();
+        if (this.historyValue) this.loadHistory();
         this.renderPanel();
         this.load(true);
     }
@@ -237,7 +241,7 @@ export default class MapController extends Controller<HTMLElement> {
 
     fit(): void {
         const bounds = new google.maps.LatLngBounds();
-        for (const marker of [...this.pointMarkers, ...this.stopMarkers]) {
+        for (const marker of [...this.pointMarkers, ...this.stopMarkers, ...this.historyMarkers]) {
             bounds.extend(marker.getPosition());
         }
         for (const polyline of this.polylines) {
@@ -255,6 +259,27 @@ export default class MapController extends Controller<HTMLElement> {
             icon: this.icon(p.kind === 2 ? "record" : "pattern", this.labels[i]!),
             zIndex: 10
         }));
+    }
+
+    // как V1 PointType.DispatchLoad: тот же зелёный круг, что у точек груза, без подписи
+    private async loadHistory(): Promise<void> {
+        try {
+            const response = await fetch("/Map/History", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ r: this.tokenValue })
+            });
+            const points: { latitude: number; longitude: number; address: string | null }[] = await this.readJson(response);
+            this.historyMarkers = points.map(p => new google.maps.Marker({
+                map: this.map,
+                position: { lat: p.latitude, lng: p.longitude },
+                icon: this.icon("record", ""),
+                title: p.address ?? "",
+                zIndex: 5
+            }));
+        } catch (e) {
+            this.showError((e as Error).message);
+        }
     }
 
     private renderStopMarkers(): void {

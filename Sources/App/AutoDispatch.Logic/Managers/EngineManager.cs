@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoCall.Common;
 using AutoCall.Common.Loggers;
+using AutoDispatch.Data;
 using AutoDispatch.Dtos;
 using AutoDispatch.Dtos.Enums;
+using AutoDispatch.Dtos.Responses;
 using AutoDispatch.Logic.DataServices;
 using AutoDispatch.Logic.DataServices.Wrappers;
 using AutoDispatch.Logic.Services;
@@ -51,8 +55,57 @@ namespace AutoDispatch.Logic.Managers {
         /// <summary>
         ///     Occurs if received data via long pooling </summary>
         public event EventResponseReceivedHandler EventReceived;
+        /// <summary>
+        ///     Сервер ответил 401: подписчик (MainWindow) показывает окно входа </summary>
+        public event SessionExpiredHandler SessionExpired;
 
         #endregion [ Events ]
+
+        #region [ Errors ]
+
+        private Task<bool> _relogin;
+        private bool _sessionClosed;
+
+        private static bool IsUnauthorized(EventResponseWrapper result) {
+            return result.Exception is HttpRequestException http && http.StatusCode == HttpStatusCode.Unauthorized;
+        }
+
+        /// <summary>
+        ///     Повтор не поможет: ответ 4xx (кроме 408 и 429) или тело ответа не разбирается. Сеть, таймаут и 5xx — повторяются </summary>
+        private static bool IsPermanent(EventResponseWrapper result) {
+            if (result.Exception is HttpRequestException http && http.StatusCode is HttpStatusCode code) {
+                return (int)code >= 400 && (int)code < 500 && code != HttpStatusCode.RequestTimeout && code != HttpStatusCode.TooManyRequests;
+            }
+            return result.Exception is Newtonsoft.Json.JsonException;
+        }
+
+        /// <summary>
+        ///     Повторный вход после 401, один на оба цикла; token — токен, с которым ушёл запрос: если он уже другой,
+        ///     вход выполнен другим циклом. false — входа не было, циклы останавливаются </summary>
+        private async Task<bool> ReloginAsync(string token) {
+            Task<bool> task;
+            lock (_lock) {
+                if (_sessionClosed) {
+                    return false;
+                }
+                if (UserSession.Current?.AccessToken != token) {
+                    return true;
+                }
+                task = _relogin ??= SessionExpired?.Invoke() ?? Task.FromResult(false);
+            }
+            bool result = await task;
+            lock (_lock) {
+                if (_relogin == task) {
+                    _relogin = null;
+                }
+                if (result == false) {
+                    _sessionClosed = true;
+                }
+            }
+            return result;
+        }
+
+        #endregion [ Errors ]
 
         #region [ Request ]
 
@@ -86,6 +139,7 @@ namespace AutoDispatch.Logic.Managers {
                 while (_requests.Count > 0) {
                     try {
                         EventRequestWrapper request = _requests.Peek();
+                        string token = UserSession.Current?.AccessToken;
                         EngineTryRequest?.Invoke(request.Request.Name, 0, TimeSpan.Zero);
                         Stopwatch stopwatch = Stopwatch.StartNew();
                         EventResponseWrapper result = await _dataService.RequestAsync(request);
@@ -103,6 +157,18 @@ namespace AutoDispatch.Logic.Managers {
                             }
                             EngineQueueCountChanged?.Invoke(_requests.Count);
                             EngineStateChanged?.Invoke(ConnectionStatus.Connected);
+                        } else if (IsUnauthorized(result)) {
+                            // токен истёк или пользователь удалён: запрос остаётся в очереди и уйдёт с новым токеном
+                            EngineStateChanged?.Invoke(ConnectionStatus.Disconected);
+                            if (await ReloginAsync(token) == false) {
+                                break;
+                            }
+                        } else if (IsPermanent(result)) {
+                            // запрос завершается ошибкой, как при Status Failed от сервера, — очередь идёт дальше
+                            _webl.e($"EngineManager.Request {request.Request.Name}\n" + result.ErrorMessage);
+                            EventRequestWrapper wrapper = _requests.Dequeue();
+                            await wrapper.InvokeCompletedAsync(new EventResponse() { Status = ResponseStatus.Failed, ErrorMessage = result.ErrorMessage });
+                            EngineQueueCountChanged?.Invoke(_requests.Count);
                         } else {
                             _webl.e("EngineManager.Request\n" + result.ErrorMessage);
                             EngineStateChanged?.Invoke(ConnectionStatus.Disconected);
@@ -149,6 +215,7 @@ namespace AutoDispatch.Logic.Managers {
             Task.Factory.StartNew(async () => {
                 while (_responseRun) {
                     try {
+                        string token = UserSession.Current?.AccessToken;
                         EventResponseWrapper wrapper = await _dataService.ResponseAsync(_currentEventId, eventTypes.Select(t => (byte)t).ToArray());
                         if (wrapper.Status == RequestStatus.Success) {
 #if DEBUG
@@ -157,6 +224,15 @@ namespace AutoDispatch.Logic.Managers {
                             _currentEventId = wrapper.Response.EventId;
                             EventReceived?.Invoke(wrapper.Response);
                             EngineStateChanged?.Invoke(ConnectionStatus.Connected);
+                            if (wrapper.Response.Status == ResponseStatus.Failed) {
+                                // сервер ответил ошибкой (сбой опроса, отмена опросом того же пользователя с другого ПК) — без паузы опрос шёл бы непрерывно
+                                Thread.Sleep(TimeSpan.FromSeconds(5));
+                            }
+                        } else if (IsUnauthorized(wrapper)) {
+                            EngineStateChanged?.Invoke(ConnectionStatus.Disconected);
+                            if (await ReloginAsync(token) == false) {
+                                _responseRun = false;
+                            }
                         } else {
                             if (wrapper.SkipError == false) {
                                 _webl.e("EngineManager.Response\n" + wrapper.ErrorMessage);

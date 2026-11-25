@@ -25,6 +25,9 @@ namespace AutoDispatch.Logic.DataServices.Wrappers {
         /// <summary>
         ///     Custom Flag </summary>
         public bool SkipError { get; set; }
+        /// <summary>
+        ///     Транспортная ошибка — по ней EngineManager решает, повторять ли запрос </summary>
+        public Exception Exception { get; private set; }
 
         /// <summary>
         ///     .ctor  </summary>
@@ -38,6 +41,7 @@ namespace AutoDispatch.Logic.DataServices.Wrappers {
         /// <param name="exception">Exception</param>
         public EventResponseWrapper(Exception exception) {
             Status = RequestStatus.Failed;
+            Exception = exception;
 #if DEBUG
             ErrorMessage = exception.ToString();
 #else

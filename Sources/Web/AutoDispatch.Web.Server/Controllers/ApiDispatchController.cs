@@ -17,7 +17,7 @@ namespace AutoDispatch.Web.Server.Controllers;
 ///     по EventRequest.Name, Response — long-polling событий компании, *Zip — то же с gzip. Тело — JSON с $type (DispatchJson),
 ///     читается из потока: V1-клиент шлёт его с Content-Type x-www-form-urlencoded. Ответ всегда 200 с EventResponse,
 ///     ошибка — Status Failed + ErrorMessage, как в V1. UserId в Data сверяется с токеном; статус пользователя (IsDeleted)
-///     проверяется на каждом запросе — JWT живёт долго (решено 2026-11-13) </summary>
+///     проверяется на каждом запросе в ApiBaseController — удалённому 401, а не 200 с Failed </summary>
 [Route("Api/Dispatch/[action]")]
 public class ApiDispatchController : ApiBaseController {
 
@@ -76,7 +76,6 @@ public class ApiDispatchController : ApiBaseController {
             if (handler.RequestType.IsInstanceOfType(wrapper.Data) == false) {
                 throw new InfoException($"Request {wrapper.Name} expects {handler.RequestType.Name}");
             }
-            await CheckUserAsync(userId);
             if (handler.HasAccess(GetRoles()) == false) {
                 throw new AccessDeniedException();
             }
@@ -100,7 +99,6 @@ public class ApiDispatchController : ApiBaseController {
                 throw new AccessDeniedException();
             }
             lastEventId = data.EventId ?? 0;
-            await CheckUserAsync(userId);
             var responseData = await Service.EventNotificationAsync(data, cts);
             lastEventId = responseData.Events.Any() ? responseData.Events.Max(r => r.EventId) : lastEventId;
             return new EventResponse { Status = ResponseStatus.Success, Data = responseData, EventId = lastEventId };
@@ -112,15 +110,6 @@ public class ApiDispatchController : ApiBaseController {
             return new EventResponse { Status = ResponseStatus.Failed, ErrorMessage = e.GetBaseException().Message, EventId = lastEventId };
         } finally {
             _polls.End(userId, cts);
-        }
-    }
-
-    /// <summary>
-    ///     V1 проверял VerifyId на каждом запросе; в V3 статус = IsDeleted (Delete в /Admin/Users) </summary>
-    private async Task CheckUserAsync(Guid userId) {
-        var user = await Host.UserManager.FindByIdAsync(userId.ToString());
-        if (user == null || user.IsDeleted) {
-            throw new AccessDeniedException();
         }
     }
 

@@ -7,6 +7,8 @@ using AutoDispatch.Web.Data.Helpers;
 using AutoDispatch.Web.Logic.Dtos.App;
 using AutoDispatch.Web.Logic.Dtos.Identity;
 using AutoDispatch.Web.Logic.Helpers;
+using AutoDispatch.Web.Logic.Helpers.Dispatch;
+using AutoDispatch.Web.Logic.Services.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services;
 
@@ -136,6 +138,9 @@ public class UserService : BaseService {
         user.ModifiedId = userId;
         user.ModifiedDateTime = DateTime.UtcNow;
         Check(await Host.UserManager.UpdateAsync(user));
+        // кэши dispatch на процесс: компания пользователя и имя для CreatedByName (V1 — RemoveUserCache из UserController)
+        DispatchBaseService.RemoveUserCache(user.Id);
+        UserNameCache.Remove(user.Id);
 
         var role = await GetRoleAsync(user);
         if (role != dto.Role) {

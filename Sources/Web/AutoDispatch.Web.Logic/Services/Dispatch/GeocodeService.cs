@@ -150,7 +150,8 @@ public class GeocodeService : BaseService {
     }
 
     /// <summary>
-    ///     Один адрес: память → таблица GeocodeAddress → Safer. Ошибка Safer — исключение, как в V1 </summary>
+    ///     Один адрес: память → таблица GeocodeAddress → Safer. Ошибка Safer — исключение, как в V1;
+    ///     found=false — пустой адрес, сохраняется, как в GetFormattedPlaceNamesAsync (иначе точка запрашивается у Safer каждый раз) </summary>
     public async ValueTask<string> GetFormattedPlaceNameAsync(LocationDto location) {
         var key = AddressKey(location);
         if (_addressCache.TryGetValue(key, out var value)) {
@@ -160,7 +161,12 @@ public class GeocodeService : BaseService {
         if (row != null) {
             return _addressCache[key] = row.Address;
         }
-        var result = await RequestFormattedPlaceNameAsync(location);
+        string result;
+        try {
+            result = await RequestFormattedPlaceNameAsync(location);
+        } catch (Exception e) when (e.Message.Contains("ZERO_RESULTS")) {
+            result = String.Empty;
+        }
         await SaveAddressesAsync(new Dictionary<(int Lat, int Lng), string> { [key] = result });
         _addressCache[key] = result;
         return result;

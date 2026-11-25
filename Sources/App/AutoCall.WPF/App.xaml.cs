@@ -148,9 +148,12 @@ namespace AutoCall.WPF {
             AddApi<HelperDataService>(services);
             AddApi<SettingsApi>(services);
             AddApi<MapApi>(services);
-            // Request/Response протокола dispatch: без повторов (Request не идемпотентен), long-polling держит ответ до EventWaitTimeout сервера
+            // Request/Response протокола dispatch: без повторов Polly (Request не идемпотентен) — повторяет сам EngineManager и только
+            // сбои сети, таймаут и 5xx. Таймаут 10 минут — на весь Request вместе с отправкой файла (FileSave, base64 в JSON);
+            // у long-polling свой, 100 с (EngineDataService.ResponseTimeout) — решено 2026-11-25
             services.AddHttpClient<EngineDataService>(client => {
                 client.BaseAddress = new Uri(Settings.WebUrl);
+                client.Timeout = TimeSpan.FromMinutes(10);
             });
             // Метрики и логи App — раз в 30 с, без повторов
             services.AddHttpClient<MetricsApi>(client => {
@@ -281,8 +284,9 @@ namespace AutoCall.WPF {
         private void App_OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) {
             ClientMetrics.Exception();
             var exception = e.Exception.GetBaseException();
-            if (exception.Message == "Specified argument was out of the range of valid values.\r\nParameter name: count") {
-                // Telerik CellRegionsPartitioner при вставке в грид (V1, борды DatPower)
+            if (exception is ArgumentOutOfRangeException { ParamName: "count" }) {
+                // Telerik CellRegionsPartitioner при вставке в грид (V1, борды DatPower). V1 сравнивал текст сообщения
+                // "…\r\nParameter name: count" — в .NET он другой ("… (Parameter 'count')"), поэтому по типу и имени параметра
                 e.Handled = true;
                 return;
             }

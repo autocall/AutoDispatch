@@ -19,9 +19,9 @@ public class MapApi : BaseApi {
 
     public MapApi(HttpClient http) : base(http) { }
 
-    /// <summary> Маршрут: точки в порядке маршрута; пустой список — пустая карта. </summary>
-    public Task<string> CreateLinkAsync(IReadOnlyList<MapPointDto> points, CancellationToken cancellationToken = default) {
-        return PostForUrlAsync("Api/Maps/Link", points, cancellationToken);
+    /// <summary> Маршрут: точки в порядке маршрута; пустой список — пустая карта. loadId — груз Show Trip: на карте его история положений. </summary>
+    public Task<string> CreateLinkAsync(IReadOnlyList<MapPointDto> points, Guid? loadId = null, CancellationToken cancellationToken = default) {
+        return PostForUrlAsync(loadId == null ? "Api/Maps/Link" : $"Api/Maps/Link?loadId={loadId}", points, cancellationToken);
     }
 
     /// <summary> Выбор точки на карте; null — без начальной точки. </summary>

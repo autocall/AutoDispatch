@@ -173,8 +173,9 @@ public partial class AppSettings {
     public static readonly TimeSpan LoadWaitingInterval = TimeSpan.FromMinutes(5);
     public static readonly TimeSpan LoadSendSmsInterval = TimeSpan.FromMinutes(5);
     /// <summary>
-    ///     QuartzJob и CacheLoadJob V1 — раз в сутки </summary>
-    public static readonly TimeSpan HistoryCleanupInterval = TimeSpan.FromHours(24);
+    ///     QuartzJob V1 — раз в сутки в 01:00 по времени сервера V1 (Central): 07:00 UTC = 01:00 CST / 02:00 CDT.
+    ///     По времени суток, а не через интервал от старта: публикация перезапускает контейнер и обнуляла бы ожидание </summary>
+    public static readonly TimeSpan HistoryCleanupTimeUtc = TimeSpan.FromHours(7);
     /// <summary>
     ///     Сколько ждёт Api/Dispatch/Response новых событий компании перед пустым ответом (V1 ReconnectInterval) </summary>
     public static readonly TimeSpan EventWaitTimeout = TimeSpan.FromSeconds(30);

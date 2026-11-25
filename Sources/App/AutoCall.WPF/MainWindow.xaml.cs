@@ -43,6 +43,7 @@ using AutoDispatch.Logic.ViewModels;
 using AutoDispatch.Logic.ViewModels.Items;
 using AutoDispatch.Logic.ViewModels.Pages;
 using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using Telerik.Windows.Controls;
 using Telerik.Windows.Controls.Docking;
 using Binding = System.Windows.Data.Binding;
@@ -94,8 +95,10 @@ namespace AutoCall.WPF {
         /// <summary>
         ///     Constructor </summary>
         public MainWindow(MainManager manager, SettingsService settings, LoginManager loginManager, IMapper mapper,
-                ActualCompanyDataService actualCompanyDataService, LogsApi logsApi, ServerLogSink serverLog, MetricsReporter metrics) {
+                ActualCompanyDataService actualCompanyDataService, LogsApi logsApi, ServerLogSink serverLog, MetricsReporter metrics,
+                EngineManager engine) {
             InitializeComponent();
+            engine.SessionExpired += OnSessionExpired;
             _manager = manager;
             _manager.Initialize();
             _manager.InitializeCallServices();
@@ -117,6 +120,27 @@ namespace AutoCall.WPF {
             } else {
                 btnDebug.Visibility = Visibility.Collapsed;
             }
+        }
+
+        /// <summary>
+        ///     Сервер ответил 401 — токен истёк (JWT живёт 30 дней) или пользователь удалён: окно входа поверх главного окна.
+        ///     Тот же пользователь вошёл — работа продолжается с новым токеном, очередь запросов сохраняется; иначе App закрывается
+        ///     (борды загружены под прежнего пользователя) </summary>
+        private Task<bool> OnSessionExpired() {
+            return Dispatcher.InvokeAsync(() => {
+                var userId = UserSession.Current.UserId;
+                _l.w("Session expired: sign in again");
+                MessageBoxEx.Warning(this, "Your session has expired. Please sign in again.");
+                var dialog = new LoginDialog(App.Services.GetRequiredService<LoginService>(), _settings) { Owner = this };
+                if (dialog.ShowDialog() == true && UserSession.Current.UserId == userId) {
+                    return true;
+                }
+                if (UserSession.Current.UserId != userId) {
+                    MessageBoxEx.Info(this, "Signed in as a different user. Please start the application again.");
+                }
+                Close();
+                return false;
+            }).Task;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e) {

@@ -20,14 +20,15 @@ public class ApiMapsController : ApiBaseController {
     public ApiMapsController(ServicesHost host) : base(host) { }
 
     /// <summary>
-    ///     Тело — точки в порядке маршрута (паттерн, запись, запись, паттерн), может быть пустым; ответ { url } </summary>
+    ///     Тело — точки в порядке маршрута (паттерн, запись, запись, паттерн), может быть пустым; ответ { url }.
+    ///     loadId — груз Show Trip: карта покажет историю его положений (V1 RouteLocation?DispatchLoadId=) </summary>
     [HttpPost("Link")]
-    public ActionResult Link([FromBody] List<MapPointDto> points) {
+    public ActionResult Link([FromBody] List<MapPointDto> points, [FromQuery] Guid? loadId = null) {
         points ??= new List<MapPointDto>();
         using var scope = _l.Scope("map");
         using var details = _l.Property(AppSettings.LogDetailsProperty, JsonExtension.Serialize(points));
-        var url = Service.CreateLink(GetUserId(), points);
-        _l.i($"Map link: {points.Count} points");
+        var url = Service.CreateLink(GetUserId(), points, loadId);
+        _l.i($"Map link: {points.Count} points{(loadId == null ? "" : $", load {loadId}")}");
         return JsonSuccess(new { url });
     }
 

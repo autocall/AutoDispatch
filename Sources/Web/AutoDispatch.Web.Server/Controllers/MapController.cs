@@ -50,6 +50,7 @@ public class MapController : BaseController {
             Token = r,
             Points = points,
             Stops = stops,
+            History = link.LoadId != null,
             Settings = await Settings.GetMapAsync(link.UserId),
             GoogleMapJsKey = AppSettings.GoogleMapJsKey,
             AerisWeatherId = AppSettings.AerisWeatherId,
@@ -100,6 +101,18 @@ public class MapController : BaseController {
             return Forbidden(model?.R);
         }
         return JsonSuccess(await Service.GetRouteAsync(link));
+    }
+
+    /// <summary>
+    ///     История положений груза ссылки (Show Trip): [ { latitude, longitude, address } ]. Отдельным запросом, а не со страницей:
+    ///     у груза с трекером сотни точек, адреса новых запрашиваются у Safer </summary>
+    [HttpPost("History")]
+    public async Task<ActionResult> History([FromBody] MapRequest model) {
+        var link = Service.ParseLink(model?.R);
+        if (link == null) {
+            return Forbidden(model?.R);
+        }
+        return JsonSuccess(await Service.GetLoadHistoryAsync(link));
     }
 
     /// <summary>

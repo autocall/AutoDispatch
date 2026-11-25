@@ -138,6 +138,24 @@ public class PublicSite_Test {
         var mapR = mapUrl.Substring(mapUrl.IndexOf("?r=") + 3);
         Assert.Equal(HttpStatusCode.Forbidden, (await http.GetAsync($"{AppSettings.Website}{AppSettings.MapOrderStopsPath}?r={mapR}")).StatusCode);
 
+        // Show Trip: ссылка /Map с грузом — страница с историей положений (груза нет — пусто), на OrderStops такой токен тоже 403
+        var tripLink = await http.PostAsJsonAsync($"{AppSettings.Website}/Api/Maps/Link?loadId={Guid.NewGuid()}", new List<MapPointDto> {
+            new MapPointDto { Kind = MapPointKindEnum.Record, Latitude = 41.85m, Longitude = -87.65m },
+            new MapPointDto { Kind = MapPointKindEnum.Record, Latitude = 39.79m, Longitude = -85.72m }
+        });
+        var tripUrl = (string)JObject.Parse(await tripLink.Content.ReadAsStringAsync())["url"];
+        var tripPage = await http.GetAsync(tripUrl + "&embedded=true");
+        Assert.Equal(HttpStatusCode.OK, tripPage.StatusCode);
+        var tripHtml = await tripPage.Content.ReadAsStringAsync();
+        Assert.Contains("data-map-history-value=\"true\"", tripHtml);
+        Assert.Contains("41.85", tripHtml);
+        var tripR = tripUrl.Substring(tripUrl.IndexOf("?r=") + 3);
+        var history = await http.PostAsync($"{AppSettings.Website}/Map/History", new StringContent($"{{\"r\":\"{tripR}\"}}", System.Text.Encoding.UTF8, "application/json"));
+        Assert.Equal("[]", await history.Content.ReadAsStringAsync());
+        // ссылка без груза — истории нет
+        Assert.Contains("data-map-history-value=\"false\"", await (await http.GetAsync(mapUrl)).Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Forbidden, (await http.GetAsync($"{AppSettings.Website}{AppSettings.MapOrderStopsPath}?r={tripR}")).StatusCode);
+
         // трейлер с грузами AtPickUp/InTransit и порядком остановок на Carrier-борде админа — остановки на странице
         var request = new EventRequest { Name = "LoadLoads", Data = new LoadLoadsRequestData(userId) { Types = new[] { DispatchBoardType.Carrier } } };
         var loads = DispatchJson.Deserialize<EventResponse>(await (await http.PostAsync($"{AppSettings.Website}/Api/Dispatch/Request",

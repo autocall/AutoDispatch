@@ -2144,7 +2144,7 @@ Do you want to link the loads?",
             StackLogger.Push($"ShowTripAction");
             var load = wrapper.Load;
             // V1: MapRouteDialog (EO.WebBrowser, Dispatch/RouteLocation?t=…&DispatchLoadId=) — теперь /Map сервера в WebView2 (MapRouteHelper)
-            _ = MapRouteHelper.OpenAsync(origin: load.OriginLocation, destination: load.DestinationLocation);
+            _ = MapRouteHelper.OpenAsync(origin: load.OriginLocation, destination: load.DestinationLocation, loadId: load.EntityId);
         }
 
         /// <summary>

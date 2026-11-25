@@ -226,6 +226,7 @@ public partial class DispatchService {
     }
 
     public async Task<FileLoadResponseData> FileLoad(FileLoadRequestData request) {
+        DispatchFileHelper.CheckFileName(request.File.Name);
         if (Directory.Exists(DispatchFileHelper.FileGetFullPath(request.File.EntityId)) == false) {
             throw new InfoException("File doesn't exists");
         }
@@ -251,6 +252,7 @@ public partial class DispatchService {
     }
 
     public async Task<FileSaveResponseData> FileSave(FileSaveRequestData request) {
+        DispatchFileHelper.CheckFileName(request.File.Name);
         var path = DispatchFileHelper.FileGetFullPath(request.File.EntityId);
         Directory.CreateDirectory(path);
         var fullPath = Path.Combine(path, request.File.Name);
@@ -305,6 +307,7 @@ public partial class DispatchService {
     }
 
     private async Task InsuranceSaveAsync(DatCompanyDto company) {
+        DispatchFileHelper.CheckFileName(company.InsuranceFilePath);
         var path = DispatchFileHelper.InsuranceGetFullPath(company.EntityId);
         Directory.CreateDirectory(path);
         var fullPath = DispatchFileHelper.UniqueFileFullPath(Path.Combine(path, company.InsuranceFilePath));

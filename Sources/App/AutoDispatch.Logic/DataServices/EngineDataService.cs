@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoCall.Common.Extensions;
 using AutoDispatch.Data;
@@ -24,6 +25,9 @@ namespace AutoDispatch.Logic.DataServices {
         /// <summary>
         ///     Gets response url </summary>
         private string ResponseUrl => "Api/Dispatch/Response";
+        /// <summary>
+        ///     Таймаут long-polling (решено 2026-11-25) </summary>
+        private static readonly TimeSpan ResponseTimeout = TimeSpan.FromSeconds(100);
 
         #endregion [ Private Fields ]
 
@@ -58,8 +62,12 @@ namespace AutoDispatch.Logic.DataServices {
             var requestData = new EventNotificationRequestData(session.UserId, eventId, eventTypes);
             var eventRequest = new EventRequest() { Data = requestData };
             try {
-                var data = await PostEventAsync(ResponseUrl, eventRequest);
-                return new EventResponseWrapper(data);
+                // сервер отвечает не позже EventWaitTimeout (30 с): молча оборванная связь замечается за ResponseTimeout,
+                // а не за общий таймаут клиента (10 минут — под Request с файлами)
+                using (var timeout = new CancellationTokenSource(ResponseTimeout)) {
+                    var data = await PostEventAsync(ResponseUrl, eventRequest, timeout.Token);
+                    return new EventResponseWrapper(data);
+                }
             } catch (Exception e) {
                 return new EventResponseWrapper(e);
             }
@@ -68,14 +76,17 @@ namespace AutoDispatch.Logic.DataServices {
         #endregion [ Public Methods ]
 
         /// <summary>
-        ///     V1: HttpWebRequest бросал WebException на ответ не 2xx — здесь то же через EnsureSuccessStatusCode </summary>
-        private async Task<EventResponse> PostEventAsync(string url, EventRequest eventRequest) {
+        ///     V1: HttpWebRequest бросал WebException на ответ не 2xx — здесь HttpRequestException с кодом ответа
+        ///     (по нему EngineManager отличает 401 и неповторяемые 4xx) и текстом ошибки сервера { error } </summary>
+        private async Task<EventResponse> PostEventAsync(string url, EventRequest eventRequest, CancellationToken cancellation = default) {
             using (var request = CreateRequest(HttpMethod.Post, url)) {
                 string strRequest = JsonExtension.SerializeObject(eventRequest);
                 request.Content = new StringContent(strRequest, Encoding.UTF8, "application/x-www-form-urlencoded");
-                using (var response = await Http.SendAsync(request)) {
-                    response.EnsureSuccessStatusCode();
-                    string strResult = await response.Content.ReadAsStringAsync();
+                using (var response = await Http.SendAsync(request, cancellation)) {
+                    string strResult = await response.Content.ReadAsStringAsync(cancellation);
+                    if (response.IsSuccessStatusCode == false) {
+                        throw new HttpRequestException(ReadError(strResult) ?? $"Server responded {(int)response.StatusCode}", null, response.StatusCode);
+                    }
                     return JsonExtension.DeserializeObject<EventResponse>(strResult);
                 }
             }

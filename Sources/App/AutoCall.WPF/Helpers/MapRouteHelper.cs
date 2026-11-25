@@ -12,6 +12,7 @@ namespace AutoCall.WPF.Helpers {
     ///     Маршрут на карте сервера — замена MapRouteDialog V1 (WinForms + EO.WebBrowser, ссылка Dispatch/RouteLocation?t=… собиралась
     ///     в App). Ссылку выдаёт сервер (Api/Maps/Link), точки в ней зашифрованы — AI/wiki/public-site.md. Порядок точек — как в V1:
     ///     точки машины (V1 initialOrigin/initialDestination, без «m») по краям — kind Pattern, точки груза («m») между ними — kind Record.
+    ///     loadId — груз Show Trip: карта показывает историю его положений (V1 dispatchLoadId).
     ///     Пустой список — пустая карта (V1 RouteLocation2, кнопка Map главного окна) </summary>
     public static class MapRouteHelper {
 
@@ -19,7 +20,8 @@ namespace AutoCall.WPF.Helpers {
                 LocationViewModel initialOrigin = null,
                 LocationViewModel initialDestination = null,
                 LocationViewModel origin = null,
-                LocationViewModel destination = null) {
+                LocationViewModel destination = null,
+                Guid? loadId = null) {
             var points = new List<MapPointDto>();
             Add(points, initialOrigin, MapPointDto.KindPattern);
             Add(points, origin, MapPointDto.KindRecord);
@@ -28,7 +30,7 @@ namespace AutoCall.WPF.Helpers {
 
             string url;
             try {
-                url = await App.Services.GetRequiredService<MapApi>().CreateLinkAsync(points);
+                url = await App.Services.GetRequiredService<MapApi>().CreateLinkAsync(points, loadId);
             } catch (Exception exception) {
                 Serilog.Log.Error(exception, "Map link request failed");
                 MessageBoxEx.Error(exception.GetBaseException().Message);

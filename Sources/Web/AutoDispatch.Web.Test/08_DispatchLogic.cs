@@ -187,6 +187,24 @@ public class DispatchLogic_Test {
     }
 
     /// <summary>
+    ///     Имя документа от клиента — только имя файла: «..», каталоги и абсолютные пути не выходят из каталога сущности (audit A1) </summary>
+    [Theory]
+    [InlineData("../../app/appsettings.Production.json")]
+    [InlineData("/app/appsettings.Production.json")]
+    [InlineData("sub/file.pdf")]
+    [InlineData("..")]
+    [InlineData(".")]
+    [InlineData(" ")]
+    public void Test13_FileNameWithoutPath(string name) {
+        var id = Guid.NewGuid();
+        Assert.Throws<AutoDispatch.Web.Common.Exceptions.InfoException>(() => DispatchFileHelper.FileGetFullPath(id, name));
+        Assert.Throws<AutoDispatch.Web.Common.Exceptions.InfoException>(() => DispatchFileHelper.InsuranceGetFullPath(id, name));
+        Assert.EndsWith("BOL (1).pdf", DispatchFileHelper.FileGetFullPath(id, "BOL (1).pdf"));
+        Assert.EndsWith("rate *.pdf", DispatchFileHelper.FileGetFullPath(id, "rate *.pdf"));
+        Assert.EndsWith(id.ToString(), DispatchFileHelper.FileGetFullPath(id));
+    }
+
+    /// <summary>
     ///     Секции контактов setup packet по MARKER1..4: заголовки целиком, пустая секция вырезается, маркеров не остаётся.
     ///     В V1 (и в V3 до 2026-11-23) маркеры удалялись до вырезания — съедалось по 7 символов: «ontact Information» и т.п. </summary>
     [Theory]

@@ -21,7 +21,7 @@
         })();
     </script>
     @if (company?.LogoSmall != null) {
-        <link rel="icon" href="data:image/x-icon;@company.LogoSmall" />
+        <link rel="icon" href="@company.LogoSmall" />
     } else {
         <link rel="icon" href="~/favicon.ico" asp-append-version="true" />
     }
@@ -45,7 +45,7 @@
         <footer class="navbar flex-wrap justify-center gap-1 border-t shadow-sm">
             <div class="flex items-center gap-2 opacity-70">
                 @if (company.LogoSmall != null) {
-                    <img class="h-4 w-4" src="data:image/x-icon;@company.LogoSmall" alt="" />
+                    <img class="h-4 w-4" src="@company.LogoSmall" alt="" />
                 }
                 <span>@company.LegalName</span>
             </div>

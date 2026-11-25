@@ -133,6 +133,10 @@ namespace AutoCall.Logic.Settings {
                     await _api.SetSectionAsync(change.Key, change.Value);
                 } catch (Exception e) {
                     _webl.e($"Settings section {change.Key} was not saved", e);
+                    // секция уйдёт при следующем сохранении
+                    lock (_lock) {
+                        _dirty.Add(change.Key);
+                    }
                 }
             }
         }
