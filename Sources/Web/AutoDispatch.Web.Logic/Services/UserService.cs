@@ -38,6 +38,7 @@ public class UserService : BaseService {
                     UserName = u.UserName,
                     Email = u.Email,
                     TimeZoneId = u.TimeZoneId,
+                    SipLogin = u.SipLogin,
                     CreatedDateTime = u.CreatedDateTime,
                     IsDeleted = u.IsDeleted
                 }
@@ -64,6 +65,8 @@ public class UserService : BaseService {
             Email = user.Email,
             TimeZoneId = user.TimeZoneId,
             Role = await GetRoleAsync(user),
+            Signature = user.Signature,
+            SipLogin = user.SipLogin,
             CreatedDateTime = user.CreatedDateTime,
             IsDeleted = user.IsDeleted
         };
@@ -110,6 +113,7 @@ public class UserService : BaseService {
             Email = Normalize(dto.Email),
             UserName = String.IsNullOrWhiteSpace(dto.UserName) ? Normalize(dto.Email) : dto.UserName.Trim(),
             TimeZoneId = dto.TimeZoneId ?? TimeZoneHelper.UtcId,
+            Signature = String.IsNullOrWhiteSpace(dto.Signature) ? null : dto.Signature.Trim(),
             CreatedId = userId,
             ModifiedId = userId,
             CreatedDateTime = DateTime.UtcNow,
@@ -128,6 +132,7 @@ public class UserService : BaseService {
         user.Email = Normalize(dto.Email);
         user.UserName = String.IsNullOrWhiteSpace(dto.UserName) ? user.Email : dto.UserName.Trim();
         user.TimeZoneId = dto.TimeZoneId ?? TimeZoneHelper.UtcId;
+        user.Signature = String.IsNullOrWhiteSpace(dto.Signature) ? null : dto.Signature.Trim();
         user.ModifiedId = userId;
         user.ModifiedDateTime = DateTime.UtcNow;
         Check(await Host.UserManager.UpdateAsync(user));

@@ -27,6 +27,10 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
 | Метрики DAT v2/v1, Truckstop, MicroSIP, AbtoPhone (`MetricTypeEnum` 31–46, `ClientMetricsDto.Sources/Calls/SipRegistered`, колонки `/Admin/Metrics`) | Logic, Server |
 | Тесты `03_DatSoap`, `06_CallReport` | Test |
 
+Возвращено позже, т. к. софтфоны App переносятся: `AdUser.SipLogin/SipPassword` и `SessionDto.Sip*` (2026-11-19), метрики MicroSIP/AbtoPhone
+(42–46, 2026-11-24); Call Report — `CallReportService`, `VodiaWebService`, `CallReportDtos`, `/CallReport`, блок Phone channel congestion на Home,
+`AppSettings` Vodia и `Secrets:Vodia`, тест `14_CallReport`, колонка AutoPhone в `/Admin/Users` (2026-11-24, [[plan]] «Call Report»).
+
 ## Отличия от V3, записанные как решения
 
 - **`UserSetting` оставлен** только для секции `Map` (настройки карты `/Map`: тип, трафик, погода, тема). План называл его в

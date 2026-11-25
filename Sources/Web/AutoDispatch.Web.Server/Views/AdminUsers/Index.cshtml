@@ -47,6 +47,7 @@
                 <th>Company</th>
                 <th>Role</th>
                 <th>Time zone</th>
+                <th>AutoPhone</th>
                 <th>Created</th>
                 <th>Client Version</th>
                 <th></th>
@@ -60,6 +61,12 @@
                 <td>@user.CompanyName</td>
                 <td><span class="badge badge-ghost badge-sm">@user.Role</span></td>
                 <td class="text-base-content/60">@user.TimeZoneId</td>
+                @* номер AutoPhone (SIP extension): звонки компании в Call Report, как AutoCall V3 *@
+                <td>
+                    @if (String.IsNullOrEmpty(user.SipLogin) == false) {
+                        <a class="link link-hover" href="/CallReport?CompanyId=@user.CompanyId" title="extension @user.SipLogin">@user.SipLogin</a>
+                    }
+                </td>
                 <td class="text-base-content/60">@user.CreatedDateTime.ToString("yyyy-MM-dd")</td>
                 <td>@user.ClientVersion</td>
                 <td class="text-right whitespace-nowrap">
@@ -80,7 +87,7 @@
             </tr>
         }
         @if (Model.Users.Count == 0) {
-            <tr><td colspan="8" class="text-center opacity-60">Nothing here</td></tr>
+            <tr><td colspan="9" class="text-center opacity-60">Nothing here</td></tr>
         }
         </tbody>
     </table>

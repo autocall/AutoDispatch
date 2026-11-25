@@ -1,0 +1,108 @@
+@model CongestionViewModel
+@{
+    var filter = Model.Filter;
+    var data = Model.Data;
+    var invariant = System.Globalization.CultureInfo.InvariantCulture;
+    var day = filter.Day.ToString("yyyy-MM-dd", invariant);
+    var reportUrl = $"/CallReport?Date={day}&CompanyId={filter.CompanyId}{(filter.OnlyOut ? "&OnlyOut=true" : "")}";
+}
+
+@* фильтры перерисовывают только блок; календарь и селекты отправляют форму (calendar#select, requestSubmit) *@
+<div id="congestion" class="card bg-base-100 shadow-sm">
+    <div class="card-body gap-3">
+        <div class="flex items-center justify-between">
+            <h2 class="card-title">
+                Phone channel congestion
+                <span id="congestion-loading" class="loading loading-spinner loading-sm htmx-indicator"></span>
+            </h2>
+            <a class="link text-sm" href="@reportUrl">Call Report</a>
+        </div>
+
+        @* одна строка: день, Only out, Company, User *@
+        <form class="flex flex-row flex-wrap items-end gap-2" data-controller="calendar"
+              hx-get="/Home/Congestion" hx-target="#congestion" hx-swap="outerHTML" hx-indicator="#congestion-loading">
+            <input type="hidden" name="Date" value="@day" data-calendar-target="input" />
+            @* календарь Cally как на Logs и Metrics; дата — день CDR-файла PBX *@
+            <button type="button" popovertarget="congestion-calendar" class="input input-sm w-auto cursor-pointer"
+                    style="anchor-name: --congestion-calendar">
+                <svg class="size-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                    <path d="M16 2v4M8 2v4M3 10h18"></path>
+                </svg>
+                <span class="label">Day</span>
+                <span class="whitespace-nowrap">@filter.Day.ToString("ddd MM/dd", invariant)</span>
+                <svg class="size-3 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </button>
+            <div popover id="congestion-calendar" class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor: --congestion-calendar"
+                 data-calendar-target="popover">
+                <calendar-date class="cally" data-action="change->calendar#select"
+                               max="@DateTime.Now.Date.ToString("yyyy-MM-dd", invariant)" value="@day">
+                    <svg aria-label="Previous" class="fill-current size-4" slot="previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M15.75 19.5 8.25 12l7.5-7.5"></path>
+                    </svg>
+                    <svg aria-label="Next" class="fill-current size-4" slot="next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="m8.25 4.5 7.5 7.5-7.5 7.5"></path>
+                    </svg>
+                    <calendar-month></calendar-month>
+                </calendar-date>
+            </div>
+            <label class="form-control">
+                <span class="label-text text-xs">Company</span>
+                <select name="CompanyId" class="select select-bordered select-sm w-48" onchange="this.form.requestSubmit()">
+                    <option value="">All</option>
+                    @foreach (var company in data.Companies) {
+                        <option value="@company.Id" selected="@(filter.CompanyId == company.Id)">@company.Name</option>
+                    }
+                </select>
+            </label>
+            <label class="form-control">
+                <span class="label-text text-xs">User</span>
+                <select name="User" class="select select-bordered select-sm w-48" onchange="this.form.requestSubmit()">
+                    <option value="">All</option>
+                    @foreach (var user in data.Users) {
+                        <option value="@user.SipLogin" selected="@(filter.User == user.SipLogin)">@user.UserName</option>
+                    }
+                </select>
+            </label>
+            <label class="label h-8 cursor-pointer text-sm">
+                <input type="checkbox" name="OnlyOut" value="true" class="checkbox checkbox-sm" checked="@filter.OnlyOut"
+                       onchange="this.form.requestSubmit()" />
+                Only out
+            </label>
+        </form>
+
+        @if (data.Error != null) {
+            <div role="alert" class="alert alert-error alert-soft text-sm">Call log is not available: @data.Error</div>
+        } else {
+            <div class="flex gap-6 text-sm">
+                <span><span class="opacity-60">Calls</span> @data.Calls</span>
+                <span><span class="opacity-60">Duration</span> @((data.Duration / 3600.0).ToString("0.0", invariant)) h</span>
+            </div>
+            <div class="table-box">
+                <table class="table table-sm">
+                    <thead>
+                        <tr><th>Time</th><th class="text-right">Calls</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var period in data.Periods) {
+                        <tr>
+                            <td class="whitespace-nowrap">
+                                @period.Start.ToString("h:mm:ss tt", invariant)
+                                <span class="text-base-content/60">(@((int)(period.End - period.Start).TotalSeconds) sec)</span>
+                            </td>
+                            <td class="text-right">@period.Calls</td>
+                        </tr>
+                    }
+                    @if (data.Periods.Count == 0) {
+                        <tr><td colspan="2" class="text-center opacity-60">Nothing here</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

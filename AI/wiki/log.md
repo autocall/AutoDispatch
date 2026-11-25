@@ -491,3 +491,23 @@ App: `CallService` (звонки, ошибки), `MicroSIPHelper`/`AbtoPhoneHelp
 ## [2026-11-24] test | App: сессия 8 — Carrier Dispatch (трейлер и склад, документы, несколько точек, связка с брокерским грузом)
 
 16 проверок на грузах 20 и 13173 (части /1, /2): Assign Driver с confirmation, окно Trailer, OrderStops (0 остановок у assigned — как V1; 4 остановки, перетаскивание меняет маршрут 2 505 → 2 170 mi и сохраняет порядок), Assign Brokerage Load (Shipment как V1), Go To Linked Load (по Pro#, не по ShipmentId), Edit Consolidation на контейнере. Найдена и исправлена одна ошибка (8.5); как V1 — перенос строки между таблицами только по Refresh, View Trailer у груза на складе ничего не делает. [[app-testing]].
+
+## [2026-11-24] test | App: Move To Warehouse после перезапуска Web — место склада сохраняется
+
+Груз 20 → Ontario Whse и часть 13173/1 с трейлера → Hodgkins Whse получили координаты склада (исправление 8.5 подтверждено в App). Move To Warehouse на строке контейнера с назначенными частями ничего не делает — как V1 (`ReplaceContainers`). [[app-testing]] 8.5, 8.17.
+
+## [2026-11-24] fix | App: раскладки гридов V1 не применялись (имя сборки AutoCall.WPF → AutoDispatch)
+
+Раскладки `PersistenceManager` (`EquipmentsDialogGridView*`, `DatCompaniesDialogGridView`) V1 записаны с типами `…ColumnProxy, AutoCall.WPF, Version=…`. В App V3 (`AutoDispatch`) они молча пропускались, а при закрытии окна App перезаписывал их дефолтными. По решению пользователя исправлено в App: `GridViewExtensions.SetSettings` заменяет имя сборки перед загрузкой. Проверено отдельной программой на коде App и Telerik R1 2022: 355 раскладок из `autocall_local` — до правки 0, после правки применились все 355. Версии Telerik 2016/2021 не мешают. `DockingLayout` не загружается — как V1. [[app-testing]] 8.18, [[user-settings]], [[app]].
+
+## [2026-11-24] query | Серверная часть: все ли страницы dispatch перенесены, что осталось
+
+Меню WebV1 сверено с контроллерами V3. Страницы dispatch перенесены все: Dispatch Companies, Factoring Companies, Custom Statuses, Confirmation, CarrierRegistration + Print, Map (SelectLocation/OrderStops/маршрут), Download, webhook CarrierView, Api для App. По решению не переносятся страницы модуля AutoCall: AutoCall Emails (почта DAT-лоадборда), CHRobinson, Data Sources, Lifetime, Home (звонки, кэш DAT, флаги GPS; флаг BNSF заменён `BnsfRefreshEnabled`), UnCity, TruckStop, CallReport, UserScript. `GetHybridRate` в V1 всегда возвращал DISABLED. Найден пробел: в `/Admin/Users` нельзя задать `Signature` и учётку AutoPhone, которые в V1 правились на странице User — в [[plan]] «Решить».
+
+## [2026-11-24] fix | Web: Signature и AutoPhone в /Admin/Users, перенос Call Report
+
+По решению пользователя: в форме пользователя под Name — Signature (подпись агента на confirmed, V1 `User/Index`), шрифтом подписи; в списке — колонка AutoPhone (`SipLogin`, ссылка на `/CallReport` компании, как AutoCall V3). Call Report изначально считался частью AutoCall, но софтфоны App переносятся — перенесён копией AutoCall V3: `/CallReport`, блок Phone channel congestion на Home (Owner, Admin), `CallReportService`, `VodiaWebService` (CDR Vodia по FTP), `Secrets:Vodia` (в example и [[deploy]]), тест `14_CallReport` 2/2. Проверено на копии сервера (7183) временным тестом: колонка и ссылка, порядок полей, сохранение и возврат подписи, страницы рисуются; без `Secrets:Vodia` — «Vodia FTP is not configured». Найдено: Save пользователя с пробелом в имени падает на правиле Identity — в [[plan]] «Решить». [[web]], [[plan]].
+
+## [2026-11-25] fix | Web: имя пользователя с пробелом сохраняется в /Admin/Users
+
+По решению пользователя `options.User.AllowedUserNameCharacters = null`: `UserName` в AutoDispatch — отображаемое имя V1 `Users.Name` (вход по email), правило Identity «только буквы и цифры» не давало сохранить перенесённых пользователей вроде «Anton Gmail». В AutoCall V3 `UserName` — логин V1 (обычно email), поэтому там ошибки у этого пользователя нет. Проверено на копии сервера (7183): Save без изменений — 200, строка пользователя и роль прежние. [[plan]] «Имя пользователя с пробелом».

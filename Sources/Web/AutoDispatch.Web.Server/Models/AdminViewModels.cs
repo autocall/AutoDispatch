@@ -36,6 +36,10 @@ public class UserFormViewModel {
     public string Email { get; set; }
     [MaxLength(256)]
     public string UserName { get; set; }
+    /// <summary>
+    ///     Подпись агента на confirmation (V1 User/Index) </summary>
+    [MaxLength(64)]
+    public string Signature { get; set; }
     [MaxLength(64)]
     public string TimeZoneId { get; set; }
     [Required]

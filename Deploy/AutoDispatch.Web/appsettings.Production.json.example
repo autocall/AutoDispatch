@@ -14,7 +14,8 @@
     "Metric": { "Token": "<random string for Api/Metrics/Add, the same in Deploy/metric_cpu.sh on the DB server>" },
     "Sms": { "Bandwidth": { "ApplicationId": "<V1 BandwidthApplicationId>", "Url": "<V1 BandwidthUrl>", "User": "<V1 BandwidthUser>", "Password": "<V1 BandwidthPassword>" } },
     "OpenAI": { "ApiKey": "<V1 OPENAI_API_KEY>" },
-    "Keeppingin": { "ApiKey": "<V1 KeepPinginGoogleMapApiKey>" }
+    "Keeppingin": { "ApiKey": "<V1 KeepPinginGoogleMapApiKey>" },
+    "Vodia": { "FtpLogin": "pbx_ftp", "FtpPassword": "<Vodia PBX FTP password, as in AutoCall V3 appsettings.Production.json>" }
   },
   "Logging": {
     "LogLevel": {

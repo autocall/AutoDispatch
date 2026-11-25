@@ -72,6 +72,9 @@ public class Program {
             options.Password.RequiredLength = AppSettings.PasswordMinLength;
             options.SignIn.RequireConfirmedEmail = false;
             options.User.RequireUniqueEmail = true;
+            // UserName — отображаемое имя V1 Users.Name («Anton Gmail»), вход по email: символы не ограничиваем
+            // (уникальность NormalizedUserName Identity проверяет отдельно) — AI/wiki/plan.md «Имя пользователя с пробелом»
+            options.User.AllowedUserNameCharacters = null;
         });
         services.ConfigureApplicationCookie(options => {
             options.Cookie.Name = AppSettings.CookieName;

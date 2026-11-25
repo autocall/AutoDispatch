@@ -62,6 +62,11 @@ public partial class AppSettings {
     public static string GoogleMapApiKey { get; private set; }
 
     /// <summary>
+    ///     FTP Vodia PBX — CDR-логи звонков для Call Report и Phone channel congestion (как AutoCall V3, V1 VodiaFtp*) </summary>
+    public static string VodiaFtpLogin { get; private set; }
+    public static string VodiaFtpPassword { get; private set; }
+
+    /// <summary>
     ///     Вызывать первым в Program: значения читаются из секции "Secrets" конфигурации
     ///     (appsettings.{Environment}.json или переменные Secrets__Jwt__PrivateKey).
     ///     Пустой ключ — исключение в Release, предупреждение в Debug. </summary>
@@ -99,6 +104,8 @@ public partial class AppSettings {
         OpenAiApiKey = Read("OpenAI:ApiKey");
         KeeppinginApiKey = Read("Keeppingin:ApiKey");
         GoogleMapApiKey = Read("GoogleMap:Api");
+        VodiaFtpLogin = Read("Vodia:FtpLogin");
+        VodiaFtpPassword = Read("Vodia:FtpPassword");
 
         if (missing.Count > 0) {
 #if DEBUG

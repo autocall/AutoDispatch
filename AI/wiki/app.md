@@ -86,7 +86,8 @@ DAT rate (`GetHybridRate`: окно груза, «Refresh» — показыва
 
 `AutoDispatch.sln` собирается (VS MSBuild, 0 ошибок); App запускается до окна входа; конфигурация AutoMapper строится; `SettingsService` читает перенесённые
 секции (BoardsSettings2, FiltersColumns, DefaultLoadSettings, Selected*Company, Scan*, CallServiceSettings) и пишет только изменённую; `LoadConverter` туда-обратно.
-Не проверено: вход и работа с сервером — нужна миграция `AdUser.SipLogin/SipPassword`; сканер, софтфоны, WebView2-карты, раскладки гридов Telerik 2021 → R1 2022.
+Не проверено на 2026-11-19: вход и работа с сервером, сканер, софтфоны, WebView2-карты, раскладки гридов Telerik 2021 → R1 2022. Позже проверено ([[app-testing]]):
+вход и работа с сервером (сессии 1–8), софтфоны (7.21), карты (7.18, 8.3), раскладки гридов (8.18 — исправлено имя сборки). Сканер не проверить — нет устройств.
 
 ## Осталось
 

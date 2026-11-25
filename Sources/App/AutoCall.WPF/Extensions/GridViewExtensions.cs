@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -426,6 +428,12 @@ namespace AutoCall.WPF.Extensions {
             ServiceProvider.RegisterPersistenceProvider<ICustomPropertyProvider>(typeof(RadGridView), new GridViewCustomPropertyProvider());
             PersistenceManager manager1 = new PersistenceManager();
             try {
+                // V3: раскладки V1 записаны с типами «…ColumnProxy, AutoCall.WPF, Version=…» — сборка App теперь AutoDispatch,
+                // без замены PersistenceManager молча пропускает Columns/SortDescriptors/… (раскладка не применяется)
+                var text = Encoding.UTF8.GetString(data);
+                if (text.Contains(", AutoCall.WPF, ")) {
+                    data = Encoding.UTF8.GetBytes(Regex.Replace(text, @", AutoCall\.WPF, Version=[0-9.]+, Culture=neutral, PublicKeyToken=null", ", AutoDispatch"));
+                }
                 var binary = new MemoryStream(data);
                 manager1.Load(grid, binary);
                 // fixs Display Indexes

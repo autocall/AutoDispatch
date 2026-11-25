@@ -7,7 +7,7 @@
     <h1 class="text-2xl font-semibold">Home</h1>
 </div>
 
-@* Account — всем ролям *@
+@* Account — всем ролям; Phone channel congestion (ссылка на Call Report) — Owner/Admin, как AutoCall V3 *@
 <div class="mt-4 grid items-start gap-4 lg:grid-cols-2">
     <div class="card bg-base-100 shadow-sm">
         <div class="card-body gap-3">
@@ -26,4 +26,13 @@
             </div>
         </div>
     </div>
+
+    @if (User.IsInRole(nameof(RoleEnum.Owner)) || User.IsInRole(nameof(RoleEnum.Admin))) {
+        @* CDR скачивается с FTP PBX — блок грузится после страницы *@
+        <div id="congestion" class="card bg-base-100 shadow-sm" hx-get="/Home/Congestion" hx-trigger="load" hx-swap="outerHTML">
+            <div class="card-body">
+                <h2 class="card-title">Phone channel congestion <span class="loading loading-spinner loading-sm"></span></h2>
+            </div>
+        </div>
+    }
 </div>

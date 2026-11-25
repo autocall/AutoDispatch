@@ -38,6 +38,12 @@ public class UserDto {
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
     public RoleEnum Role { get; set; }
+    /// <summary>
+    ///     Подпись агента на confirmation (V1 User/Index — Signature) </summary>
+    public string Signature { get; set; }
+    /// <summary>
+    ///     Номер AutoPhone (V1 MicroSIPLogin); в админке только показывается </summary>
+    public string SipLogin { get; set; }
     public DateTime CreatedDateTime { get; set; }
     public bool IsDeleted { get; set; }
     /// <summary>
@@ -61,6 +67,7 @@ public class CreateUserDto {
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
     public RoleEnum Role { get; set; }
+    public string Signature { get; set; }
     public string Password { get; set; }
 }
 
@@ -71,6 +78,7 @@ public class UpdateUserDto {
     public string Email { get; set; }
     public string TimeZoneId { get; set; }
     public RoleEnum Role { get; set; }
+    public string Signature { get; set; }
     /// <summary>
     ///     Пусто — пароль не меняется </summary>
     public string Password { get; set; }

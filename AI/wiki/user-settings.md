@@ -59,4 +59,6 @@ App V1 читал и писал настройки через WCF `svc/SettingsS
 - App: `AutoCall.Logic.Settings.SettingsService` — секции в кэше (`JToken`), запись только изменённых, `SaveSettingsAsync` при закрытии окна;
   публичные `Get*/Set*` V1 не менялись. JSON V1 с `$type`/`$values` читается Newtonsoft без разрешения типов — проверено на перенесённых секциях.
   `UserName` входа и параметры сканера — локальный `%AppData%\AutoDispatch\settings.json` — [[app]].
-- Не проверено: загрузка раскладок гридов, сохранённых Telerik 2021 (.NET Framework), в Telerik R1 2022 под .NET — при сверке этапа 7.
+- Раскладки гридов (`*GridView`, `PersistenceManager`), сохранённые V1 (Telerik 2016/2021, .NET Framework), загружаются в Telerik R1 2022 под .NET 10.
+  Помешало только имя сборки: прокси-типы записаны как `…ColumnProxy, AutoCall.WPF, Version=…`, а App V3 — `AutoDispatch`; `SetSettings`
+  заменяет имя перед загрузкой (2026-11-24, все 355 раскладок локальной копии V1 применяются) — [[app-testing]] 8.18.

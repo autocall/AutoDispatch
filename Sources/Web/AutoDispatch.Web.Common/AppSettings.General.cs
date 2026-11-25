@@ -109,6 +109,19 @@ public partial class AppSettings {
 
     #endregion [ Logging ]
 
+    #region [ Vodia ]
+
+    /// <summary>
+    ///     CDR-лог Vodia PBX за день (имя файла — дата в часовом поясе PBX); логин и пароль — Secrets:Vodia. Как AutoCall V3:
+    ///     софтфоны App звонят через ту же PBX (Call Report перенесён 2026-11-24, AI/wiki/plan.md) </summary>
+    public const string VodiaCdrUrl = "ftp://phone.myautocall.net:10021//logs/cdr/{0:yyyyMMdd}.txt";
+    public static readonly TimeSpan VodiaFtpTimeout = TimeSpan.FromSeconds(60);
+    /// <summary>
+    ///     Phone channel congestion: сколько периодов с наибольшим числом одновременных звонков показывать </summary>
+    public const int CongestionTopPeriods = 10;
+
+    #endregion [ Vodia ]
+
     #region [ Monitoring ]
 
     /// <summary>
