@@ -302,7 +302,9 @@ namespace AutoCall.WPF.UserControls.Boards {
             }
         }
 
-        private void btnSearch_Clicked(object sender, RoutedEventArgs e) {
+        private async void btnSearch_Clicked(object sender, RoutedEventArgs e) {
+            // координаты выбранных Origin / Destination ещё могут загружаться (acLocation_SelectionChanged)
+            await _placeTask;
             LoadHistory();
         }
 
@@ -400,12 +402,17 @@ namespace AutoCall.WPF.UserControls.Boards {
                     // Populate autocomplete items source
                     _placeIds.Clear();
                     ui.ItemsSource = predictions.Cast<JObject>().Select(p => {
-                        var location = new LocationViewModel() { FormattedAddress = StringExtension.NormalizeCityName((string)p["description"]) };
+                        // "Visalia" + "CA, USA" → "Visalia, CA", как города DAT в V1: без радиуса сервер ищет OriginCity LIKE 'Visalia, CA%'
+                        var state = PlaceAutocompleteJsonParser.GetSecondaryText(p)?.Split(',')[0].Trim();
+                        var city = String.IsNullOrEmpty(state) ? (string)p["description"] : $"{PlaceAutocompleteJsonParser.GetMainText(p)}, {state}";
+                        var location = new LocationViewModel() { FormattedAddress = StringExtension.NormalizeCityName(city) };
                         _placeIds[location] = PlaceAutocompleteJsonParser.GetPlaceId(p);
                         return location;
                     }).ToList();
                     ui.Populate(ui.SearchText);
                 }
+            } catch (Exception exception) {
+                _l.e("acLocation_SearchTextChanged", exception);
             } finally {
                 _processing = false;
             }
@@ -413,15 +420,27 @@ namespace AutoCall.WPF.UserControls.Boards {
 
         /// <summary>
         ///     Координаты выбранной подсказки (Api/Dispatch/Helpers/PlaceDetails) </summary>
-        private async void acLocation_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        private void acLocation_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             if (((RadAutoCompleteBox)sender).SelectedItem is LocationViewModel location &&
                 _placeIds.TryGetValue(location, out var placeId) && String.IsNullOrEmpty(placeId) == false) {
+                _placeTask = Task.WhenAll(_placeTask, LoadPlaceAsync(location, placeId));
+            }
+        }
+
+        /// <summary>
+        ///     Загрузки координат выбранных мест: Search ждёт их (btnSearch_Clicked) </summary>
+        private Task _placeTask = Task.CompletedTask;
+
+        private async Task LoadPlaceAsync(LocationViewModel location, string placeId) {
+            try {
                 var details = await _dataService.GetPlaceDetails(placeId);
                 QueryLoadDto place = PlaceAutocompleteJsonParser.GetCityAndAddress(details);
                 if (place?.Location != null) {
                     location.Latitude = place.Location.Latitude;
                     location.Longitude = place.Location.Longitude;
                 }
+            } catch (Exception exception) {
+                _l.e("acLocation_SelectionChanged", exception);
             }
         }
 

@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AutoDispatch.Web.Logic;
 
 /// <summary>
-///     Только для мест без DI: даёт ServicesHost в новом scope </summary>
+///     Только для мест без DI: даёт новый scope, ServicesHost берётся из него; scope освобождает вызывающий (using) </summary>
 public static class ServiceLocator {
 
     private static IServiceProvider _serviceProvider;
@@ -12,11 +12,10 @@ public static class ServiceLocator {
         _serviceProvider = serviceProvider;
     }
 
-    public static ServicesHost GetHost() {
+    public static IServiceScope CreateScope() {
         if (_serviceProvider == null) {
             throw new InvalidOperationException("ServiceProvider has not been initialized");
         }
-        var scope = _serviceProvider.CreateScope();
-        return scope.ServiceProvider.GetRequiredService<ServicesHost>();
+        return _serviceProvider.CreateScope();
     }
 }

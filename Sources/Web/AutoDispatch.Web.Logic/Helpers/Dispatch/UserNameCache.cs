@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using LinqToDB;
+using Microsoft.Extensions.DependencyInjection;
 using AutoDispatch.Web.Data.Entities;
 
 namespace AutoDispatch.Web.Logic.Helpers.Dispatch;
@@ -16,7 +17,8 @@ public static class UserNameCache {
         if (Names.TryGetValue(userId, out var name)) {
             return name;
         }
-        var host = ServiceLocator.GetHost();
+        using var scope = ServiceLocator.CreateScope();
+        var host = scope.ServiceProvider.GetRequiredService<ServicesHost>();
         var user = host.UnitOfWork.Context.GetTable<AdUser>().Where(e => e.Id == userId)
             .Select(e => new { e.UserName, e.Email }).FirstOrDefault();
         // неизвестный id (автор не перенесён) кэшируется как null, чтобы не бить в БД на каждый DTO

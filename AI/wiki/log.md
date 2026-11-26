@@ -566,3 +566,25 @@ App против локального Web (DDM, Anton Gmail), UI Automation и `
 ## [2026-11-25] test | Аудит: проверка в App исправлений настроек при повторном входе и B12
 
 Сортировка Warehouses → закрытие при `IsDeleted` (401, секция отложена) → истёкшая сессия, вход → закрытие Yards записало обе секции; сортировка восстановлена и снова снята. B12 — SaferSnap «link» в окне Carriers открывает `brokersnapshot.com/Company/carpathian-eagle-inc` без `ExternalLogin`. Вход другим пользователем не проверен (Debug `LoginDialog` входит учёткой `Settings.cs`). [[audit]].
+## [2026-11-26] fix | [[audit]] B7, B8, B13; статус B12
+
+B7 — `ServicesHost.GetService` под `lock`. B8 — `ServiceLocator.CreateScope()` вместо `GetHost()`, `UserNameCache.Get` освобождает scope. Оба — отличия от копии AutoCall V3, [[plan]] «`ServicesHost` и `ServiceLocator`». B13 — по решению пользователя удалены эндпоинт `Api/Dispatch/Helpers/ExtractLoadFromPdf2` и обёртка в App ([[protocol]], [[plan]]). B12 — значок статуса исправлен на ✅ (пункт закрыт 2026-11-25). Web и App собираются; на работающем сервере не проверялось (сервер и App были запущены под отладчиком).
+
+## [2026-11-26] fix | [[audit]] B11
+
+Борд истории карриера (`DispatchCarrierHistoryBoard`): `catch` с записью в лог в обработчике подсказок города и в загрузке координат; Search ждёт загрузку координат выбранных мест. App собирается; в работающей программе не проверялось.
+
+## [2026-11-26] test | [[audit]] B11 — проверка в App
+
+Loads History, радиус 50. Ожидание координат: блокировка `IdentityUsers` на 6 с держит PlaceDetails, Search ждёт — Elgin, Total 55 = БД. Ошибки подсказок и координат (401 при `IsDeleted`) — только в лог App, без «App Error». Остаток: если PlaceDetails упал, поиск с радиусом молча идёт от 0/0 (Aurora — 0 вместо 54).
+## [2026-11-26] fix | Борд истории: поиск по городу без радиуса
+
+Найдено пользователем при проверке B11: подсказка места уходила на сервер как «Visalia, Ca, USA», условие `OriginCity LIKE` ничего не находило. Название подсказки теперь «город, штат» без страны, как у городов DAT в V1. [[app]] «Что заменено», [[audit]] B11. App собирается; в работающей программе не проверялось.
+
+## [2026-11-26] test | Борд истории: поиск по городу проверен пользователем
+
+Поиск по городу без радиуса в App работает ([[audit]] B11).
+
+## [2026-11-26] test | [[audit]] B7, B8 — тест `16_ServiceScopes`
+
+Новый `AutoDispatch.Web.Test/16_ServiceScopes.cs`, в процессе теста без сервера. B7: 32 потока одновременно `ServicesHost.GetService` — один экземпляр; без `lock` (HEAD) — `InvalidOperationException` порчи `Dictionary`. B8: 20 промахов `UserNameCache.Get` — 1 сессия SQL Server с Application Name теста; со старым `ServiceLocator.GetHost()` — 16 открытых соединений. Прогон на копии исходников (сервер держит DLL).

@@ -60,7 +60,7 @@ AutoCall V3 (`AutoCallV3/Repo/AI/wiki/app-v3.md`). Сделано 2026-11-19; с
 |---|---|
 | Колонка Equipment: `IDatPowerService.GetTypesByCodes` (справочник `EquipmentType` WebV1) | `Board_EquipmentTypeToCodeConverter` — таблица кодов, снятая с `autocall.dbo.EquipmentType` 2026-11-19 |
 | Фильтр по зонам: `IStateRepository` + `IZoneRepository` (WCF) | `StateZones.StateToZone` — 101 штат, снято с `autocall.dbo.State/Zone` 2026-11-19 |
-| Борд истории, поиск города: `IDatPowerStorage.GetLocationsAsync` (города DAT с координатами) | подсказки `Api/Dispatch/Helpers/PlaceAutocomplete`, координаты — `PlaceDetails` при выборе (как `PlaceApi` V3) |
+| Борд истории, поиск города: `IDatPowerStorage.GetLocationsAsync` (города DAT с координатами) | подсказки `Api/Dispatch/Helpers/PlaceAutocomplete`, координаты — `PlaceDetails` при выборе (как `PlaceApi` V3). Название подсказки — «город, штат» без страны (`main_text` + первая часть `secondary_text`), как у городов DAT: без радиуса сервер ищет `OriginCity LIKE 'Visalia, CA%'` (исправлено 2026-11-26, до этого уходило «Visalia, Ca, USA» и поиск без радиуса ничего не находил) |
 | «Are you here?» (выход после 7 дней простоя): статические таймеры `DatPowerBoard` | `UserControls/Boards/ExitAppTimer` (код V1) |
 | Copy в контекстном меню `valueBindableTextBlock`: `RecordBaseDetailsDialog.Copy_OnClick` | `Helpers/CopyMenuHelper` (код V1) |
 | `Xceed MessageBox` Pallets/Length, `ByteUpDown` | `TaskDialog` WinForms, `RadNumericUpDown` Telerik (Extended WPF Toolkit под MS-PL — только .NET Framework) |

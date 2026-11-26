@@ -46,9 +46,12 @@ public class ServicesHost {
     /// <summary>
     ///     Сервис по типу; единственный конструктор сервиса — (ServicesHost host) </summary>
     public T GetService<T>() where T : IService {
-        if (services.ContainsKey(typeof(T)) == false) {
-            services[typeof(T)] = (T)Activator.CreateInstance(typeof(T), this);
+        // lock: сервисы запрашиваются и из параллельных задач одного запроса (GeocodeService, Parallel.ForEachAsync)
+        lock (services) {
+            if (services.ContainsKey(typeof(T)) == false) {
+                services[typeof(T)] = (T)Activator.CreateInstance(typeof(T), this);
+            }
+            return (T)services[typeof(T)];
         }
-        return (T)services[typeof(T)];
     }
 }

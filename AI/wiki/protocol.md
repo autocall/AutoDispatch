@@ -92,7 +92,7 @@ JWT Bearer, ответ — данные как есть через `JsonSuccess`
 | `Api/Dispatch/Helpers/PlaceDetails?placeId=` | GET | `{result, status}` | `Dispatch/GetPlaceDetails` (gzip) |
 | `Api/Dispatch/Helpers/Distance?lat1&lng1&lat2&lng2` | GET | `{distance, duration}` (Google Distance Matrix, `Secrets:GoogleMap:Api`) | `Dispatch/GetDistance` |
 | `Api/Dispatch/Helpers/ExtractLoadFromPdf?board=` | POST multipart `file` | `LoadDto` (OpenAI по PNG страниц из `/Temp`) | `Dispatch/ExtractLoadFromPdf` |
-| `Api/Dispatch/Helpers/ExtractLoadFromPdf2?loadId=&board=` | GET | `LoadDto` по сохранённому confirmation | `Dispatch/ExtractLoadFromPdf2` |
+| ~~`Api/Dispatch/Helpers/ExtractLoadFromPdf2?loadId=&board=`~~ | GET | удалён 2026-11-26 ([[audit]] B13): App его не вызывал | `Dispatch/ExtractLoadFromPdf2` |
 | `Api/DatCompany/Search?dot=` или `?mc=` | GET | словарь полей FMCSA, ключи как есть (`Legal Name:`), без camelCase | `api/DatCompany/Search` |
 | `Api/Maps/SelectLocationLink` | POST `MapLatLngDto` или `null` | `{url}` страницы `Map/SelectLocation?r=` ([[public-site]]) | `Dispatch/SelectLocation?latlng=` в EO.WebBrowser с Bearer |
 | `Api/Maps/OrderStopsLink` | POST `{trailerId}` | `{url}` страницы `Map/OrderStops?r=` ([[public-site]]) | `Dispatch/OrderStops?TrailerId=` в EO.WebBrowser с Bearer |

@@ -55,13 +55,6 @@ namespace AutoDispatch.Logic.DataServices {
                     location1.Latitude, location1.Longitude, location2.Latitude, location2.Longitude))));
         }
 
-        public Task<ExtractLoadFromPdf2Response> ExtractLoadFromPdf2(Guid loadId, DispatchBoardType board) {
-            return GetResponseAsync(async () => new ExtractLoadFromPdf2Response() {
-                Status = ResponseStatus.Success,
-                Data = JsonConvert.DeserializeObject<LoadDto>(await SendAsync(HttpMethod.Get, $"{Url}ExtractLoadFromPdf2?loadId={loadId}&board={(int)board}"))
-            });
-        }
-
         /// <summary>
         ///     V1 — WebClient.UploadFileTaskAsync через временный файл; теперь multipart file из памяти </summary>
         public async Task<ExtractLoadFromPdf2Response> ExtractLoadFromPdfAsync(string fileName, byte[] data, DispatchBoardType board) {

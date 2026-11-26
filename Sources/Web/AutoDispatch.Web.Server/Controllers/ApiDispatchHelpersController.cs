@@ -4,7 +4,6 @@ using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Logic;
-using AutoDispatch.Web.Logic.Helpers.Dispatch;
 using AutoDispatch.Web.Logic.Services.Dispatch;
 
 namespace AutoDispatch.Web.Server.Controllers;
@@ -19,7 +18,6 @@ public class ApiDispatchHelpersController : ApiBaseController {
     private CustomerCompanyService CustomerCompanies => Host.GetService<CustomerCompanyService>();
     private GeocodeService Geocode => Host.GetService<GeocodeService>();
     private OpenAIService OpenAI => Host.GetService<OpenAIService>();
-    private ConfirmationService Confirmations => Host.GetService<ConfirmationService>();
 
     public ApiDispatchHelpersController(ServicesHost host) : base(host) { }
 
@@ -67,18 +65,6 @@ public class ApiDispatchHelpersController : ApiBaseController {
             throw new InfoException("File is empty");
         }
         await using var stream = file.OpenReadStream();
-        return JsonSuccess(await ExtractAsync(stream, board));
-    }
-
-    /// <summary>
-    ///     То же по сохранённому confirmation груза </summary>
-    [HttpGet]
-    public async Task<ActionResult> ExtractLoadFromPdf2(Guid loadId, DispatchBoardType board) {
-        var load = await Confirmations.GetLoadByIdAsync(loadId);
-        if (load == null || String.IsNullOrEmpty(load.ConfirmationFile)) {
-            throw new InfoException("Load has no confirmation file");
-        }
-        await using var stream = new FileStream(DispatchFileHelper.FileGetFullPath(load.EntityId, load.ConfirmationFile), FileMode.Open, FileAccess.Read);
         return JsonSuccess(await ExtractAsync(stream, board));
     }
 
