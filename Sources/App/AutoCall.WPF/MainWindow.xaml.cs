@@ -137,6 +137,8 @@ namespace AutoCall.WPF {
                 }
                 if (UserSession.Current.UserId != userId) {
                     MessageBoxEx.Info(this, "Signed in as a different user. Please start the application again.");
+                    // раскладка и выбранные компании прежнего пользователя не пишутся в настройки вошедшего
+                    _skipSavingColumns = true;
                 }
                 Close();
                 return false;

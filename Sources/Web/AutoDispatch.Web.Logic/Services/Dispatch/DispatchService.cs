@@ -274,12 +274,19 @@ public partial class DispatchService : DispatchBaseService, IDispatchService {
 
     /// <summary>
     ///     Текущее положение объекта (V1 _modifyLocation; изменения EF сохранял при следующем SaveChanges — здесь сразу).
+    ///     Пишутся только положение и LastModified*, как EF V1 (меняет лишь изменённые свойства): сущность прочитана раньше,
+    ///     запись целиком затёрла бы параллельное сохранение пользователя (аудит B1, тест 15_LocationRace).
     ///     Generic: LinqToDB берёт маппинг по типу на этапе компиляции — с BaseDispatchEntity UpdateAsync падал «no fields to update» </summary>
     private async Task _modifyLocationAsync<T>(T entity, LocationDto location, Guid userId) where T : BaseDispatchEntity {
         LocationConverter.SetCurrent(entity, location);
         entity.LastModifiedById = userId;
         entity.LastModifiedDate = DateTime.UtcNow;
-        await UpdateAsync(entity);
+        await Table<T>().Where(e => e.EntityId == entity.EntityId)
+            .Set(e => e.CurrentLatitude, entity.CurrentLatitude)
+            .Set(e => e.CurrentLongitude, entity.CurrentLongitude)
+            .Set(e => e.LastModifiedById, entity.LastModifiedById)
+            .Set(e => e.LastModifiedDate, entity.LastModifiedDate)
+            .UpdateAsync();
     }
 
     #region [ LoadNameOfLocation ]

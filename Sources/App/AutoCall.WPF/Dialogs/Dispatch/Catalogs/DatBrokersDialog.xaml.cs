@@ -196,9 +196,10 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
         }
 
         private void Link_Click(object sender, RoutedEventArgs e) {
-            var session = UserSession.Current;
-            var ReturnUrl = ((DatCompanyViewModel)((FrameworkContentElement)sender).DataContext).CarrierViewLink;
-            Process.Start(new ProcessStartInfo($"https://brokersnapshot.com/ExternalLogin?Token={session.AccessToken}&Type=1&ReturnUrl={Uri.EscapeDataString(ReturnUrl)}") { UseShellExecute = true });
+            // V1 входил через brokersnapshot.com/ExternalLogin с токеном AutoCall; токен AutoDispatch Safer не проверяет (аудит B12) —
+            // публичная страница поиска, как AutoCall V3 (RecordDetailsBuilders.McUrl)
+            var url = ((DatCompanyViewModel)((FrameworkContentElement)sender).DataContext).CarrierViewLink;
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }
 }

@@ -63,6 +63,9 @@ namespace AutoCall.Logic.Settings {
         private readonly object _lock = new object();
         private Dictionary<string, JToken> _sections;
         private readonly HashSet<string> _dirty = new HashSet<string>();
+        /// <summary>
+        ///     Чьи секции в кэше </summary>
+        private Guid? _userId;
 
         #endregion [ Private Fields ]
 
@@ -77,15 +80,25 @@ namespace AutoCall.Logic.Settings {
         #region [ Private Methods ]
 
         /// <summary>
-        ///     Все секции пользователя — один раз после входа (до MainWindow) </summary>
+        ///     Все секции пользователя — после входа (до MainWindow) и после повторного входа по истёкшей сессии (MainWindow.OnSessionExpired).
+        ///     Тот же пользователь — несохранённые секции (запись не удалась, аудит B10) остаются и уйдут при следующем сохранении;
+        ///     другой пользователь — отбрасываются </summary>
         public async Task LoadAsync() {
             var json = await _api.GetSettingsAsync();
             var sections = String.IsNullOrEmpty(json)
                 ? new Dictionary<string, JToken>()
                 : JObject.Parse(json).Properties().ToDictionary(p => p.Name, p => p.Value);
+            var userId = AutoDispatch.Data.UserSession.Current?.UserId;
             lock (_lock) {
+                if (userId == _userId) {
+                    foreach (var section in _dirty) {
+                        sections[section] = _sections[section];
+                    }
+                } else {
+                    _dirty.Clear();
+                }
                 _sections = sections;
-                _dirty.Clear();
+                _userId = userId;
             }
         }
 

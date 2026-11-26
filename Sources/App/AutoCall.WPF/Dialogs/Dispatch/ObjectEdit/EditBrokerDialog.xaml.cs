@@ -306,9 +306,9 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
             } else if (Model.DotNumber == null && Model.McNumber != null) {
                 urlParameter = $"docket={Model.McNumber}";
             }
-            var session = UserSession.Current;
-            var ReturnUrl = $"https://brokersnapshot.com/SearchCompanies/Search?{urlParameter}";
-            Process.Start(new ProcessStartInfo($"https://brokersnapshot.com/ExternalLogin?Token={session.AccessToken}&Type=1&ReturnUrl={Uri.EscapeDataString(ReturnUrl)}") { UseShellExecute = true });
+            // V1 входил через brokersnapshot.com/ExternalLogin с токеном AutoCall; токен AutoDispatch Safer не проверяет (аудит B12) —
+            // публичная страница поиска, как AutoCall V3 (RecordDetailsBuilders.McUrl)
+            Process.Start(new ProcessStartInfo($"https://brokersnapshot.com/SearchCompanies/Search?{urlParameter}") { UseShellExecute = true });
         }
 
         #region [ clearable rating ]
