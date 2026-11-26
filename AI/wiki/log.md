@@ -588,3 +588,12 @@ Loads History, радиус 50. Ожидание координат: блоки�
 ## [2026-11-26] test | [[audit]] B7, B8 — тест `16_ServiceScopes`
 
 Новый `AutoDispatch.Web.Test/16_ServiceScopes.cs`, в процессе теста без сервера. B7: 32 потока одновременно `ServicesHost.GetService` — один экземпляр; без `lock` (HEAD) — `InvalidOperationException` порчи `Dictionary`. B8: 20 промахов `UserNameCache.Get` — 1 сессия SQL Server с Application Name теста; со старым `ServiceLocator.GetHost()` — 16 открытых соединений. Прогон на копии исходников (сервер держит DLL).
+## [2026-11-26] fix | [[audit]] B11 проверка, B14, B16
+
+B11 — подписи «City, ST» проверены в App: поиск без радиуса по названию города совпадает с БД (Chicago 15, Chicago→Riverside 2), радиус 50 — 53. B14 — страница `/Account/AccessDenied` (403), тест `01_Account.Test04_AccessDeniedPage` воспроизводит 404 на старом сервере; Web 59/59 на копии; отличие от V3 — [[plan]] «Страница AccessDenied». B16 — `ProcessExit` пишет выход и `CloseAndFlush` при `Environment.Exit`; проверено закрытием App при заблокированной `IdentityUsers`: строка «exited: Environment.Exit» дошла до сервера.
+## [2026-11-26] decision | [[audit]] B18 — оставить как в AutoCall V3
+
+Разобраны предупреждения сборки Web: AutoMapper 13.0.1 (CVE-2026-32933, CVE-2026-128081, CVE-2026-128082 — `StackOverflowException` на глубокой вложенности; исправления только в 15.1.4+ / 16.3.0, коммерческая лицензия), `System.Security.Cryptography.Pkcs` 9.0.x транзитивно через SqlClient и Telerik (CVE-2026-84008, CVE-2026-70162), устаревшие `KnownNetworks` и SkiaSharp `DrawText`/`DrawBitmap`. Риск по коду низкий. Решение пользователя: оставить как в V3 (там то же), менять вместе с V3 — [[plan]] «Уязвимые пакеты и устаревшие API (B18)».
+## [2026-11-26] fix | [[audit]] D1 — запрос App только к записям своей компании
+
+Перед исправлением проверено по боевой БД V1: грузы, созданные или изменённые пользователем не своей компании (2583 / 1582 из 164 тыс.), — системные учётки (`SystemAdmin`, `AutoCallAdmin` — webhook CarrierView раз в 5 минут, по снимкам `d_HistoryObject`) и пользователи, переведённые между компаниями без пересечения периодов; ссылок между компаниями нет, кроме 4 грузов 2018 года. Исправление: компания запроса в `ServicesHost`, проверка в `GetByIdAsync`, `CompanyId` из DTO не принимается, `LoadHistoryObjects`, история координат, `BindLoads`, файлы — [[plan]] «Изоляция компаний в Api/Dispatch (D1)». Тест `17_CompanyIsolation`, `15_LocationRace` переведён на пользователя компании трейлера; Web 60/60 дважды.

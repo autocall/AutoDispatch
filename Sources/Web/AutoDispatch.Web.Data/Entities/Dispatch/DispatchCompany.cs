@@ -5,7 +5,7 @@ namespace AutoDispatch.Web.Data.Entities.Dispatch;
 
 /// <summary>
 ///     Профиль компании в dispatch (V1 d_ActualCompany, переименовано 2026-11-13): реквизиты, SMTP, нумерация, BNSF, CarrierView </summary>
-public class DispatchCompany : BaseEntity {
+public class DispatchCompany : BaseEntity, ICompanyEntity {
 
     [Required]
     public string LogoSmall { get; set; }

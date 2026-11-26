@@ -35,6 +35,11 @@ public class ServicesHost {
 
     public UnitOfWork UnitOfWork { get; }
     public IMapper Mapper { get; }
+
+    /// <summary>
+    ///     Компания пользователя App в запросе Api/Dispatch/Request (аудит D1): сервисы dispatch отказывают в записях других компаний.
+    ///     null — серверный вызов (webhook, задачи, админка сайта), без проверки </summary>
+    public Guid? DispatchCompanyId { get; set; }
     public IServiceProvider ServiceProvider { get; }
 
     public ServicesHost(UnitOfWork unitOfWork, IMapper mapper, IServiceProvider serviceProvider) {

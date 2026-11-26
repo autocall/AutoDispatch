@@ -17,7 +17,8 @@ namespace AutoDispatch.Web.Server.Controllers;
 ///     по EventRequest.Name, Response — long-polling событий компании, *Zip — то же с gzip. Тело — JSON с $type (DispatchJson),
 ///     читается из потока: V1-клиент шлёт его с Content-Type x-www-form-urlencoded. Ответ всегда 200 с EventResponse,
 ///     ошибка — Status Failed + ErrorMessage, как в V1. UserId в Data сверяется с токеном; статус пользователя (IsDeleted)
-///     проверяется на каждом запросе в ApiBaseController — удалённому 401, а не 200 с Failed </summary>
+///     проверяется на каждом запросе в ApiBaseController — удалённому 401, а не 200 с Failed. Request работает только с записями
+///     компании пользователя (ServicesHost.DispatchCompanyId, аудит D1) </summary>
 [Route("Api/Dispatch/[action]")]
 public class ApiDispatchController : ApiBaseController {
 
@@ -79,6 +80,7 @@ public class ApiDispatchController : ApiBaseController {
             if (handler.HasAccess(GetRoles()) == false) {
                 throw new AccessDeniedException();
             }
+            Host.DispatchCompanyId = await Service.GetCompanyIdByUserIdAsync(userId);
             var data = await handler.Invoke(Service, wrapper.Data);
             return new EventResponse { Status = ResponseStatus.Success, Data = data };
         } catch (Exception e) {

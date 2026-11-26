@@ -36,6 +36,14 @@ public class AccountController : BaseController {
         return View(new LogInViewModel { ReturnUrl = returnUrl });
     }
 
+    /// <summary>
+    ///     Вошёл, но нет нужной роли ([Authorize(Roles)], Forbid()): сюда ведёт cookie Identity (AccessDeniedPath по умолчанию) </summary>
+    [HttpGet, AllowAnonymous]
+    public ActionResult AccessDenied() {
+        Response.StatusCode = StatusCodes.Status403Forbidden;
+        return View();
+    }
+
     [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
     public async Task<ActionResult> LogIn(LogInViewModel model) {
         using var scope = _l.Scope("auth");

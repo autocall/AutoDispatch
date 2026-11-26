@@ -216,6 +216,7 @@ public partial class DispatchService {
     public async Task<BindLoadsResponseData> BindLoads(BindLoadsRequestData request) {
         Guid? groupId = null;
         var loads = await Alive<Load>().Where(l => request.LoadIds.Contains(l.EntityId)).ToListAsync();
+        loads.ForEach(l => CheckCompany(l.CompanyId)); // аудит D1: до любых изменений
         int? historyId = null;
         switch (request.ParentType) {
             case LoadParentType.Warehouse: {
@@ -283,6 +284,7 @@ public partial class DispatchService {
                     break;
                 }
             case LoadParentType.DatDriver: {
+                    await GetByIdAsync<DatDriver>(request.ParentId); // аудит D1: чужой DatDriver — AccessDenied
                     var history = await Table<HistoryLocationDatDriver>().Where(h => h.DatDriverId == request.ParentId)
                         .OrderByDescending(h => h.Id).FirstOrDefaultAsync();
                     historyId = history?.Id;

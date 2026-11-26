@@ -81,6 +81,15 @@ insert into Load select * from #l;";
         return (reader.IsDBNull(0) ? null : reader.GetDecimal(0), reader.IsDBNull(1) ? null : Convert.ToDecimal(reader.GetValue(1)));
     }
 
+    private async Task<string> TrailerCompanyUserAsync() {
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand(
+            "select top 1 Email from IdentityUsers where IsDeleted = 0 and CompanyId = (select CompanyId from Trailer where EntityId = @t)", connection);
+        command.Parameters.AddWithValue("@t", TrailerId);
+        return (string)await command.ExecuteScalarAsync();
+    }
+
     [Fact]
     public async Task Test01_TrailerLocationKeepsParallelLoadSave() {
         await ExecAsync(SetupSql);
@@ -88,8 +97,9 @@ insert into Load select * from #l;";
             using var http = new HttpClient(new HttpClientHandler {
                 ServerCertificateCustomValidationCallback = (sender, certificate, chain, errors) => true
             }) { Timeout = TimeSpan.FromSeconds(90) };
+            // аудит D1: запрос App — только к записям своей компании, вход мастер-паролем под пользователем компании трейлера
             var signIn = await http.PostAsJsonAsync($"{AppSettings.Website}/Api/Account/SignIn",
-                new SignInViewModel { Email = AppSettings.AdminEmail, Password = _password });
+                new SignInViewModel { Email = await TrailerCompanyUserAsync(), Password = _password });
             var session = JObject.Parse(await signIn.Content.ReadAsStringAsync());
             var userId = (Guid)session["id"];
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", (string)session["token"]);

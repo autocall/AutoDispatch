@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoDispatch.Web.Data.Entities.Dispatch;
 
-public class DefectRepair : BaseEntity {
+public class DefectRepair : BaseEntity, ICompanyEntity {
 
     public Guid CompanyId { get; set; }
 

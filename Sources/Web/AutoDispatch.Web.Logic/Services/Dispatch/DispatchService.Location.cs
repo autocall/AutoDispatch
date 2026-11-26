@@ -182,13 +182,19 @@ public partial class DispatchService {
     #region [ Load History Location ]
 
     public async Task<LoadHistoryObjectsResponseData> LoadHistoryObjects(LoadHistoryObjectsRequestData request) {
-        var models = await Table<HistoryObject>().Where(h => request.Ids.Contains(h.Id)).ToListAsync();
+        var query = Table<HistoryObject>().Where(h => request.Ids.Contains(h.Id));
+        if (RequestCompanyId is Guid companyId) {
+            // аудит D1: App просит снимки грузов из истории координат груза — только грузов своей компании, чужие id не возвращаются
+            query = query.Where(h => Table<Load>().Any(l => l.EntityId == h.ReferenceId && l.CompanyId == companyId));
+        }
+        var models = await query.ToListAsync();
         return new LoadHistoryObjectsResponseData {
             Histories = this.Mapper.Map<List<HistoryObjectDto>>(models)
         };
     }
 
     public async Task<LoadHistoryLocationDriverResponseData> LoadHistoryLocationDriver(LoadHistoryLocationDriverRequestData request) {
+        await GetByIdAsync<Driver>(request.DriverId); // аудит D1: чужой Driver — AccessDenied
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationDriver>().Where(p => p.DriverId == request.DriverId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
@@ -200,6 +206,7 @@ public partial class DispatchService {
     }
 
     public async Task<LoadHistoryLocationTruckResponseData> LoadHistoryLocationTruck(LoadHistoryLocationTruckRequestData request) {
+        await GetByIdAsync<Truck>(request.TruckId); // аудит D1: чужой Truck — AccessDenied
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationTruck>().Where(p => p.TruckId == request.TruckId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
@@ -211,6 +218,7 @@ public partial class DispatchService {
     }
 
     public async Task<LoadHistoryLocationTrailerResponseData> LoadHistoryLocationTrailer(LoadHistoryLocationTrailerRequestData request) {
+        await GetByIdAsync<Trailer>(request.TrailerId); // аудит D1: чужой Trailer — AccessDenied
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationTrailer>().Where(p => p.TrailerId == request.TrailerId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
@@ -222,6 +230,7 @@ public partial class DispatchService {
     }
 
     public async Task<LoadHistoryLocationLoadResponseData> LoadHistoryLocationLoad(LoadHistoryLocationLoadRequestData request) {
+        await GetByIdAsync<Load>(request.LoadId); // аудит D1: чужой Load — AccessDenied
         // NOTE: skips a filter by Date, because a load has few locations
         var list = await Table<HistoryLocationLoad>().Where(p => p.LoadId == request.LoadId)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();
@@ -233,6 +242,7 @@ public partial class DispatchService {
     }
 
     public async Task<LoadHistoryLocationDatDriverResponseData> LoadHistoryLocationDatDriver(LoadHistoryLocationDatDriverRequestData request) {
+        await GetByIdAsync<DatDriver>(request.DatDriverId); // аудит D1: чужой DatDriver — AccessDenied
         DateTime dt = DateTime.UtcNow.AddSeconds(-request.DateTime.TimeOfDay.TotalSeconds);
         var list = await Table<HistoryLocationDatDriver>().Where(p => p.DatDriverId == request.DatDriverId && p.CreatedDate > dt)
             .OrderByDescending(m => m.CreatedDate).ToListAsync();

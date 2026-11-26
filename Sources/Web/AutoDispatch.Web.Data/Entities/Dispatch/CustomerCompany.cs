@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoDispatch.Web.Data.Entities.Dispatch;
 
-public class CustomerCompany : BaseEntity {
+public class CustomerCompany : BaseEntity, ICompanyEntity {
 
     [Required, MaxLength(64)]
     public string Name { get; set; }

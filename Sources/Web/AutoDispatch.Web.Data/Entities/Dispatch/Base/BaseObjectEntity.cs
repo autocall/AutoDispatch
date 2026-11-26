@@ -5,7 +5,7 @@ namespace AutoDispatch.Web.Data.Entities.Dispatch;
 
 /// <summary>
 ///     Объект компании со снимком истории (HistoryObject) </summary>
-public class BaseObjectEntity : BaseEntity {
+public class BaseObjectEntity : BaseEntity, ICompanyEntity {
 
     /// <summary>
     ///     Current history object # </summary>

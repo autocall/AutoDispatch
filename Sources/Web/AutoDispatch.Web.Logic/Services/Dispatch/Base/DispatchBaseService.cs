@@ -22,8 +22,14 @@ public abstract class DispatchBaseService : BaseService {
     ///     Живые записи (IsDeleted = false), как EntityRepository.GetAll V1 </summary>
     protected IQueryable<T> Alive<T>() where T : Data.Entities.Dispatch.BaseEntity => Table<T>().Where(e => e.IsDeleted == false);
 
-    protected Task<T> GetByIdAsync<T>(Guid id) where T : Data.Entities.Dispatch.BaseEntity {
-        return Table<T>().FirstOrDefaultAsync(e => e.EntityId == id);
+    /// <summary>
+    ///     Запись по id; в запросе App чужая компания — AccessDeniedException (аудит D1) </summary>
+    protected async Task<T> GetByIdAsync<T>(Guid id) where T : Data.Entities.Dispatch.BaseEntity {
+        var entity = await Table<T>().FirstOrDefaultAsync(e => e.EntityId == id);
+        if (entity is ICompanyEntity owned) {
+            CheckCompany(owned.CompanyId);
+        }
+        return entity;
     }
 
     protected Task<T> GetByIdAsync<T>(Guid? id) where T : Data.Entities.Dispatch.BaseEntity {
@@ -35,6 +41,20 @@ public abstract class DispatchBaseService : BaseService {
     protected Task<int> UpdateAsync<T>(T entity) where T : class => Db.UpdateAsync(entity);
 
     protected Task<int> DeleteAsync<T>(T entity) where T : class => Db.DeleteAsync(entity);
+
+    #region [ company of App request ]
+
+    /// <summary>
+    ///     Компания пользователя App (ServicesHost.DispatchCompanyId); null — серверный вызов без проверки </summary>
+    protected Guid? RequestCompanyId => Host.DispatchCompanyId;
+
+    protected void CheckCompany(Guid companyId) {
+        if (RequestCompanyId != null && companyId != RequestCompanyId) {
+            throw new AccessDeniedException();
+        }
+    }
+
+    #endregion [ company of App request ]
 
     #region [ company by user ]
 

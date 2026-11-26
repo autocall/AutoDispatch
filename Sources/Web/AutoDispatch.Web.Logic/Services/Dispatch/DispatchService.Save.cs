@@ -663,6 +663,7 @@ public partial class DispatchService {
     // Save history without location
     private async Task<TEntity> BaseSaveAsync<TDto, TEntity>(Guid userId, TDto dto, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto, IBaseEventDto where TEntity : BaseObjectEntity {
+        dto.CompanyId = RequestCompanyId ?? dto.CompanyId; // аудит D1: запрос App пишет только в свою компанию
         if (dto.CompanyId == Guid.Empty) {
             dto.CompanyId = await this.GetCompanyIdByUserIdAsync(userId);
         }
@@ -676,6 +677,7 @@ public partial class DispatchService {
     private async Task<List<TEntity>> BaseSavesAsync<TDto, TEntity>(Guid userId, List<TDto> dtos, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto, IBaseEventDto where TEntity : BaseObjectEntity {
         foreach (var dto in dtos) {
+            dto.CompanyId = RequestCompanyId ?? dto.CompanyId; // аудит D1: запрос App пишет только в свою компанию
             if (dto.CompanyId == Guid.Empty) {
                 dto.CompanyId = await this.GetCompanyIdByUserIdAsync(userId);
             }
@@ -696,6 +698,9 @@ public partial class DispatchService {
     public async Task<TEntity> SaveWithHistoryAsync<TDto, TEntity>(TDto dto, Guid userId, Guid? groupId = null, bool keepLocation = false)
         where TDto : BaseObjectDto
         where TEntity : BaseObjectEntity {
+        // аудит D1: запрос App пишет только в свою компанию; чужая запись — отказ до снимка истории
+        dto.CompanyId = RequestCompanyId ?? dto.CompanyId;
+        TEntity entity = await GetByIdAsync<TEntity>(dto.EntityId);
         #region Save HistoryObject
         var historyObject = new HistoryObject {
             ReferenceId = dto.EntityId,
@@ -707,7 +712,6 @@ public partial class DispatchService {
         #endregion
         #region Modify Entity
         var @new = false;
-        TEntity entity = await GetByIdAsync<TEntity>(dto.EntityId);
         if (entity == null) {
             @new = true;
             entity = ObjectConverter.ToModel<TEntity>(dto);

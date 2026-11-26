@@ -210,7 +210,26 @@ public partial class DispatchService {
         };
     }
 
+    /// <summary>
+    ///     Аудит D1: каталог {EntityId} — груза, карриера или брокера, водителя, трака, трейлера, дефекта, ремонта или компании (шаблоны).
+    ///     Тип в запросе не передаётся — компания ищется по всем этим таблицам; не найдено — запись ещё не сохранена (удалённые остаются
+    ///     в таблицах с IsDeleted), не чужая </summary>
+    private async Task CheckFilesCompanyAsync(Guid entityId) {
+        if (RequestCompanyId == null) return;
+        var companyIds = await Table<Load>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId)
+            .Concat(Table<DatCompany>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .Concat(Table<Driver>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .Concat(Table<Truck>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .Concat(Table<Trailer>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .Concat(Table<Defect>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .Concat(Table<DefectRepair>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .Concat(Table<DispatchCompany>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
+            .ToListAsync();
+        companyIds.ForEach(CheckCompany);
+    }
+
     public async Task<FilesLoadResponseData> FilesLoad(FilesLoadRequestData request) {
+        await CheckFilesCompanyAsync(request.EntityId);
         var path = DispatchFileHelper.FileGetFullPath(request.EntityId);
         if (Directory.Exists(path) == false) {
             return new FilesLoadResponseData() { Files = new List<FileDto>() };
@@ -227,6 +246,7 @@ public partial class DispatchService {
 
     public async Task<FileLoadResponseData> FileLoad(FileLoadRequestData request) {
         DispatchFileHelper.CheckFileName(request.File.Name);
+        await CheckFilesCompanyAsync(request.File.EntityId);
         if (Directory.Exists(DispatchFileHelper.FileGetFullPath(request.File.EntityId)) == false) {
             throw new InfoException("File doesn't exists");
         }
@@ -253,6 +273,7 @@ public partial class DispatchService {
 
     public async Task<FileSaveResponseData> FileSave(FileSaveRequestData request) {
         DispatchFileHelper.CheckFileName(request.File.Name);
+        await CheckFilesCompanyAsync(request.File.EntityId);
         var path = DispatchFileHelper.FileGetFullPath(request.File.EntityId);
         Directory.CreateDirectory(path);
         var fullPath = Path.Combine(path, request.File.Name);
@@ -263,7 +284,8 @@ public partial class DispatchService {
 
     /// <summary>
     ///     Файл уходит в RecyclePath/{EntityId}, каталог без имени файла удаляется целиком </summary>
-    public FileDeleteResponseData FileDelete(FileDeleteRequestData request) {
+    public async Task<FileDeleteResponseData> FileDelete(FileDeleteRequestData request) {
+        await CheckFilesCompanyAsync(request.File.EntityId);
         if (request.File.Name != null) {
             var fullPath = DispatchFileHelper.FileGetFullPath(request.File.EntityId, request.File.Name);
             if (File.Exists(fullPath)) {
@@ -283,7 +305,8 @@ public partial class DispatchService {
         };
     }
 
-    public FileRenameResponseData FileRename(FileRenameRequestData request) {
+    public async Task<FileRenameResponseData> FileRename(FileRenameRequestData request) {
+        await CheckFilesCompanyAsync(request.File.EntityId);
         var fullPathOld = DispatchFileHelper.FileGetFullPath(request.File.EntityId, request.File.Name);
         var fullPathNew = DispatchFileHelper.FileGetFullPath(request.File.EntityId, request.NewName);
         File.Move(fullPathOld, fullPathNew);

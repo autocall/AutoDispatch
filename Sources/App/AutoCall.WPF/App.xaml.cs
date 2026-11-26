@@ -256,9 +256,22 @@ namespace AutoCall.WPF {
                 Serilog.Log.Error(args.Exception, "Unobserved task exception");
                 args.SetObserved();
             };
+
+            // Environment.Exit (MainWindow: таймер закрытия 10 с, нет Dispatch Company; App_OnDispatcherUnhandledException без окон)
+            // не вызывает Application_Exit — без этого остаток лога на сервер не уходит (аудит B16)
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => {
+                if (_exited == false) {
+                    Serilog.Log.ForContext(LogProperties.Scope, LogScopes.Session)
+                        .Information("AutoDispatch exited: {Reason}", _crashed ? "crash" : "Environment.Exit");
+                }
+                Serilog.Log.CloseAndFlush();
+            };
         }
 
+        private static bool _exited;
+
         private void Application_Exit(object sender, ExitEventArgs args) {
+            _exited = true;
             Serilog.Log.ForContext(LogProperties.Scope, LogScopes.Session)
                 .Information("AutoDispatch exited: {Reason}, code {Code}", _crashed ? "crash" : "closed", args.ApplicationExitCode);
             Serilog.Log.CloseAndFlush();

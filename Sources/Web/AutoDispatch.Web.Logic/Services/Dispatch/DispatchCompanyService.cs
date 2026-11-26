@@ -86,19 +86,19 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
         var dispatchService = Host.GetService<DispatchService>();
 
         if (dto.ConfirmationData != null) {
-            dispatchService.FileDelete(new FileDeleteRequestData(userId) { File = new FileDto() { EntityId = dto.EntityId, Name = dto.ConfirmationFile } });
+            await dispatchService.FileDelete(new FileDeleteRequestData(userId) { File = new FileDto() { EntityId = dto.EntityId, Name = dto.ConfirmationFile } });
             await dispatchService.FileSave(new FileSaveRequestData(userId) {
                 File = new FileDto() { EntityId = dto.EntityId, Data = Encoding.ASCII.GetBytes(dto.ConfirmationData), Name = dto.ConfirmationFile }
             });
         }
         if (dto.BOLData != null) {
-            dispatchService.FileDelete(new FileDeleteRequestData(userId) { File = new FileDto() { EntityId = dto.EntityId, Name = dto.BOLFile } });
+            await dispatchService.FileDelete(new FileDeleteRequestData(userId) { File = new FileDto() { EntityId = dto.EntityId, Name = dto.BOLFile } });
             await dispatchService.FileSave(new FileSaveRequestData(userId) {
                 File = new FileDto() { EntityId = dto.EntityId, Data = Encoding.ASCII.GetBytes(dto.BOLData), Name = dto.BOLFile }
             });
         }
         if (dto.InvoiceData != null) {
-            dispatchService.FileDelete(new FileDeleteRequestData(userId) { File = new FileDto() { EntityId = dto.EntityId, Name = dto.InvoiceFile } });
+            await dispatchService.FileDelete(new FileDeleteRequestData(userId) { File = new FileDto() { EntityId = dto.EntityId, Name = dto.InvoiceFile } });
             await dispatchService.FileSave(new FileSaveRequestData(userId) {
                 File = new FileDto() { EntityId = dto.EntityId, Data = Encoding.ASCII.GetBytes(dto.InvoiceData), Name = dto.InvoiceFile }
             });

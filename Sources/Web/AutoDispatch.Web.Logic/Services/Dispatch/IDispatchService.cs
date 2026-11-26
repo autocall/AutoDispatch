@@ -153,10 +153,10 @@ public interface IDispatchService : IService {
     Task<FileSaveResponseData> FileSave(FileSaveRequestData request);
 
     [MinAccess(RoleEnum.Owner)]
-    FileDeleteResponseData FileDelete(FileDeleteRequestData request);
+    Task<FileDeleteResponseData> FileDelete(FileDeleteRequestData request);
 
     [MinAccess(RoleEnum.Owner)]
-    FileRenameResponseData FileRename(FileRenameRequestData request);
+    Task<FileRenameResponseData> FileRename(FileRenameRequestData request);
 
     #endregion [ Files ]
 

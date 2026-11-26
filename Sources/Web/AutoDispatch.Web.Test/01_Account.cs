@@ -115,4 +115,52 @@ public class Account_Test {
         }
         Assert.DoesNotContain(401, await CodesAsync());
     }
+
+    /// <summary>
+    ///     Аудит B14: вошедший без нужной роли попадает на страницу AccessDenied (403), а не на 404.
+    ///     У AdminEmail на время теста снимается роль Admin в БД сервера, вход — до восстановления роли </summary>
+    [Fact]
+    public async Task Test04_AccessDeniedPage() {
+        var serverDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AutoDispatch.Web.Server"));
+        var connectionString = new ConfigurationBuilder().AddJsonFile(Path.Combine(serverDir, "appsettings.Development.json"), optional: true)
+            .AddEnvironmentVariables().Build().GetConnectionString("DefaultConnection");
+        async Task<int> ExecAsync(string sql) {
+            await using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+            await connection.OpenAsync();
+            await using var command = new Microsoft.Data.SqlClient.SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@e", AppSettings.AdminEmail);
+            return await command.ExecuteNonQueryAsync();
+        }
+        const string userRole = "FROM IdentityUserRoles WHERE UserId = (SELECT Id FROM IdentityUsers WHERE NormalizedEmail = UPPER(@e)) " +
+            "AND RoleId = (SELECT Id FROM IdentityRoles WHERE Name = 'Admin')";
+
+        using var http = new HttpClient(new HttpClientHandler {
+            AllowAutoRedirect = false,
+            ServerCertificateCustomValidationCallback = (sender, certificate, chain, errors) => true
+        });
+        Assert.Equal(1, await ExecAsync("DELETE " + userRole));
+        try {
+            var loginPage = await http.GetStringAsync($"{AppSettings.Website}/Account/LogIn");
+            var token = System.Text.RegularExpressions.Regex.Match(loginPage, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+            var login = await http.PostAsync($"{AppSettings.Website}/Account/LogIn", new FormUrlEncodedContent(new Dictionary<string, string> {
+                ["__RequestVerificationToken"] = token, ["Email"] = AppSettings.AdminEmail, ["Password"] = _password, ["RememberMe"] = "false"
+            }));
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, login.StatusCode);
+        } finally {
+            await ExecAsync("INSERT INTO IdentityUserRoles (UserId, RoleId) SELECT u.Id, r.Id FROM IdentityUsers u, IdentityRoles r " +
+                "WHERE u.NormalizedEmail = UPPER(@e) AND r.Name = 'Admin' AND NOT EXISTS (SELECT 1 " + userRole + ")");
+        }
+
+        // роли — в cookie на момент входа: у этой сессии Admin нет
+        var admin = await http.GetAsync($"{AppSettings.Website}/Admin/Users");
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, admin.StatusCode);
+        var location = admin.Headers.Location!.ToString();
+        Assert.Contains("/Account/AccessDenied", location);
+
+        var denied = await http.GetAsync(location.StartsWith("http") ? location : AppSettings.Website + location);
+        var body = await denied.Content.ReadAsStringAsync();
+        _output.WriteLine($"{(int)denied.StatusCode} {location}");
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, denied.StatusCode);
+        Assert.Contains("Access denied", body);
+    }
 }
