@@ -61,6 +61,10 @@ namespace AutoCall.Logic.Services {
 
         private object _lock = new object();
 
+        /// <summary>
+        ///     Мс ожидания канала MicroSIP_Action: autophone.exe запущен — подключение мгновенное (аудит D15) </summary>
+        private const int ActionConnectTimeout = 3000;
+
         private readonly SettingsService _settings;
 
         public MicroSIPCallService(SettingsService settings) {
@@ -137,11 +141,11 @@ namespace AutoCall.Logic.Services {
         private void StartAction(microsip_action action, string phone) {
             Task.Factory.StartNew(() => {
                 using (NamedPipeClientStream pipeServer = new NamedPipeClientStream(".", "MicroSIP_Action", PipeDirection.Out)) {
-                    pipeServer.Connect();
-
                     phone = _urlToNumber(phone);
 
                     try {
+                        // аудит D15: без таймаута Connect ждал вечно, если autophone.exe не запущен, — каждое действие занимало поток пула
+                        pipeServer.Connect(ActionConnectTimeout);
                         using (StreamWriter sw = new StreamWriter(pipeServer)) {
                             sw.AutoFlush = true;
 
@@ -151,6 +155,8 @@ namespace AutoCall.Logic.Services {
                             };
                             sw.WriteLine(JsonExtension.SerializeObject(obj));
                         }
+                    } catch (TimeoutException) {
+                        Logger.Warning("MicroSIP StartAction {Action}: MicroSIP is not running (no pipe in {Timeout} ms)", action, ActionConnectTimeout);
                     } catch (IOException e) {
                         Logger.Error(e, "MicroSIP StartAction {Action}", action);
                     }

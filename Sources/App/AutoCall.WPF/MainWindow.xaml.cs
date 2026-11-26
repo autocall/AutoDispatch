@@ -115,11 +115,10 @@ namespace AutoCall.WPF {
 
             Loaded += MainWindow_Loaded;
 
-            var session = UserSession.Current;
-            if (((RoleName)session.Roles & RoleName.Admin) != 0 || session.UserName == "apbestamerican@gmail.com") {
-            } else {
-                btnDebug.Visibility = Visibility.Collapsed;
-            }
+#if !DEBUG
+            // аудит D20: кнопка разработчика (закрывает софтфон) — только в Debug-сборке; V1 — Admin и apbestamerican@gmail.com
+            btnDebug.Visibility = Visibility.Collapsed;
+#endif
         }
 
         /// <summary>
@@ -311,13 +310,8 @@ namespace AutoCall.WPF {
                     Model.CarrierCompanies.FirstOrDefault(c => ((ActualCompanyViewModel)c).EntityId == _settings.GetSelectedCarrierCompany()));
             }
 
-            if (session.CompanyId == new Guid("D2FD7AFF-5982-4E20-A0B9-06C4DE600684")) {
-                if (((RoleName)session.Roles).CheckPermission(RoleName.Dispatcher)) {
-                    canvasTotal.Visibility = Visibility.Visible;
-                }
-            } else {
-                canvasTotal.Visibility = Visibility.Collapsed;
-            }
+            // аудит D19: V1 показывал итоги только компании D2FD7AFF-… (неактивна с 2025-08, не переносится)
+            canvasTotal.Visibility = Visibility.Collapsed;
 
             #endregion ********************* Init dispatch board *********************
 

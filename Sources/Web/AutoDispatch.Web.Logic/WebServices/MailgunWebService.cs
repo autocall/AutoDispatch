@@ -19,6 +19,11 @@ public class MailgunWebService : BaseWebService {
         if (AppSettings.MailgunApiKey == null || AppSettings.MailgunDomain == null || AppSettings.MailgunFrom == null) {
             return ApiResult<string>.Failed(System.Net.HttpStatusCode.ServiceUnavailable, "Mailgun is not configured");
         }
+#if DEBUG
+        // Debug: только на AppSettings.DebugEmailRecipient, получатель — в теме (аудит D8)
+        subject = $"[DEBUG to: {to}] {subject}";
+        to = AppSettings.DebugEmailRecipient;
+#endif
         try {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"/v3/{AppSettings.MailgunDomain}/messages");
             request.Headers.Authorization = new AuthenticationHeaderValue("Basic",

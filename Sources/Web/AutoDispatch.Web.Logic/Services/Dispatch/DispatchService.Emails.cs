@@ -60,9 +60,7 @@ public partial class DispatchService {
                     FileName = "Insurance_Instructions.pdf"
                 });
 
-#if !DEBUG
             await setupPacketService.SendAsync(carrier, email);
-#endif
             Directory.CreateDirectory(destinDir);
         }
         #endregion [ Insurance Instructions Email ]

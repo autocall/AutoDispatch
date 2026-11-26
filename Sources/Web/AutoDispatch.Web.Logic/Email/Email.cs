@@ -75,7 +75,11 @@ public class SmtpSettings {
     public string Host { get; set; }
     public int Port { get; set; }
     public bool EnableSsl { get; set; } = true;
-    public int Timeout { get; set; } = 10000;
+    /// <summary>
+    ///     Мс на отправку с вложениями: в .NET 10 SmtpClient.Timeout действует и на SendMailAsync (в V1 на .NET Framework — нет, 10 с
+    ///     там ни на что не влияли). 100 с — чтобы не обрывать письма с PDF на медленном SMTP и уложиться в proxy_read_timeout
+    ///     nginx (120 с): App получает ошибку SMTP, а не 504 (аудит D22) </summary>
+    public int Timeout { get; set; } = 100_000;
 
     public SmtpSettings(string userName, string password, string host, int port) {
         this.UserName = userName;

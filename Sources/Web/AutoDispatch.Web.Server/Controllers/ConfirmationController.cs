@@ -100,6 +100,11 @@ public class ConfirmationController : BaseController {
             _l.e($"Load '{loadId}' was not found");
             return View("Error", new ConfirmationViewModel());
         }
+        // аудит D22: как страница подтверждения (LoadAsync) — удалённый груз не отдаётся
+        if (load.IsDeleted) {
+            _l.e($"Load '{loadId}' is deleted");
+            return View("Error", new ConfirmationViewModel());
+        }
         if (load.ConfirmedFile == null) {
             _l.e($"Load '{loadId}' is not confirmed");
             return View("Error", new ConfirmationViewModel());

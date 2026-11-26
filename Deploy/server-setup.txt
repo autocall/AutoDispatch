@@ -21,6 +21,12 @@ sudo chmod 600 /home/autodispatch/config/appsettings.Production.json
 sudo cp dispatch.myautocall.net.conf /etc/nginx/sites-available/
 sudo ln -s /etc/nginx/sites-available/dispatch.myautocall.net.conf /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
+# лимит входа и сброса пароля (аудит D10, 2026-11-26): если сайт уже настроен и certbot правил файл на хосте — не копировать
+# поверх, а перенести из репозитория вручную: map + два limit_req_zone над server, proxy_set_header на уровень server,
+# два location ~* (вход, сброс пароля) и @dispatch_auth_limited — в server с listen 443; затем nginx -t и reload
+# проверка: 21-й POST за 5 минут с одного IP — 429 {"error":"Too many attempts…"}:
+#   for i in $(seq 1 21); do curl -s -o /dev/null -w "%{http_code} " -X POST https://dispatch.myautocall.net/Api/Account/SignIn -H "Content-Type: application/json" -d '{"email":"d10@example.invalid","password":"x"}'; done
+# отказы: grep 'limiting requests' /var/log/nginx/error.log
 
 -------- Let's Encrypt --------
 sudo certbot --nginx -d dispatch.myautocall.net

@@ -101,14 +101,21 @@ namespace AutoCall.Logic.Managers {
 
         #region [ Events ]
 
+        // аудит D16: при закрытии App Application.Current — null, `await null` давал NullReferenceException в async void
         private async void OnCallChanged(string recordId, CallStatus status, int? line) {
-            await Application.Current?.Dispatcher?.InvokeAsync(new Action(() => CallChanged?.Invoke(recordId, status, line)));
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted) return;
+            await dispatcher.InvokeAsync(new Action(() => CallChanged?.Invoke(recordId, status, line)));
         }
         private async void OnCallRinging(string phone, string displayName) {
-            await Application.Current?.Dispatcher?.InvokeAsync(new Action(() => CallRinging?.Invoke(phone, displayName)));
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted) return;
+            await dispatcher.InvokeAsync(new Action(() => CallRinging?.Invoke(phone, displayName)));
         }
         private async void OnPhoneStatusChanged(bool calling) {
-            await Application.Current?.Dispatcher?.InvokeAsync(new Action(() => PhoneStatusChanged?.Invoke(calling)));
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted) return;
+            await dispatcher.InvokeAsync(new Action(() => PhoneStatusChanged?.Invoke(calling)));
         }
 
         public event CallServicePhoneStatusChangedEventHandler PhoneStatusChanged;

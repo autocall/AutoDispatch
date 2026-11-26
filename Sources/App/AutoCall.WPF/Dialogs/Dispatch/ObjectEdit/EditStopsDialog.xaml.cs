@@ -45,6 +45,10 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
 
         private IList<LoadViewModel> _loads;
 
+        /// <summary>
+        ///     Окно закрыто: Initialize после await не трогает освобождённый WebView2 (аудит D17) </summary>
+        private bool _closed;
+
         public EditStopsDialog(DispatchService dispatchService, ICallService callService, IMapper mapper, TrailerViewModel trailer, IList<LoadViewModel> loads) {
             _dispatchService = dispatchService;
             _mapper = mapper;
@@ -76,11 +80,15 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
         public async void Initialize() {
             try {
                 var url = await App.Services.GetRequiredService<MapApi>().CreateOrderStopsLinkAsync(Model.Trailer.EntityId);
+                if (_closed) return;
                 var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: MapWindow.UserDataFolder);
+                if (_closed) return;
                 await browser.EnsureCoreWebView2Async(environment);
+                if (_closed) return;
                 browser.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 browser.Source = new Uri(url + "&embedded=true");
             } catch (Exception exception) {
+                if (_closed) return;
                 Serilog.Log.Error(exception, "Order stops map failed");
                 MessageBoxEx.Error(this, exception.GetBaseException().Message);
             }
@@ -89,6 +97,7 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
         /// <summary>
         ///     On window closed handler </summary>
         private void MapDialog_OnClosed(object sender, EventArgs e) {
+            _closed = true;
             this.Dispose();
         }
 
@@ -189,7 +198,10 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
 
             // страница ждёт window.reorder([{ loadId, type }…]) (V1 — EvalScript("reorder(JSON.parse('…'))") со всеми полями StopViewModel)
             string stops = JsonConvert.SerializeObject(Model.Stops.Select(s => new { loadId = s.LoadId, type = (int)s.Type }));
-            _ = browser.ExecuteScriptAsync("reorder(" + stops + ")");
+            // аудит D17: до инициализации WebView2 (карта ещё грузится) скрипт некуда отправить — порядок уже в Model.Stops
+            if (browser.CoreWebView2 != null) {
+                _ = browser.ExecuteScriptAsync("reorder(" + stops + ")");
+            }
         }
     }
 }

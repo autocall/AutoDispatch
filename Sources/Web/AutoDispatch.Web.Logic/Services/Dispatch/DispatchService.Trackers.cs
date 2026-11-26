@@ -243,14 +243,14 @@ public partial class DispatchService {
         var status1 = (byte)LoadStatus.AtPickUp;
         var status2 = (byte)LoadStatus.AtDelivery;
         var now = DateTime.UtcNow;
-#if DEBUG
-        var _1hour = TimeSpan.FromMinutes(1);
-        var _2hour = TimeSpan.FromMinutes(2);
-#else
         var _1hour = TimeSpan.FromHours(1);
         var _2hour = TimeSpan.FromHours(2);
-#endif
-        var loadEntities = (await Alive<Load>().Where(e => e.Board == 0 && (e.Status == status1 || e.Status == status2)).ToListAsync())
+        var query = Alive<Load>().Where(e => e.Board == 0 && (e.Status == status1 || e.Status == status2));
+        // Тест (аудит D8): раскомментировать — через 1–2 минуты в Waiting переходит только этот груз, остальные не трогаются
+        // _1hour = TimeSpan.FromMinutes(1);
+        // _2hour = TimeSpan.FromMinutes(2);
+        // query = query.Where(e => e.EntityId == Guid.Parse("00000000-0000-0000-0000-000000000000"));
+        var loadEntities = (await query.ToListAsync())
             .Where(e => (e.WasAtPickup == false && now - e.LastStatusChangedDate > _2hour && e.Status == status1) ||
                         (e.WasAtPickup == true && now - e.LastStatusChangedDate > _1hour && e.Status == status1) ||
                         (e.WasAtDelivery == false && now - e.LastStatusChangedDate > _2hour && e.Status == status2) ||

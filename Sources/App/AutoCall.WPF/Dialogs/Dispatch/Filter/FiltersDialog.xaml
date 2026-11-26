@@ -160,7 +160,8 @@
                 <TextBlock><Bold>Created by: user1</Bold> - created by user</TextBlock>
                 <TextBlock><Bold>Status: waiting | en route</Bold> - combination of statuses</TextBlock>
                 <TextBlock><Bold>Custom Status: status1 | status2</Bold> - combination of statuses
-                    <Hyperlink NavigateUri="https://myautocall.net/CustomStatus" RequestNavigate="CustomStatusLink_RequestNavigate">link</Hyperlink>
+                    <!-- адрес собирает CustomStatusLink_RequestNavigate из Settings.WebUrl (аудит D19; V1 — https://myautocall.net/CustomStatus) -->
+                    <Hyperlink NavigateUri="Admin/CustomStatuses" RequestNavigate="CustomStatusLink_RequestNavigate">link</Hyperlink>
                 </TextBlock>
                 <TextBlock><Bold>Equipment: V | VR</Bold> - combination of equipments</TextBlock>
             </StackPanel>

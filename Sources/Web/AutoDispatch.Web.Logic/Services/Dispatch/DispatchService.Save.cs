@@ -281,7 +281,8 @@ public partial class DispatchService {
                                 load.Index = parent.Index;
                                 load.IndexPrefix = parent.IndexPrefix;
                                 if (load.IndexExtra == null) {
-                                    var indexExtraList = saveLoads.Where(e => e.ParentId != parent.EntityId).Select(e => e.IndexExtra);
+                                    // аудит D5: подгрузы этого груза (V1 — `!=`: сам груз и чужие, пустой IndexExtra ронял сохранение)
+                                    var indexExtraList = saveLoads.Where(e => e.ParentId == parent.EntityId).Select(e => e.IndexExtra);
                                     load.IndexExtra = "/" + NextIndexExtra(indexExtraList);
                                 }
                             }
@@ -352,8 +353,12 @@ public partial class DispatchService {
         }
     }
 
+    /// <summary>
+    ///     Следующий номер подгруза: max по «/N» + 1; пустые и без цифр не считаются, нет ни одного — 1 (аудит D5) </summary>
     private static string NextIndexExtra(IEnumerable<string> extraIndexes) {
-        var nextId = extraIndexes.Select(e => Int32.Parse(DispatchStringExtension.OnlyNumbers(e.Split('/').Last()))).Max() + 1;
+        var nextId = extraIndexes.Where(e => String.IsNullOrEmpty(e) == false)
+            .Select(e => Int32.TryParse(DispatchStringExtension.OnlyNumbers(e.Split('/').Last()), out var number) ? number : 0)
+            .DefaultIfEmpty(0).Max() + 1;
         return nextId.ToString();
     }
 

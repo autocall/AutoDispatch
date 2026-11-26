@@ -20,6 +20,7 @@ namespace AutoDispatch.Web.Test;
 /// <summary>
 ///     Аудит D1: запрос App по id получает только записи своей компании. Против поднятого сервера и его БД (ConnectionStrings:DefaultConnection);
 ///     вход мастер-паролем (Secrets:System:Password) </summary>
+[Collection("LocalData")] // последовательно с 15, 16, 19: берёт последний груз DDM, а они создают и удаляют временные
 public class CompanyIsolation_Test {
 
     private readonly ITestOutputHelper _output;

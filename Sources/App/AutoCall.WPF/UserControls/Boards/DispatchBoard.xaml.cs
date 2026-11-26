@@ -113,9 +113,10 @@ namespace AutoCall.WPF.UserControls.Boards {
             }
 
             var session = UserSession.Current;
-            if (session.UserName != "pilipenko.anton@ngs.ru") {
-                btnTest.Visibility = Visibility.Collapsed;
-            }
+#if !DEBUG
+            // аудит D19: кнопка разработчика — только в Debug-сборке; V1 — пользователь pilipenko.anton@ngs.ru
+            btnTest.Visibility = Visibility.Collapsed;
+#endif
 
             if (((RoleName)session.Roles).CheckPermission(RoleName.Dispatcher) == false) {
                 // Warehouse Condition

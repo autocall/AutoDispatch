@@ -3,6 +3,7 @@ using LinqToDB;
 using LinqToDB.Async;
 using AutoDispatch.Dtos.Data;
 using AutoDispatch.Dtos.Dtos;
+using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Data.Entities.Dispatch;
 using AutoDispatch.Web.Logic.Mapping.Dispatch;
 
@@ -110,6 +111,11 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
             // Adds / Updates customizes
             foreach (var dto2 in dto.Customizes) {
                 var model = await GetByIdAsync<DispatchCompanyCustom>(dto2.EntityId);
+                if (model != null && model.DispatchCompanyId != dto.EntityId) {
+                    // аудит D2: id строки другой компании dispatch из формы — V1 перезаписывал её и переносил в эту компанию
+                    _l.w($"Customize {dto2.EntityId} of dispatch company {model.DispatchCompanyId} skipped: saving {dto.EntityId}");
+                    continue;
+                }
                 if (model == null) {
                     model = Mapper.Map<DispatchCompanyCustom>(dto2);
                     if (model.EntityId == Guid.Empty) {

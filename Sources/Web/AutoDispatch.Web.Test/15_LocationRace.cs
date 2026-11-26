@@ -24,6 +24,7 @@ namespace AutoDispatch.Web.Test;
 ///     второго груза (как сохранение диспетчера) и проверяет, что после записи положения LineHaul остался.
 ///     Против поднятого сервера (AppSettings.Website) и его БД (ConnectionStrings:DefaultConnection); данные — клон
 ///     трейлера DDMK53960 и груза 13173/2 локальной копии DDM с фиксированными Id </summary>
+[Collection("LocalData")] // последовательно с 16, 17, 19: временные грузы и трейлер в локальной БД
 public class LocationRace_Test {
 
     private static readonly Guid TrailerId = Guid.Parse("E0000000-0000-0000-0000-000000000001");

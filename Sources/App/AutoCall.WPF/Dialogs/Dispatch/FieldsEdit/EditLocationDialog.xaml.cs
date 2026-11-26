@@ -24,6 +24,10 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
         private JObject _selected;
 
         /// <summary>
+        ///     Окно закрыто: Initialize после await не трогает освобождённый WebView2 (аудит D17) </summary>
+        private bool _closed;
+
+        /// <summary>
         ///     Gets or sets dialog view model </summary>
         public EditLocationViewModel Model {
             get { return DataContext as EditLocationViewModel; }
@@ -45,13 +49,17 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
                 var location = Model.Location.Location;
                 var point = location != null ? new MapLatLngDto(location.Latitude, location.Longitude) : null;
                 var url = await App.Services.GetRequiredService<MapApi>().CreateSelectLocationLinkAsync(point);
+                if (_closed) return;
 
                 var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: MapWindow.UserDataFolder);
+                if (_closed) return;
                 await browser.EnsureCoreWebView2Async(environment);
+                if (_closed) return;
                 browser.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 browser.CoreWebView2.WebMessageReceived += Browser_WebMessageReceived;
                 browser.Source = new Uri(url + "&embedded=true");
             } catch (Exception exception) {
+                if (_closed) return;
                 Serilog.Log.Error(exception, "Select location map failed");
                 MessageBoxEx.Error(this, exception.GetBaseException().Message);
             }
@@ -71,6 +79,7 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
         /// <summary>
         ///     On window closed handler </summary>
         private void MapDialog_OnClosed(object sender, EventArgs e) {
+            _closed = true;
             this.Dispose();
         }
 

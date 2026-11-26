@@ -15,6 +15,7 @@ namespace AutoDispatch.Web.Test;
 /// <summary>
 ///     Аудит B7 (ServicesHost.GetService из параллельных задач) и B8 (UserNameCache не освобождал scope и соединение).
 ///     В процессе теста, без поднятого сервера; B8 — локальная БД из appsettings.Development.json проекта Server </summary>
+[Collection("LocalData")] // последовательно с 15, 17, 19: ServiceLocator статический, тесты создают и удаляют грузы в локальной БД
 public class ServiceScopes_Test {
 
     private readonly ITestOutputHelper _output;

@@ -27,6 +27,12 @@ public partial class AppSettings {
     /// <summary>
     ///     Страница сайта, куда ведёт ссылка из письма сброса пароля </summary>
     public const string ResetPasswordPath = "/Account/ResetPassword";
+#if DEBUG
+    /// <summary>
+    ///     Debug: все письма — SMTP компаний (EmailUtils) и Mailgun — уходят только сюда, настоящие получатели — в теме
+    ///     «[DEBUG to: …]». Локальная БД — копия боевой, с настоящими адресами и SMTP компаний (аудит D8) </summary>
+    public const string DebugEmailRecipient = "nata.kachina88@gmail.com";
+#endif
 
     #endregion [ Email ]
 

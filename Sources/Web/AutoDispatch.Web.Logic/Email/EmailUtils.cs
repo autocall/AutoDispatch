@@ -12,6 +12,9 @@ public static class EmailUtils {
 
     public static async Task SendEmailAsync(SmtpSettings smtpSettings, Email email) {
         using var message = ConvertEmailToMailMessage(email);
+#if DEBUG
+        RedirectToDebugRecipient(message);
+#endif
         using var smtpClient = new SmtpClient(smtpSettings.Host, smtpSettings.Port) {
             EnableSsl = smtpSettings.EnableSsl,
             Timeout = smtpSettings.Timeout,
@@ -20,8 +23,21 @@ public static class EmailUtils {
             Credentials = new NetworkCredential(smtpSettings.UserName, smtpSettings.Password)
         };
         await smtpClient.SendMailAsync(message);
-        _l.i($"Email '{email.Subject}' sent from {email.FromEmailAddress?.Address} to {String.Join(", ", email.ToEmailAddresses.Select(e => e.Address))}");
+        _l.i($"Email '{message.Subject}' sent from {email.FromEmailAddress?.Address} to {String.Join(", ", message.To.Select(e => e.Address))}");
     }
+
+#if DEBUG
+    /// <summary>
+    ///     Debug: вместо To и CC — AppSettings.DebugEmailRecipient, прежние получатели — в теме (аудит D8) </summary>
+    private static void RedirectToDebugRecipient(MailMessage message) {
+        var recipients = message.To.Concat(message.CC).Concat(message.Bcc).Select(e => e.Address);
+        message.Subject = $"[DEBUG to: {String.Join(", ", recipients)}] {message.Subject}";
+        message.To.Clear();
+        message.CC.Clear();
+        message.Bcc.Clear();
+        message.To.Add(AppSettings.DebugEmailRecipient);
+    }
+#endif
 
     public static bool IsValidEmail(string email) {
         try {

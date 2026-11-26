@@ -96,6 +96,7 @@ public partial class DispatchService {
         conditions.Add($"[CompanyId]='{companyId}'");
         conditions.Add($"([Board]=2 OR [Board]=0)");/* Carrier / CarrierAccount */
         conditions.Add($"[ParentId] IS NULL");
+        conditions.Add($"[IsDeleted]=0"); // аудит D6: V1 считал удалённые в Total и отсеивал их после выбора страницы
         if (request.Request.MinPickupDate != null) {
             // Adds Chicago Time Zone
             var dt = request.Request.MinPickupDate.Value.AddHours(-5);
@@ -165,9 +166,11 @@ SELECT COUNT([EntityId]) FROM [Load]
 WHERE {String.Join(" AND ", conditions)}")).First();
 
         var pageSize = Math.Max(1, request.Request.PageSize);
-        var pageIndex = request.Request.PageIndex * pageSize <= total ? request.Request.PageIndex : total / pageSize;
+        // аудит D6: страница за концом — последняя (V1: при Total кратном размеру — пустая), отступ — от исправленной страницы
+        var lastPageIndex = total == 0 ? 0 : (total - 1) / pageSize;
+        var pageIndex = Math.Min(Math.Max(0, request.Request.PageIndex), lastPageIndex);
 
-        var skip = pageSize * request.Request.PageIndex;
+        var skip = pageSize * pageIndex;
         var top = pageSize;
 
         var loadIds = await Db.QueryToListAsync<Guid>($@"

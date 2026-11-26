@@ -44,14 +44,7 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
         }
 
         private void btnScan_OnClick(object sender, RoutedEventArgs e) {
-#if DEBUG
-            var tmpSourceFile = Path.Combine("D:\\Develop\\AutoCall\\Sources\\Web\\Web\\Temp\\trailer_scheme_202007162019.pdf");
-            var tmpFile = Path.Combine(Path.GetTempPath(), $"trailer_schemetmp_{Guid.NewGuid()}.pdf");
-            File.Copy(tmpSourceFile, tmpFile);
-            Model.FileTempPath = tmpFile;
-            Model.FileName = "scheme.pdf";
-            var pdfData = File.ReadAllBytes(tmpFile);
-#else
+            // аудит D19: V1 в Debug брал PDF с машины разработчика V1 (D:\Develop\AutoCall\…) — теперь сканер и в Debug
             var dlg = new ScannerDialog();
             var pdfData = dlg.ShowDialog() == true ? dlg.GeneratePdf() : null;
             if (pdfData != null) {
@@ -60,7 +53,6 @@ namespace AutoCall.WPF.Dialogs.Dispatch {
                 Model.FileName = "scheme.pdf";
                 File.WriteAllBytes(tmpFile, pdfData);
             }
-#endif
             Model.PdfData = pdfData;
         }
 
