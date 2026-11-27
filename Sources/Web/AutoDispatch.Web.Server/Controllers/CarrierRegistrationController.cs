@@ -6,6 +6,7 @@ using AutoDispatch.Dtos.Data;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Exceptions;
+using AutoDispatch.Web.Data.Enums;
 using AutoDispatch.Web.Logic;
 using AutoDispatch.Web.Logic.Dtos.Dispatch;
 using AutoDispatch.Web.Logic.Helpers.Dispatch;
@@ -67,6 +68,11 @@ public class CarrierRegistrationController : BaseController {
         var model = await LoadAsync(carrierId, mode);
         if (model?.SetupPacket == null || step > 14) {
             return View("Error", new SetupPacketViewModel());
+        }
+        // аудит A4: агент чужой компании — 403 (AccessDenied)
+        if (IsAgentOf(model) == false) {
+            _l.w($"{mode} of carrier {carrierId} by agent of another company: {User?.Identity?.Name}");
+            return Forbid();
         }
         return await StepViewAsync(model, step ?? model.SetupPacket.Step);
     }
@@ -198,9 +204,13 @@ public class CarrierRegistrationController : BaseController {
     ///     в режиме User страница шлёт форму сама при загрузке (V1 auto-next) </summary>
     [HttpPost("Step14"), ValidateAntiForgeryToken]
     public async Task<ActionResult> Step14(Guid carrierId, [FromForm] SetupPacketStep14Model model) {
-        var page = await LoadAsync(carrierId, model.Mode);
+        var page = await LoadForPostAsync(carrierId, model);
         if (page?.SetupPacket == null) {
             return View("Error", new SetupPacketViewModel());
+        }
+        // аудит A4: повторное завершение карриером не пересобирает PDF и не шлёт письма — Finish
+        if (page.Carrier.SetupPacketCompleted && model.Mode == PageModeEnum.User) {
+            return RedirectToStep(carrierId, model.Mode, 14);
         }
         try {
             page.Carrier.SetupPacketCompleted = true;
@@ -381,7 +391,7 @@ public class CarrierRegistrationController : BaseController {
 
     private async Task<ActionResult> NextAsync<T>(Guid carrierId, T model, bool createPacket, Func<SetupPacketDto, Task> before)
         where T : SetupPacketStepModel {
-        var page = await LoadAsync(carrierId, model.Mode);
+        var page = await LoadForPostAsync(carrierId, model);
         if (page == null || (page.SetupPacket == null && createPacket == false)) {
             return View("Error", new SetupPacketViewModel());
         }
@@ -428,11 +438,34 @@ public class CarrierRegistrationController : BaseController {
     }
 
     /// <summary>
+    ///     Аудит A4: режимы агента (Edit/View) — только под логином сайта и для карриера своей компании (Admin — любой, как
+    ///     AdminDispatchCompaniesController). Mode приходит из скрытого поля формы: без проверки анонимный POST с Mode=Edit правил
+    ///     завершённый packet (V1: «TODO: check by finished») </summary>
+    private bool IsAgentOf(SetupPacketViewModel page) =>
+        User.Identity?.IsAuthenticated == true &&
+        (User.IsInRole(nameof(RoleEnum.Admin)) || User.FindFirst("CompanyId") != null && GetCompanyId() == page.Company.CompanyId);
+
+    /// <summary>
+    ///     Страница для POST шага: режим агента без права на него → режим карриера (User), дальше действуют его правила </summary>
+    private async Task<SetupPacketViewModel> LoadForPostAsync(Guid carrierId, SetupPacketStepModel model) {
+        var page = await LoadAsync(carrierId, model.Mode);
+        if (page != null && model.Mode != PageModeEnum.User && IsAgentOf(page) == false) {
+            _l.w($"Mode {model.Mode} without agent of the carrier's company: carrier {carrierId}, identity {User?.Identity?.Name}, {Request.GetIp()} — as User");
+            page.Mode = model.Mode = PageModeEnum.User;
+        }
+        return page;
+    }
+
+    /// <summary>
     ///     Сохранить и вернуться на предыдущий включённый шаг (V1 PrevAsync: данные шага тоже сохраняются, без валидации) </summary>
     private async Task<ActionResult> PrevAsync<T>(Guid carrierId, T model) where T : SetupPacketStepModel {
-        var page = await LoadAsync(carrierId, model.Mode);
+        var page = await LoadForPostAsync(carrierId, model);
         if (page?.SetupPacket == null) {
             return View("Error", new SetupPacketViewModel());
+        }
+        // аудит A4: завершённый packet карриер не меняет и шагом назад (V1 проверки не было)
+        if (page.Carrier.SetupPacketCompleted && model.Mode == PageModeEnum.User) {
+            return RedirectToStep(carrierId, model.Mode, model.Step);
         }
         var dto = page.SetupPacket;
         Mapper.Map(model, dto);

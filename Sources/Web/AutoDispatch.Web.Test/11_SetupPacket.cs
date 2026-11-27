@@ -81,8 +81,8 @@ public class SetupPacket_Test {
     ///     POST шага: поля + Step/Mode + antiforgery со страницы; успех — 302 на Index </summary>
     private async Task<HttpResponseMessage> PostAsync(HttpClient http, string step, string html, Dictionary<string, string> fields, MultipartFormDataContent multipart = null) {
         fields["__RequestVerificationToken"] = Token(html);
-        fields["Step"] = Regex.Match(html, "name=\"Step\" value=\"(\\d+)\"").Groups[1].Value;
-        fields["Mode"] = "0";
+        fields.TryAdd("Step", Regex.Match(html, "name=\"Step\" value=\"(\\d+)\"").Groups[1].Value);
+        fields.TryAdd("Mode", "0");
         HttpContent content;
         if (multipart != null) {
             foreach (var (key, value) in fields) multipart.Add(new StringContent(value), key);
@@ -267,6 +267,22 @@ public class SetupPacket_Test {
         Assert.Contains("BROKER - CARRIER AGREEMENT", await agreement.Content.ReadAsStringAsync());
         var instructions = await http.GetAsync($"{AppSettings.Website}/Print/SetupPacket/InsuranceInstructions?CarrierId={CarrierId}");
         Assert.Equal(HttpStatusCode.OK, instructions.StatusCode);
+
+        // аудит A4: завершённый packet без логина не меняется — ни шагом с поддельным Mode=Edit (2), ни Prev, ни повторным Step14
+        // (раньше Mode=Edit из скрытого поля обходил проверку «завершён»); ответ — редирект на Index карриера (Finish)
+        const string packetSql = "SELECT {0} FROM SetupPacket sp JOIN DatCompany d ON d.SetupPacketId = sp.EntityId WHERE d.EntityId = @id";
+        var w9Before = await ScalarAsync(String.Format(packetSql, "sp.W9Name"));
+        var packetModified = await ScalarAsync(String.Format(packetSql, "sp.LastModifiedDate"));
+        var carrierModified = await ScalarAsync("SELECT LastModifiedDate FROM DatCompany WHERE EntityId = @id");
+        var tokenPage = await http.GetStringAsync($"{AppSettings.Website}/Account/LogIn");
+        foreach (var (action, step, mode) in new[] { ("Prev07", "7", "2"), ("Prev07", "7", "0"), ("Step07", "7", "2"), ("Step14", "14", "2") }) {
+            var forged = await PostAsync(http, action, tokenPage, new() { ["Step"] = step, ["Mode"] = mode, ["W9Name"] = "HACKED" });
+            Assert.Equal(HttpStatusCode.Redirect, forged.StatusCode);
+            Assert.Equal($"/CarrierRegistration/?CarrierId={CarrierId}", forged.Headers.Location?.ToString());
+        }
+        Assert.Equal(w9Before, await ScalarAsync(String.Format(packetSql, "sp.W9Name")));
+        Assert.Equal(packetModified, await ScalarAsync(String.Format(packetSql, "sp.LastModifiedDate")));
+        Assert.Equal(carrierModified, await ScalarAsync("SELECT LastModifiedDate FROM DatCompany WHERE EntityId = @id"));
     }
 
     /// <summary>
