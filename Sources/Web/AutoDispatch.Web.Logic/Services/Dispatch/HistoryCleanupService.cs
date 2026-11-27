@@ -48,8 +48,15 @@ DELETE FROM [dbo].[Event] WHERE [HistoryId] IS NOT NULL AND [HistoryId] NOT IN (
         var timeout = Db.CommandTimeout;
         try {
             Db.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
-            await Db.ExecuteAsync(query);
-            _l.i("HistoryCleanupService.DoAsync Successed");
+            // прирост за сутки и размер таблиц (этап 9 плана): рост Event и HistoryObject — основной объём БД
+            var since = DateTime.UtcNow.AddDays(-1);
+            var events = await Table<Event>().CountAsync(e => e.CreatedDate >= since);
+            var histories = await Table<HistoryObject>().CountAsync(e => e.CreatedDate >= since);
+            var deleted = await Db.ExecuteAsync(query);
+            var eventTotal = await Table<Event>().LongCountAsync();
+            var historyTotal = await Table<HistoryObject>().LongCountAsync();
+            _l.i($"HistoryCleanupService.DoAsync Successed: {deleted} rows deleted; last 24 h — Event +{events}, HistoryObject +{histories}; " +
+                 $"total — Event {eventTotal}, HistoryObject {historyTotal}");
         } finally {
             Db.CommandTimeout = timeout;
         }

@@ -7,7 +7,7 @@ namespace AutoDispatch.Web.Logic.WebServices.Safer;
 
 /// <summary>
 ///     Запасной источник карточки карриера — HTML safer.fmcsa.dot.gov/query.asp (V1 SaferFmcsaDataService + SaferFmcsaParser),
-///     когда brokersnapshot недоступен </summary>
+///     когда brokersnapshot недоступен. Без метрики (2026-11-27): вызывается только при сбое Companies, сбои — в логе </summary>
 public class SaferFmcsaWebService : BaseWebService {
 
     private const string Url = "https://safer.fmcsa.dot.gov/query.asp";

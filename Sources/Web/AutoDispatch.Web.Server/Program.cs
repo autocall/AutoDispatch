@@ -177,6 +177,16 @@ public class Program {
         app.UseAuthentication();
         app.UseMiddleware<RequestContextMiddleware>();
         app.UseAuthorization();
+        // для внешнего мониторинга доступности (AI/wiki/deploy.md): процесс отвечает и обе БД доступны; без авторизации
+        app.MapGet("/health", async (AdDbContext db, AdLogDbContext logDb, CancellationToken cancellation) => {
+            var dbOk = await db.Database.CanConnectAsync(cancellation);
+            var logOk = await logDb.Database.CanConnectAsync(cancellation);
+            if (dbOk && logOk) {
+                return Results.Text("OK");
+            }
+            _l.e($"Health: database {(dbOk ? "OK" : "unavailable")}, log database {(logOk ? "OK" : "unavailable")}");
+            return Results.Text($"database {dbOk}, log database {logOk}", statusCode: StatusCodes.Status503ServiceUnavailable);
+        });
         app.MapControllers();
         app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 

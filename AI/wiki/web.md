@@ -38,7 +38,13 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
   `UserSettingService` — только `GetMapAsync/SetMapAsync`. С 2026-11-17 решено вернуть секции App (`Api/Settings`) на этапе 7 — [[user-settings]].
 - **`RoleEnum`** = роли V1 с модулем AutoDispatch: Agent 1, Warehouse 2, Dispatcher 3, Sales 4, Accounting 5, Owner 6, Admin 7
   (решение этапа 0). Seed создаёт их все; форма пользователя по умолчанию Dispatcher. Права по ролям — этапы 3–6.
-- **Метрики**: остались Web CPU, DB CPU, Geocoding, Online, App exceptions; показатели dispatch — этап 9.
+- **Метрики** (2026-11-27, [[plan]] «Логи и метрики перед запуском»): Web CPU, DB CPU (фактически CPU веб-хоста, колонка скрыта),
+  Geocoding (Brokersnapshot api/v2: геокодинг и маршруты; поиск компаний api/v3 — отдельно, Companies во внешних сервисах); память процесса и диск с документами пишутся в `Metric`, но показываются
+  карточкой Server на `/Admin/Monitor` (сейчас, пик, прирост, дней до заполнения); dispatch — `Request` (задержка, вызовы, ошибки,
+  медленные) и пользователи в long-polling; внешние сервисы `MetricConverter.Externals` (CarrierView, SMS, SMTP, OpenAI,
+  Companies, Keeppingin, Google Distance; OpenAI скрыт на странице; Mailgun, Vodia, Safer FMCSA — только в логе); App — Online, телефония, исключения, медленные запросы (разрывы связи и повторные входы — только в логе App).
+- **Логи сверх V3**: `Session` у записей сервера — из `X-Request-Id` App (одна лента клиента и сервера на `/Admin/Logs`);
+  фоновые задачи пишут запуск и каждую итерацию; отказ D1 — warning с записью и компаниями; 401 API — warning; `/health`.
 - **Окружение**: `ApplicationName` `AutoDispatch.Web`, cookie `AutoDispatch.Auth`, `Website` `https://dispatch.myautocall.net`,
   БД `autodispatch`/`autodispatch_log` (локально `autodispatch_local`/`autodispatch_log_local`, SQL Express, collation UTF8),
   `FilesPath` (`/files/`, локально `D:\Develop\AutoDispatch\Data\files\`), локальные порты 7092/7082 (V3 занимает 7091/7081),

@@ -1,9 +1,15 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using LinqToDB;
 using LinqToDB.Async;
+using Microsoft.Extensions.DependencyInjection;
+using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Data.Entities;
 using AutoDispatch.Web.Data.Entities.Dispatch;
+using AutoDispatch.Web.Data.Enums;
+using AutoDispatch.Web.Logic.Email;
+using AutoDispatch.Web.Logic.Monitoring;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -27,7 +33,7 @@ public abstract class DispatchBaseService : BaseService {
     protected async Task<T> GetByIdAsync<T>(Guid id) where T : Data.Entities.Dispatch.BaseEntity {
         var entity = await Table<T>().FirstOrDefaultAsync(e => e.EntityId == id);
         if (entity is ICompanyEntity owned) {
-            CheckCompany(owned.CompanyId);
+            CheckCompany(owned.CompanyId, $"{typeof(T).Name} {id}");
         }
         return entity;
     }
@@ -42,14 +48,36 @@ public abstract class DispatchBaseService : BaseService {
 
     protected Task<int> DeleteAsync<T>(T entity) where T : class => Db.DeleteAsync(entity);
 
+    #region [ email ]
+
+    /// <summary>
+    ///     Письмо через SMTP компании (EmailUtils) с метрикой SMTP; сбой — warning с сервером SMTP и исключение дальше, как раньше </summary>
+    protected async Task SendEmailAsync(SmtpSettings smtp, Email.Email email) {
+        var metrics = Host.ServiceProvider.GetRequiredService<MetricCollector>();
+        var stopwatch = Stopwatch.StartNew();
+        try {
+            await EmailUtils.SendEmailAsync(smtp, email);
+        } catch (Exception e) {
+            metrics.AddExternal(MetricTypeEnum.SmtpLatency, stopwatch.Elapsed, false);
+            _l.w($"SMTP {smtp.Host}:{smtp.Port} (user {smtp.UserName}) failed for '{email.Subject}': {e.GetBaseException().Message}");
+            throw;
+        }
+        metrics.AddExternal(MetricTypeEnum.SmtpLatency, stopwatch.Elapsed, true);
+    }
+
+    #endregion [ email ]
+
     #region [ company of App request ]
 
     /// <summary>
     ///     Компания пользователя App (ServicesHost.DispatchCompanyId); null — серверный вызов без проверки </summary>
     protected Guid? RequestCompanyId => Host.DispatchCompanyId;
 
-    protected void CheckCompany(Guid companyId) {
+    /// <summary>
+    ///     record — что запрошено, для лога («Load {id}»); клиенту уходит только «Access denied» </summary>
+    protected void CheckCompany(Guid companyId, string record) {
         if (RequestCompanyId != null && companyId != RequestCompanyId) {
+            _l.w($"Access denied: {record} of company {companyId}, user company {RequestCompanyId}");
             throw new AccessDeniedException();
         }
     }

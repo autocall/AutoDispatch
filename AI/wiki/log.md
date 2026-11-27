@@ -691,3 +691,82 @@ C5: оказался багом V1, а не Linux (`EndsWith` с учётом р
 сайта для карриера своей компании (Admin — любой, как `AdminDispatchCompaniesController`), иначе режим карриера и `_l.w`; в режиме карриера
 завершённый packet не меняют шаги, `Prev` и повторный `Step14`; `View`/`Edit` агенту чужой компании — 403. Тест `11.Test01` дополнен
 (на старом поведении — падение: редирект на `Edit`), все тесты Web 71/71. Отступление от V1 — [[plan]] «Защита завершённого setup packet'а».
+
+## [2026-11-27] change | Логи и метрики перед запуском
+
+По просьбе пользователя — залогировать по максимуму перед запуском. Решение и отступления — [[plan]] «Логи и метрики перед запуском».
+Сервер: метрики `Request` (задержка, вызовы, ошибки, медленные > 5 с + warning с именем метода), long-polling, память, диск,
+9 внешних сервисов (`MetricConverter.Externals`, 100–126), счётчики App 48–50; колонки `/Admin/Metrics`; `Session` из `X-Request-Id`;
+фоновые задачи — запуск и итерации; `RetentionService` по часам UTC ([[audit]] B5 закрыт); отказ D1 и 401 API — warning;
+прирост `Event`/`HistoryObject` за сутки; `/health`; большие JSON V1 — в `Details`. App: `_webl` без ограничения «раз в минуту»,
+переходы связи и медленные запросы в `EngineManager`, `Relogins`, предупреждение о памяти.
+Проверено: сборка Web и App (MSBuild VS), тесты Web 75/75 (новые `04.Test05–06`, `05.Test08–09`), на локальном сервере —
+`/health` 200, новые метрики в `Metric`, страница метрик 24 колонки. App вручную не запускался. Не сделано: реальный DB CPU,
+внешний мониторинг `/health` — [[deploy]].
+
+## [2026-11-27] query | DB CPU в V3 и AutoDispatch; удалён мёртвый код
+
+Оповещения по `/health` решено не делать — смотрят явно ([[plan]]). Удалены `EventResponseWrapper.SkipError` и
+`StringExtension.GetDeterministicHashCode` (App собирается). DB CPU: по `autocall_v3_log.Metric` в V3 не работал — сначала
+SQL-замер давал 100 % постоянно, затем скрипт на веб-хосте дублирует Web CPU; сервер БД — отдельный Linux-хост AWS, скрипт
+надо ставить туда — [[deploy]] «Метрика CPU».
+DB CPU скрыт на `/Admin/Metrics` (колонка закомментирована в `Views/AdminMetrics/Index.cshtml`, Server — 4 колонки);
+сбор, `Api/Metrics/Add`, `metric_cpu_3.sh` и тип `DbCpu` работают. Вернуть — когда скрипт будет на сервере БД.
+Память и диск перенесены с `/Admin/Metrics` на `/Admin/Monitor` (карточка Server под Application): память — сейчас, пик за 24 ч
+и 24 ч назад в текущем запуске; диск — занято/всего/свободно, прирост за 24 ч и в среднем за 7 дней, дней до заполнения.
+Метрика 12 — `WebDiskUsedMb` (МБ вместо %: процент слишком груб для суточного прироста). Тест `04.Test07`. Сборка через
+отдельный каталог артефактов (запущенный сервер держит `obj`), вживую Overview не открывался — посмотреть после перезапуска.
+
+## [2026-11-27] query | Geocoding, Mailgun, OpenAI
+
+Метрика Geocoding снова так называется и считает только api/v2 Brokersnapshot (геокодинг, маршруты); карточка карриера и поиск
+компаний (api/v3) — внешний сервис Companies (127–129). Mailgun — только письмо сброса пароля (`PasswordService`), письма компаний
+идут через их SMTP. OpenAI: ключ из V1 отклоняется (`Incorrect API key provided`), нужен действующий — [[deploy]] «Секреты».
+Убраны метрики Mailgun (только сброс пароля) и Vodia (только Call Report): редки, сбои и так пишутся в лог (error при ответе с
+ошибкой и исключении, warning — не настроен). Time zone → Keeppingin, Distance → Google Distance.
+Убраны колонки и счётчики App disconnects и relogins (48–49): в V3 их нет, оба события и так пишутся в лог App
+(«Connection lost/restored», «Session expired: …»). В группе App остались exceptions и slow. App собирается, тесты метрик 5/5.
+Убрана метрика Safer FMCSA (запасной путь карточки карриера при сбое Companies, сбои — в логе). Колонка OpenAI скрыта на
+`/Admin/Metrics` (метрика собирается, ключ не действует). Порядок групп: Server, Users, Dispatch, External services, телефония,
+App. Проверено на локальном сервере: шапка и строки по 16 ячеек, карточка Server на Overview отображается.
+
+## [2026-11-27] change | /Admin/Logs — кнопка Newer, как в V3
+
+Перенесена доработка AutoCall V3 (там пока не закоммичена): курсор `LogFilterDto.After` — ближайшие записи над курсором,
+показ по убыванию; Newer — строкой между шапкой таблицы и списком (новые записи сверху), Older — под таблицей, ссылки фильтров сбрасывают и `After`. Раньше была только Older —
+вернуться к более новым можно было лишь сбросом фильтра. Тест `05.Test10` (локальная БД логов: Older дважды, Newer → вторая страница).
+Порядок вкладок шапки: сначала Download, Dispatch Companies, Custom Statuses, Factoring Companies, затем Companies, Users, Logs,
+Overview, Metrics.
+
+## [2026-11-27] plan | [[app-testing]] — чек-лист контрольного прогона после аудита (сессия 9)
+
+19 пунктов по вкладкам Carrier Dispatch, Broker Dispatch, Carrier Accounting с привязкой к пунктам [[audit]] (D1, A1, C5, C1, A4, A5,
+B10, D17) и проверкой по логу сессии App. Мёртвый код App проверен статически: ссылок на удалённые ресурсы, темы и ключи `App.xaml` нет.
+
+## [2026-11-27] test | [[app-testing]] сессия 9 — контрольный прогон после аудита
+
+Прогон через UI Automation под pilipenko.anton@gmail.com (DDM, Owner): 9.1–9.5, 9.7, 9.8, 9.10–9.13, 9.15–9.17 — пройдены, ложных
+«Access denied» (D1) нет. Найдено и исправлено: (1) C5 в App — `ImageHelper.IsImage` с учётом регистра, `.PNG` не попадал в Preview
+Images; (2) «Slow handler» в `EngineManager` — ложные срабатывания на модальных окнах (FilesLoad 43 s), убран, остался «Slow request»;
+(3) `LogsApi` выбрасывал пачку на 401 — записи об истёкшей сессии терялись. ⚠️ FMCSA (safer.fmcsa.dot.gov) отвечает 403 этой машине
+(AWS) — ссылка Broker Registration и запасной путь Safer FMCSA сервера с облачного хоста не работают. Не проверены: 9.6, 9.9, 9.14, 9.18.
+Дополнено: 9.6 (консолидация контейнера 13173), 9.9 (Create/Send Invoice 9083 с POD `.PDF` и Merged — письмо только на
+`DebugEmailRecipient`, груз → billed, метрика SMTP), 9.18 (обрыв связи с Web — «Connection lost/restored after 137 s»). Не проверен 9.14.
+9.9 подтверждён пользователем: во вложении письма склеенный PDF — инвойс и страница `POD.PDF` (C5 для склейки работает). 9.19 закрыт.
+
+## [2026-11-27] change | Публичные страницы — маленький логотип в шапке
+
+`_PublicLayout`: в шапке `LogoSmall` (32×32) вместо `LogoBig`, как в подвале — CarrierRegistration, Confirmation, Print. CSS пересобран
+(`npm run build:css`, новый класс `w-8`). [[public-site]].
+
+## [2026-11-27] fix | [[app-testing]] 9.14 — setup packet: галочки и [company_name]
+
+Пользователь прошёл setup packet (PINA TRUCKING LLC). В PDF: галочки «á€€3?» (испорченная при переносе `ReportService.Check`) и
+незаменённый «[company_name]» (ошибка V1). Исправлено: ✓ шрифтом DejaVu Sans (новый файл в `Resources/Fonts`), `[company_name]` —
+LegalName брокера; решение — [[plan]] «Галочки и [company_name] в setup_packet.pdf», тест `08.Test16`. Тесты DispatchLogic 32/32.
+
+## [2026-11-27] fix | [[app-testing]] 9.14 — пробел после [company_name] в шаблоне
+
+Повторный PDF setup packet: галочки ✓ в порядке, но «TEST BROKER LLCare», «LLCmust» — в `000102040506071314_02.rtf` после
+плейсхолдера не было пробела (в V1 не видно, плейсхолдер не заменялся). Добавлены пробелы в шаблон, `08.Test16` проверяет «LLC are» / «LLC must»;
+[[plan]] «Галочки и [company_name] в setup_packet.pdf».

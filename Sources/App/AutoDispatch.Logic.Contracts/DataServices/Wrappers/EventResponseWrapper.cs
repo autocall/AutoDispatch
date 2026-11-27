@@ -23,9 +23,6 @@ namespace AutoDispatch.Logic.DataServices.Wrappers {
         ///     A size of response </summary>
         public long Size { get; set; }
         /// <summary>
-        ///     Custom Flag </summary>
-        public bool SkipError { get; set; }
-        /// <summary>
         ///     Транспортная ошибка — по ней EngineManager решает, повторять ли запрос </summary>
         public Exception Exception { get; private set; }
 

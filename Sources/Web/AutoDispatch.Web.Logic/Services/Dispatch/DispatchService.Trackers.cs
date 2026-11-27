@@ -1,5 +1,6 @@
 using LinqToDB;
 using LinqToDB.Async;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using AutoDispatch.Dtos.Data;
 using AutoDispatch.Dtos.Dtos;
@@ -16,6 +17,8 @@ using AutoDispatch.Web.Logic.WebServices;
 using AutoDispatch.Web.Logic.WebServices.Bnsf;
 using AutoDispatch.Web.Logic.WebServices.CarrierView;
 using AutoDispatch.Web.Logic.Mapping.Dispatch;
+using AutoDispatch.Web.Logic.Monitoring;
+using AutoDispatch.Web.Data.Enums;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
@@ -144,8 +147,10 @@ public partial class DispatchService {
         }
         var response = await webService.GetLoadAsync(actualCompany.CarrierViewToken, request.TrakerId);
         var response2 = await webService.GetPositionAsync(actualCompany.CarrierViewToken, request.TrakerId);
-        _l.i("response: " + DispatchJson.Serialize(response, TypeNameHandling.None));
-        _l.i("response2: " + DispatchJson.Serialize(response2, TypeNameHandling.None));
+        // ответы CarrierView (V1 писал их в текст) — в Details
+        using (_l.Property(AppSettings.LogDetailsProperty, DispatchJson.Serialize(new { load = response, position = response2 }, TypeNameHandling.None))) {
+            _l.i($"SyncCarrierViewTracker: tracker {request.TrakerId}, load {response.Success}, position {response2.Success}");
+        }
         if (response.Success && response2.Success) {
             if (response.Data.success == true && response2.Data.success) {
                 load.CarrierViewStatus = response2.Data.data.position?.type;
@@ -209,6 +214,8 @@ public partial class DispatchService {
             DateTime = DateTime.UtcNow,
             LoadId = load.EntityId,
         });
+        // позиция дошла до груза — метрика Tracking (идут ли данные CarrierView)
+        Host.ServiceProvider.GetRequiredService<MetricCollector>().AddUser(MetricTypeEnum.TrackedLoads, load.EntityId, true);
         string statusesJson = DispatchJson.Serialize(model.load.statuses);
         bool changed = load.CarrierViewStatus != model.position.type ||
                        load.CarrierViewPhone != model.load.driver_phone ||

@@ -5,8 +5,10 @@
 
     int? Get(Dictionary<MetricTypeEnum, int> values, MetricTypeEnum type) => values.TryGetValue(type, out var value) ? value : null;
     // цвета и форматы — в MetricsIndexViewModel, границы шкал — MetricConverter.GetSteps;
-    // CPU и задержка: показывается среднее (Values), цвет — по максимуму за период (StepClass).
-    // Колонки dispatch (long-polling, Request, внешние сервисы) — этап 8 плана
+    // CPU и задержка: показывается среднее (Values), цвет — по максимуму за период (StepClass)
+    // OpenAI скрыт (2026-11-27): ключ не действует (AI/wiki/deploy.md «Секреты»), метрика собирается.
+    // Вернуть: var externals = MetricConverter.Externals;
+    var externals = MetricConverter.Externals.Where(e => e.Latency != MetricTypeEnum.OpenAiLatency).ToArray();
 
     // телефония — как AutoCall V3: звонки и ошибки; у AbtoPhone в ошибки входят пользователи без регистрации на PBX
     var phones = new (string Name, MetricTypeEnum Calls, MetricTypeEnum Errors, MetricTypeEnum? Unregistered)[] {
@@ -16,8 +18,8 @@
     (int Failed, int Unregistered) PhoneErrors(Dictionary<MetricTypeEnum, int> values,
         (string Name, MetricTypeEnum Calls, MetricTypeEnum Errors, MetricTypeEnum? Unregistered) phone) =>
         (Get(values, phone.Errors) ?? 0, phone.Unregistered is { } type ? Get(values, type) ?? 0 : 0);
-    // период + Server (3) + Users (1) + телефония + App exceptions
-    var columns = 1 + 3 + 1 + phones.Length + 1;
+    // порядок групп: Server (2: Web CPU, Geocoding; DB CPU скрыт — вернуть 3), Users (2), Dispatch (3), внешние сервисы, телефония, App (2)
+    var columns = 1 + 2 + 2 + 3 + externals.Length + phones.Length + 2;
 
     // в БД время в UTC, на странице — локальное время сервера (в контейнере это TZ контейнера)
     // InvariantCulture: AM/PM не зависит от культуры контейнера
@@ -143,21 +145,37 @@
             <thead>
                 <tr>
                     <th rowspan="2" class="text-left z-10">@period</th>
-                    <td colspan="3" class="border-l">Server</td>
-                    <td class="border-l">Users</td>
+                    @* DB CPU скрыт — вернуть colspan="3"; память и диск — на /Admin/Monitor *@
+                    <td colspan="2" class="border-l">Server</td>
+                    <td colspan="2" class="border-l">Users</td>
+                    <td colspan="3" class="border-l">Dispatch</td>
+                    <td colspan="@externals.Length" class="border-l">External services <span class="font-normal">latency, s · calls</span></td>
                     @foreach (var phone in phones) {
                         <td class="border-l">@phone.Name</td>
                     }
-                    <td rowspan="2" class="border-l">App<br /><span class="font-normal">exceptions</span></td>
+                    <td colspan="2" class="border-l">App</td>
                 </tr>
                 <tr>
                     <td class="border-l" title="Average, colored by peak: @Model.StepsHint(MetricTypeEnum.WebCpu, e => e.ToString(), "%")">Web CPU</td>
-                    <td title="Average, colored by peak: @Model.StepsHint(MetricTypeEnum.DbCpu, e => e.ToString(), "%")">DB CPU</td>
-                    <td title="Average latency in seconds, colored by peak: @Model.StepsHint(MetricTypeEnum.GeoLatency, e => Model.Seconds(e), "s") · calls">Geocoding<br /><span class="font-normal">latency, s · calls</span></td>
+                    @* DB CPU скрыт (2026-11-27): скрипт metric_cpu.sh стоит на веб-хосте и повторяет Web CPU, а не сервер БД
+                       (AI/wiki/deploy.md «Метрика CPU»). Сбор и Api/Metrics/Add работают; вернуть, когда скрипт будет на сервере БД
+                    <td title="Web host CPU (metric_cpu.sh runs on the web host, as in V3). Average, colored by peak: @Model.StepsHint(MetricTypeEnum.DbCpu, e => e.ToString(), "%")">DB CPU</td>
+                    *@
+                    <td title="Brokersnapshot geocoding and routes (company lookups — Companies in external services). Average latency in seconds, colored by peak: @Model.StepsHint(MetricTypeEnum.GeoLatency, e => Model.Seconds(e), "s") · calls">Geocoding<br /><span class="font-normal">latency, s · calls</span></td>
                     <td class="border-l" title="App open (peak)">Online</td>
+                    <td title="Users who saved, deleted or sent something in App (peak)">Active</td>
+                    <td class="border-l" title="App users waiting for events (long-polling), average">Polling</td>
+                    <td title="Api/Dispatch/Request: average latency in seconds, colored by peak: @Model.StepsHint(MetricTypeEnum.DispatchRequestLatency, e => Model.Seconds(e), "s") · calls · errors · slow (over @AppSettings.DispatchSlowRequest.TotalSeconds s)">Request<br /><span class="font-normal">latency, s · calls</span></td>
+                    <td title="Loads with a CarrierView driver position received (peak); none for hours while loads are tracked — webhook is not coming">Tracking</td>
+                    @foreach (var external in externals) {
+                        <td class="@(external == externals[0] ? "border-l" : "")"
+                            title="Average latency in seconds, colored by peak: @Model.StepsHint(external.Latency, e => Model.Seconds(e), "s") · calls · errors">@external.Name</td>
+                    }
                     @foreach (var phone in phones) {
                         <td class="border-l"><span class="font-normal">calls</span></td>
                     }
+                    <td class="border-l" title="Unhandled exceptions">exceptions</td>
+                    <td title="App requests to the server over 5 s">slow</td>
                 </tr>
             </thead>
             <tbody>
@@ -173,14 +191,27 @@
                             }
                         </th>
                         <td class="border-l @Model.StepClass(row, MetricTypeEnum.WebCpu)">@Percent(Get(values, MetricTypeEnum.WebCpu))</td>
+                        @* DB CPU скрыт — см. заголовок
                         <td class="@Model.StepClass(row, MetricTypeEnum.DbCpu)">@Percent(Get(values, MetricTypeEnum.DbCpu))</td>
+                        *@
                         @* цвет — только по задержке (максимум за период); ошибки — отдельно, плашкой у числа *@
-                        <td class="whitespace-nowrap @Model.StepClass(row, MetricTypeEnum.GeoLatency)">
-                            @if (Get(values, MetricTypeEnum.GeoLatency) is { } geoLatency) { @Model.Seconds(geoLatency) } else { @Dash }
-                            @if (Get(values, MetricTypeEnum.GeoCounter) is { } geoCount) { <span class="opacity-60">· @Number(geoCount)</span> }
-                            @ErrorBadge(Get(values, MetricTypeEnum.GeoErrorCounter))
-                        </td>
+                        @Call(row, MetricTypeEnum.GeoLatency, MetricTypeEnum.GeoCounter, MetricTypeEnum.GeoErrorCounter, "")
                         <td class="border-l @Model.ActiveClass(Get(values, MetricTypeEnum.OnlineUsers))">@Number(Get(values, MetricTypeEnum.OnlineUsers))</td>
+                        <td class="@Model.ActiveClass(Get(values, MetricTypeEnum.ActiveUsers))">@Number(Get(values, MetricTypeEnum.ActiveUsers))</td>
+                        <td class="border-l">@Number(Get(values, MetricTypeEnum.DispatchPollUsers))</td>
+                        @* медленные запросы — жёлтой плашкой после ошибок *@
+                        <td class="whitespace-nowrap @Model.StepClass(row, MetricTypeEnum.DispatchRequestLatency)">
+                            @if (Get(values, MetricTypeEnum.DispatchRequestLatency) is { } requestLatency) { @Model.Seconds(requestLatency) } else { @Dash }
+                            @if (Get(values, MetricTypeEnum.DispatchRequestCounter) is { } requestCount) { <span class="opacity-60">· @Number(requestCount)</span> }
+                            @ErrorBadge(Get(values, MetricTypeEnum.DispatchRequestErrorCounter))
+                            @if (Get(values, MetricTypeEnum.DispatchRequestSlowCounter) is > 0 and var slow) {
+                                <span class="opacity-60">·</span> <span class="bg-warning/40 rounded px-1" title="Slow requests">@slow</span>
+                            }
+                        </td>
+                        <td class="@Model.ActiveClass(Get(values, MetricTypeEnum.TrackedLoads))">@Number(Get(values, MetricTypeEnum.TrackedLoads))</td>
+                        @foreach (var external in externals) {
+                            @Call(row, external.Latency, external.Calls, external.Errors, external == externals[0] ? "border-l" : "")
+                        }
                         @foreach (var phone in phones) {
                             var (failed, unregistered) = PhoneErrors(values, phone);
                             @* у AbtoPhone в ошибки входят и пользователи без регистрации на PBX — MicroSIP о ней не сообщает *@
@@ -190,12 +221,9 @@
                                 @ErrorBadge(failed + unregistered)
                             </td>
                         }
-                        @* исключения App — плашка, если они были *@
-                        <td class="border-l">
-                            @(Get(values, MetricTypeEnum.AppExceptions) > 0
-                                ? Badge(Get(values, MetricTypeEnum.AppExceptions))
-                                : Number(Get(values, MetricTypeEnum.AppExceptions)))
-                        </td>
+                        @* события App — плашка, если они были *@
+                        <td class="border-l">@CountOrBadge(Get(values, MetricTypeEnum.AppExceptions))</td>
+                        <td>@CountOrBadge(Get(values, MetricTypeEnum.AppSlowRequests))</td>
                     </tr>
                 }
                 @if (Model.Rows.Count == 0) {
@@ -237,6 +265,29 @@
         return value > 0
             ? new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"opacity-60\">·</span> {Badge(value)}")
             : Microsoft.AspNetCore.Html.HtmlString.Empty;
+    }
+
+    /// <summary>
+    ///     Событие, которого быть не должно: больше нуля — плашка, иначе число (бледный 0 или прочерк) </summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent CountOrBadge(int? value) {
+        return value > 0 ? Badge(value) : Number(value);
+    }
+
+    /// <summary>
+    ///     Ячейка внешнего вызова: средняя задержка в секундах (цвет — по максимуму), «· успешные вызовы», плашка ошибок </summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent Call(MetricRowDto row, MetricTypeEnum latency, MetricTypeEnum calls, MetricTypeEnum errors, string cssClass) {
+        var values = row.Values;
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<td class=\"whitespace-nowrap {cssClass} {Model.StepClass(row, latency)}\">");
+        sb.Append(values.TryGetValue(latency, out var ms) ? Model.Seconds(ms) : "<span class=\"opacity-40\">—</span>");
+        if (values.TryGetValue(calls, out var count)) {
+            sb.Append($" <span class=\"opacity-60\">· {(count == 0 ? "<span class=\"opacity-40\">0</span>" : count.ToString())}</span>");
+        }
+        if (values.TryGetValue(errors, out var failed) && failed > 0) {
+            sb.Append($" <span class=\"opacity-60\">·</span> <span class=\"bg-error/40 rounded px-1\">{failed}</span>");
+        }
+        sb.Append("</td>");
+        return new Microsoft.AspNetCore.Html.HtmlString(sb.ToString());
     }
 
     /// <summary>

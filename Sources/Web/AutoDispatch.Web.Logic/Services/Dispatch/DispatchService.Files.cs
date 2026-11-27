@@ -227,7 +227,7 @@ public partial class DispatchService {
             .Concat(Table<DefectRepair>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
             .Concat(Table<DispatchCompany>().Where(e => e.EntityId == entityId).Select(e => e.CompanyId))
             .ToListAsync();
-        companyIds.ForEach(CheckCompany);
+        companyIds.ForEach(companyId => CheckCompany(companyId, $"files of {entityId}"));
     }
 
     public async Task<FilesLoadResponseData> FilesLoad(FilesLoadRequestData request) {

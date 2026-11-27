@@ -164,20 +164,28 @@ public class BrokersnapshotWebService : BaseWebService {
         }
         http = http ?? Http;
         var sw = Stopwatch.StartNew();
+        var result = await GetCoreAsync(url, http);
+        // api/v3 компаний (HttpCompany) — внешний сервис Companies, остальное (api/v2 геокодинг и маршруты) — Geocoding
+        if (http == HttpCompany) {
+            _metrics.AddExternal(MetricTypeEnum.CompanyLatency, sw.Elapsed, result.Success);
+        } else {
+            _metrics.AddCall(MetricTypeEnum.GeoLatency, sw.Elapsed, result.Success ? MetricTypeEnum.GeoCounter : MetricTypeEnum.GeoErrorCounter);
+        }
+        return result;
+    }
+
+    private static async Task<ApiResult<string>> GetCoreAsync(string url, HttpClient http) {
         try {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AppSettings.BrokersnapshotApiToken);
             using var response = await http.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode == false) {
-                _metrics.AddCall(MetricTypeEnum.GeoLatency, sw.Elapsed, MetricTypeEnum.GeoErrorCounter);
                 _l.e($"Brokersnapshot [{(int)response.StatusCode}] {url}: {body.Truncate(500)}");
                 return ApiResult<string>.Failed(response.StatusCode, body.Truncate(200));
             }
-            _metrics.AddCall(MetricTypeEnum.GeoLatency, sw.Elapsed, MetricTypeEnum.GeoCounter);
             return ApiResult<string>.Successed(body);
         } catch (Exception e) {
-            _metrics.AddCall(MetricTypeEnum.GeoLatency, sw.Elapsed, MetricTypeEnum.GeoErrorCounter);
             _l.e($"Brokersnapshot {url} failed", e);
             return ApiResult<string>.Failed(e);
         }

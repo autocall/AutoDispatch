@@ -14,9 +14,13 @@ public static class ClientMetrics {
     private static readonly Lock _lock = new();
     private static Dictionary<string, CallCounters> _calls = [];
     private static int _exceptions;
+    private static int _slowRequests;
     private static bool? _sipRegistered;
 
     public static void Exception() => Interlocked.Increment(ref _exceptions);
+
+    /// <summary> Запрос к серверу дольше EngineManager.SlowRequest </summary>
+    public static void SlowRequest() => Interlocked.Increment(ref _slowRequests);
 
     /// <summary> Звонок закончился: дозвонился или не ответили. </summary>
     public static void CallEnded(string service) {
@@ -51,6 +55,7 @@ public static class ClientMetrics {
             Calls = [.. calls.Select(e => new ClientCallMetrics { Service = e.Key, Calls = e.Value.Calls, Errors = e.Value.Errors })],
             SipRegistered = sip,
             Exceptions = Interlocked.Exchange(ref _exceptions, 0),
+            SlowRequests = Interlocked.Exchange(ref _slowRequests, 0),
         };
     }
 
@@ -67,6 +72,7 @@ public sealed class ClientMetricsReport {
     public List<ClientCallMetrics> Calls { get; set; } = [];
     public bool? SipRegistered { get; set; }
     public int Exceptions { get; set; }
+    public int SlowRequests { get; set; }
 }
 
 public sealed class ClientCallMetrics {

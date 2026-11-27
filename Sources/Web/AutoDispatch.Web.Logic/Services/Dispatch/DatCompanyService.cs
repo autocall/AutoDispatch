@@ -51,7 +51,7 @@ public class DatCompanyService : DispatchCrudService<DatCompanyDto, DatCompany> 
             webCompany.SMTP_Host,
             webCompany.SMTP_Port);
         var emailObj = new Email.Email(email, webCompany.SMTP_Email, "Test", "Test");
-        await EmailUtils.SendEmailAsync(smtpSettings, emailObj);
+        await SendEmailAsync(smtpSettings, emailObj);
     }
 
     public async Task SendTestSchemeEmail(ActualCompanyDto webCompany, string email) {
@@ -62,6 +62,6 @@ public class DatCompanyService : DispatchCrudService<DatCompanyDto, DatCompany> 
             webCompany.SMTP_SchemeHost,
             webCompany.SMTP_SchemePort);
         var emailObj = new Email.Email(email, webCompany.SMTP_SchemeEmail, "Test", "Test Scheme");
-        await EmailUtils.SendEmailAsync(smtpSettings, emailObj);
+        await SendEmailAsync(smtpSettings, emailObj);
     }
 }

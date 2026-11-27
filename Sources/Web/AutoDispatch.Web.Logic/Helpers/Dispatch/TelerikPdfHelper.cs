@@ -45,6 +45,8 @@ public static class TelerikPdfHelper {
             { "Calibri", "Carlito-Regular.ttf" }, { "Calibri Bold", "Carlito-Bold.ttf" }, { "Calibri Italic", "Carlito-Italic.ttf" }, { "Calibri Bold Italic", "Carlito-BoldItalic.ttf" },
             { "Arial", "LiberationSans-Regular.ttf" }, { "Courier New", "LiberationMono-Regular.ttf" },
             { "Brush Script MT", "DancingScript-Bold.ttf" }, { "Wingdings", "wingding.ttf" },
+            // галочка setup packet (ReportService.Check, ✓ U+2713): в Carlito и Liberation её нет; DejaVu — лицензия Bitstream Vera
+            { "DejaVu Sans", "DejaVuSans.ttf" },
         };
         private static readonly ConcurrentDictionary<string, byte[]> Cache = new();
 

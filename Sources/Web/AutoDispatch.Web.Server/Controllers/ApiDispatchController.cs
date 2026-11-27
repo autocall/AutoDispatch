@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using AutoDispatch.Dtos.Data;
 using AutoDispatch.Dtos.Enums;
@@ -8,6 +9,7 @@ using AutoDispatch.Web.Common.Exceptions;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Enums;
 using AutoDispatch.Web.Logic;
+using AutoDispatch.Web.Logic.Monitoring;
 using AutoDispatch.Web.Logic.Services.Dispatch;
 
 namespace AutoDispatch.Web.Server.Controllers;
@@ -25,11 +27,13 @@ public class ApiDispatchController : ApiBaseController {
     private const string JsonContentType = "application/json";
 
     private readonly DispatchPollRegistry _polls;
+    private readonly MetricCollector _metrics;
 
     private DispatchService Service => Host.GetService<DispatchService>();
 
-    public ApiDispatchController(ServicesHost host, DispatchPollRegistry polls) : base(host) {
+    public ApiDispatchController(ServicesHost host, DispatchPollRegistry polls, MetricCollector metrics) : base(host) {
         this._polls = polls;
+        this._metrics = metrics;
     }
 
     [HttpPost, DisableRequestSizeLimit]
@@ -50,7 +54,12 @@ public class ApiDispatchController : ApiBaseController {
 
     #region [ private ]
 
+    /// <summary>
+    ///     Метрики: время и исход каждого запроса (ошибка — кроме InfoException); дольше DispatchSlowRequest — warning с именем метода;
+    ///     успешный изменяющий запрос — пользователь в ActiveUsers </summary>
     private async Task<EventResponse> InvokeAsync(EventRequest wrapper) {
+        var stopwatch = Stopwatch.StartNew();
+        var failed = false;
         try {
             var userId = GetUserId();
             if (wrapper?.Data == null || wrapper.Data.UserId != userId) {
@@ -67,13 +76,25 @@ public class ApiDispatchController : ApiBaseController {
             }
             Host.DispatchCompanyId = await Service.GetCompanyIdByUserIdAsync(userId);
             var data = await handler.Invoke(Service, wrapper.Data);
+            if (handler.IsChange) {
+                _metrics.AddUser(MetricTypeEnum.ActiveUsers, userId, true);
+            }
             return new EventResponse { Status = ResponseStatus.Success, Data = data };
         } catch (Exception e) {
             e = e.GetBaseException();
             if (e is InfoException == false) {
+                failed = true;
                 _l.e($"Request {wrapper?.Name}: UserId {wrapper?.Data?.UserId}", e);
             }
             return new EventResponse { Status = ResponseStatus.Failed, ErrorMessage = e.Message };
+        } finally {
+            var elapsed = stopwatch.Elapsed;
+            _metrics.AddCall(MetricTypeEnum.DispatchRequestLatency, elapsed,
+                failed ? MetricTypeEnum.DispatchRequestErrorCounter : MetricTypeEnum.DispatchRequestCounter);
+            if (elapsed > AppSettings.DispatchSlowRequest) {
+                _metrics.Add(MetricTypeEnum.DispatchRequestSlowCounter, 1);
+                _l.w($"Slow request {wrapper?.Name}: {elapsed.TotalSeconds:F1} s");
+            }
         }
     }
 

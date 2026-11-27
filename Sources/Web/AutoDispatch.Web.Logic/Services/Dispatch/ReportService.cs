@@ -27,8 +27,21 @@ public class ReportService : BaseService {
     };
 
     /// <summary>
-    ///     RTF галочка (ZapfDingbats check) </summary>
-    private const string Check = @"က3\'3f";
+    ///     RTF галочка, как V1: unicode-escape 10003 (U+2713 ✓) с запасным «?», шрифтом CheckFontName — в Carlito и Liberation ✓ нет,
+    ///     Telerik его не рисует (V1 рисовал системным шрифтом Windows). При переносе escape превратился в символ U+1000 — в PDF было
+    ///     «á€€3?» (app-testing 9.14); строка собрана из частей, чтобы правки кода инструментами не повторили этого </summary>
+    public const string Check = "{\\f" + CheckFontNumber + "\\b0\\i0 \\" + "u10003\\'3f}";
+
+    /// <summary>
+    ///     Шрифт галочки в таблице шрифтов шаблона (AddCheckFont): номер не пересекается со шрифтами шаблонов; файл — TelerikPdfHelper </summary>
+    private const string CheckFontNumber = "9001";
+    private const string CheckFontName = "DejaVu Sans";
+
+    /// <summary>
+    ///     Добавляет в таблицу шрифтов шаблона (fonttbl) шрифт галочки Check </summary>
+    public static string AddCheckFont(string rtf) {
+        return rtf.Replace("{\\fonttbl", "{\\fonttbl{\\f" + CheckFontNumber + "\\fswiss\\fcharset0 " + CheckFontName + ";}");
+    }
 
     public ReportService(ServicesHost host) : base(host) { }
 
@@ -225,6 +238,9 @@ public class ReportService : BaseService {
         fields["ActualCompany.LogoBig"] = actualCompany.LogoBig;
         fields["ActualCompany.McNumber"] = actualCompany.McNumber.ToString();
         fields["ActualCompany.LegalName"] = actualCompany.LegalName;
+        // плейсхолдер страницы Re-brokering (000102040506071314_02) — V1 его не заменял, в PDF оставалось «[company_name]»
+        // (как у confirmation/invoice в V1 App ReportService; отступление от V1 — AI/wiki/plan.md, app-testing 9.14)
+        fields["[company_name]"] = actualCompany.LegalName;
         fields["ActualCompany.CellPhone"] = actualCompany.CellPhone?.ToPhone();
         fields["ActualCompany.ShippersPhone"] = actualCompany.ShippersPhone?.ToPhone();
         fields["ActualCompany.WorkPhone"] = actualCompany.WorkPhone?.ToPhone();
@@ -255,7 +271,7 @@ public class ReportService : BaseService {
     ///     Подстановка полей, логотипа и вырезание пустых контактов по MARKER* в RTF-шаблон (общая часть V1 GenerateSetupPacketPdf и
     ///     GenerateInsuranceInstructionsPdf) </summary>
     public static string FillRtfTemplate(string path, SetupPacketDto setupPacket, Dictionary<string, string> fields) {
-        var sb = new StringBuilder(File.ReadAllText(path));
+        var sb = new StringBuilder(AddCheckFont(File.ReadAllText(path)));
         // таблицы шаблонов — стиль Table Grid (\ts23: \trbrdr* \brdrs\brdrw10), ячейки границ не задают (\brdrtbl): WPF RadDocument V1
         // рисовал без рамок, Telerik Document Processing рисует рамки стиля — у стилей таблиц границы убираются, как в PDF V1
         // (линии абзацев \brdrt/\brdrb не трогаются) — AI/wiki/app-testing.md 6.26

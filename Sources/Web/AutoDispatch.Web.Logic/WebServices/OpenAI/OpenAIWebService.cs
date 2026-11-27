@@ -1,7 +1,11 @@
 using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
+using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using AutoDispatch.Web.Common;
+using AutoDispatch.Web.Data.Enums;
+using AutoDispatch.Web.Logic.Monitoring;
 using AutoDispatch.Web.Common.Extensions;
 
 namespace AutoDispatch.Web.Logic.WebServices.OpenAI;
@@ -12,12 +16,28 @@ public class OpenAIWebService : BaseWebService {
 
     private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
 
-    public OpenAIWebService(ServicesHost host) { }
+    private readonly MetricCollector _metrics;
+
+    public OpenAIWebService(ServicesHost host) {
+        this._metrics = host.ServiceProvider.GetRequiredService<MetricCollector>();
+    }
 
     public async Task<ApiResult<ResponseData>> RequestAsync(RequestData requestData) {
         if (AppSettings.OpenAiApiKey == null) {
+            _l.w("OpenAI request is not sent: OpenAI is not configured");
             return ApiResult<ResponseData>.Failed(System.Net.HttpStatusCode.ServiceUnavailable, "OpenAI is not configured");
         }
+        var stopwatch = Stopwatch.StartNew();
+        var result = await RequestCoreAsync(requestData);
+        _metrics.AddExternal(MetricTypeEnum.OpenAiLatency, stopwatch.Elapsed, result.Success);
+        if (result.Success) {
+            var usage = result.Data.usage;
+            _l.i($"OpenAI {result.Data.model}: {stopwatch.Elapsed.TotalSeconds:F1} s, tokens {usage?.prompt_tokens} + {usage?.completion_tokens}");
+        }
+        return result;
+    }
+
+    private static async Task<ApiResult<ResponseData>> RequestCoreAsync(RequestData requestData) {
         try {
             using var request = new HttpRequestMessage(HttpMethod.Post, AppSettings.OpenAiUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AppSettings.OpenAiApiKey);
@@ -26,6 +46,8 @@ public class OpenAIWebService : BaseWebService {
             var json = await response.Content.ReadAsStringAsync();
             var responseData = DispatchJson.Deserialize<ResponseData>(json);
             if (response.IsSuccessStatusCode == false) {
+                // раньше ответ с ошибкой (лимит, ключ) в лог не попадал
+                _l.e($"OpenAI [{(int)response.StatusCode}]: {responseData?.error?.message ?? json.Truncate(500)}");
                 return ApiResult<ResponseData>.Failed(response.StatusCode, responseData?.error?.message ?? json.Truncate(200));
             }
             responseData.ContentJson = json; // for logs

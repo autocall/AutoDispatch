@@ -47,6 +47,13 @@ public class MetricCollector {
         this.Add(counterType, 1);
     }
 
+    /// <summary>
+    ///     Вызов внешнего сервиса из MetricConverter.Externals по его метрике задержки: успешный или ошибка </summary>
+    public void AddExternal(MetricTypeEnum latencyType, TimeSpan elapsed, bool success) {
+        var external = MetricConverter.Externals.Single(e => e.Latency == latencyType);
+        this.AddCall(latencyType, elapsed, success ? external.Calls : external.Errors);
+    }
+
     public void AddUser(MetricTypeEnum type, Guid userId, bool flag) {
         lock (_lock) {
             var users = this.Current().Users;
@@ -74,6 +81,7 @@ public class MetricCollector {
             this.AddUser(MetricTypeEnum.AbtoPhoneUnregisteredUsers, userId, registered == false);
         }
         this.Add(MetricTypeEnum.AppExceptions, dto.Exceptions);
+        this.Add(MetricTypeEnum.AppSlowRequests, dto.SlowRequests);
     }
 
     /// <summary>

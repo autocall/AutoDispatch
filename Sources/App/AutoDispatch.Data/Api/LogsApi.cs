@@ -21,7 +21,10 @@ public class LogsApi : BaseApi, IClientLogSender {
             if (message.IsSuccessStatusCode) {
                 return ClientLogSendResult.Sent;
             }
-            return (int)message.StatusCode < 500 ? ClientLogSendResult.Rejected : ClientLogSendResult.Unavailable;
+            // 401 (токен истёк — пачка уйдёт после повторного входа), 408, 429 и 5xx — повторить позже; остальные 4xx — отказ.
+            // Раньше 401 выбрасывал пачку: «Connection lost … 401» и «Session expired» на сервер не доходили (app-testing 9.17)
+            int code = (int)message.StatusCode;
+            return code == 401 || code == 408 || code == 429 || code >= 500 ? ClientLogSendResult.Unavailable : ClientLogSendResult.Rejected;
         } catch (Exception) when (!cancellationToken.IsCancellationRequested) {
             return ClientLogSendResult.Unavailable;
         }

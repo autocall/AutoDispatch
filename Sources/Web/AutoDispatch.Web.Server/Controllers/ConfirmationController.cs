@@ -134,7 +134,9 @@ public class ConfirmationController : BaseController {
             return null;
         }
         if (load.ActualCompanyId == null) {
-            _l.w($"Load {load.IndexString}:{load.EntityId}. ActualCompanyId is NULL\n" + JsonExtension.Serialize(load));
+            using (_l.Property(AppSettings.LogDetailsProperty, JsonExtension.Serialize(load))) {
+                _l.w($"Load {load.IndexString}:{load.EntityId}. ActualCompanyId is NULL");
+            }
             return null;
         }
         var carrier = await Service.GetDatCompanyByIdAsync(load.DatCompanyId.Value);

@@ -93,11 +93,12 @@ public class LogsIndexViewModel {
     public static string ScopeLabel(string scope) => ScopeLabels.GetValueOrDefault(scope, scope);
 
     /// <summary>
-    ///     Адрес страницы с текущим фильтром после изменения; Before и Live сбрасываются — они про конкретную выборку </summary>
+    ///     Адрес страницы с текущим фильтром после изменения; Before, After и Live сбрасываются — они про конкретную выборку </summary>
     public string Link(Action<AutoDispatch.Web.Logic.Dtos.Log.LogFilterDto> change, bool keepPage = false) {
         var filter = Filter.Clone();
         if (keepPage == false) {
             filter.Before = null;
+            filter.After = null;
             filter.Live = false;
         }
         change(filter);
@@ -117,6 +118,7 @@ public class LogsIndexViewModel {
         Add("Days", filter.Days);
         Add("Requests", filter.Requests ? "true" : null);
         Add("Before", filter.Before?.ToString());
+        Add("After", filter.After?.ToString());
         Add("Live", filter.Live ? "true" : null);
         return query.Count == 0 ? "/Admin/Logs" : "/Admin/Logs?" + String.Join("&", query);
     }
@@ -126,6 +128,7 @@ public class MonitorIndexViewModel {
     public string Version { get; set; }
     public string Environment { get; set; }
     public DateTime StartedAt { get; set; }
+    public AutoDispatch.Web.Logic.Monitoring.ServerStatsDto Server { get; set; }
     public List<AutoDispatch.Web.Logic.Dtos.Log.DbPingDto> Databases { get; set; }
     public AutoDispatch.Web.Logic.Dtos.Log.LogTableSizeDto LogTable { get; set; }
     public List<AutoDispatch.Web.Logic.Dtos.Log.OnlineUserDto> Online { get; set; }

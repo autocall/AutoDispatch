@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net.Http.Headers;
 using LinqToDB;
 using LinqToDB.Async;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using AutoCall.Dtos.Dtos;
@@ -10,6 +12,8 @@ using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Extensions;
 using AutoDispatch.Web.Data.Entities;
+using AutoDispatch.Web.Data.Enums;
+using AutoDispatch.Web.Logic.Monitoring;
 using AutoDispatch.Web.Logic.WebServices;
 
 namespace AutoDispatch.Web.Logic.Services.Dispatch;
@@ -39,6 +43,8 @@ public class GeocodeService : BaseService {
 
     private BrokersnapshotWebService Brokersnapshot => Host.GetService<BrokersnapshotWebService>();
 
+    private MetricCollector Metrics => Host.ServiceProvider.GetRequiredService<MetricCollector>();
+
     public GeocodeService(ServicesHost host) : base(host) { }
 
     #region [ time zone ]
@@ -49,7 +55,15 @@ public class GeocodeService : BaseService {
         if (_timeZoneCache.TryGetValue(key, out var value)) {
             return value;
         }
-        var result = await RequestTimeZoneAsync(location.Latitude, location.Longitude, timestamp);
+        var stopwatch = Stopwatch.StartNew();
+        string result;
+        try {
+            result = await RequestTimeZoneAsync(location.Latitude, location.Longitude, timestamp);
+        } catch {
+            Metrics.AddExternal(MetricTypeEnum.TimeZoneLatency, stopwatch.Elapsed, false);
+            throw;
+        }
+        Metrics.AddExternal(MetricTypeEnum.TimeZoneLatency, stopwatch.Elapsed, true);
         _timeZoneCache[key] = result;
         return result;
     }
@@ -334,15 +348,23 @@ public class GeocodeService : BaseService {
         var ci = CultureInfo.InvariantCulture;
         var url = $"https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={lat1.ToString(ci)},{lng1.ToString(ci)}" +
                   $"&destinations={lat2.ToString(ci)},{lng2.ToString(ci)}&key={AppSettings.GoogleMapApiKey}";
-        var json = await Http.GetStringAsync(url);
-        var obj = JObject.Parse(json);
-        if ((string)obj["status"] != "OK") {
-            throw new Exception("Request distance: " + (string)obj["status"]);
+        var stopwatch = Stopwatch.StartNew();
+        JToken element;
+        try {
+            var json = await Http.GetStringAsync(url);
+            var obj = JObject.Parse(json);
+            if ((string)obj["status"] != "OK") {
+                throw new Exception("Request distance: " + (string)obj["status"]);
+            }
+            element = obj["rows"]?.First?["elements"]?.First;
+            if ((string)element?["status"] != "OK") {
+                throw new Exception("Request distance: " + (string)element?["status"]);
+            }
+        } catch {
+            Metrics.AddExternal(MetricTypeEnum.DistanceLatency, stopwatch.Elapsed, false);
+            throw;
         }
-        var element = obj["rows"]?.First?["elements"]?.First;
-        if ((string)element?["status"] != "OK") {
-            throw new Exception("Request distance: " + (string)element?["status"]);
-        }
+        Metrics.AddExternal(MetricTypeEnum.DistanceLatency, stopwatch.Elapsed, true);
         var result = new Tuple<int, int>((int)element["distance"]["value"], (int)element["duration"]["value"]);
         _distanceCache[key] = result;
         return result;

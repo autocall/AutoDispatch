@@ -132,12 +132,16 @@ namespace AutoCall.WPF {
                 MessageBoxEx.Warning(this, "Your session has expired. Please sign in again.");
                 var dialog = new LoginDialog(App.Services.GetRequiredService<LoginService>(), _settings) { Owner = this };
                 if (dialog.ShowDialog() == true && UserSession.Current.UserId == userId) {
+                    _l.i("Session expired: signed in again");
                     return true;
                 }
                 if (UserSession.Current.UserId != userId) {
+                    _l.w("Session expired: signed in as a different user, closing");
                     MessageBoxEx.Info(this, "Signed in as a different user. Please start the application again.");
                     // раскладка и выбранные компании прежнего пользователя не пишутся в настройки вошедшего
                     _skipSavingColumns = true;
+                } else {
+                    _l.w("Session expired: sign-in cancelled, closing");
                 }
                 Close();
                 return false;

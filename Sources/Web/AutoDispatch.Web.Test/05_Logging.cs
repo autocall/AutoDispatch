@@ -1,10 +1,16 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using LinqToDB;
+using LinqToDB.AspNet;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using Serilog.Events;
 using AutoDispatch.Web.Common;
+using AutoDispatch.Web.Data;
+using AutoDispatch.Web.Data.Context;
+using AutoDispatch.Web.Logic;
 using AutoDispatch.Web.Logic.Dtos.App;
 using AutoDispatch.Web.Logic.Dtos.Log;
 using AutoDispatch.Web.Logic.Monitoring;
@@ -175,5 +181,55 @@ public class Logging_Test {
         Assert.Equal(HttpStatusCode.OK, empty.StatusCode);
         var none = await http.PostAsync($"{AppSettings.Website}/Api/Logs", new StringContent("null", System.Text.Encoding.UTF8, "application/json"));
         Assert.Equal(HttpStatusCode.BadRequest, none.StatusCode);
+    }
+
+    /// <summary>
+    ///     Сессия App из X-Request-Id (AppSession.NextRequestId) — колонка Session у записей сервера </summary>
+    [Fact]
+    public void Test08_SessionOfRequestId() {
+        Assert.Equal("20261127-101500-a1b2c3", AutoDispatch.Web.Server.Infrastructure.RequestContextMiddleware.SessionOf("20261127-101500-a1b2c3-17"));
+        Assert.Null(AutoDispatch.Web.Server.Infrastructure.RequestContextMiddleware.SessionOf(""));
+        Assert.Null(AutoDispatch.Web.Server.Infrastructure.RequestContextMiddleware.SessionOf("plain"));
+        Assert.Null(AutoDispatch.Web.Server.Infrastructure.RequestContextMiddleware.SessionOf(null));
+    }
+
+    /// <summary>
+    ///     Чистка логов — на границах 00/06/12/18 UTC, а не через 6 часов от старта (аудит B5) </summary>
+    [Fact]
+    public void Test09_RetentionSchedule() {
+        var run = AutoDispatch.Web.Server.BackgroundServices.RetentionService.UntilNextRun;
+        Assert.Equal(TimeSpan.FromHours(1), run(new DateTime(2026, 11, 27, 5, 0, 0, DateTimeKind.Utc)));
+        Assert.Equal(TimeSpan.FromHours(6), run(new DateTime(2026, 11, 27, 6, 0, 0, DateTimeKind.Utc)));
+        Assert.Equal(TimeSpan.FromMinutes(30), run(new DateTime(2026, 11, 27, 23, 30, 0, DateTimeKind.Utc)));
+    }
+
+    /// <summary>
+    ///     /Admin/Logs: Older дважды, затем Newer возвращает вторую страницу, а не первую (как в V3; раньше была только Older,
+    ///     без After сервер отдавал бы самые новые). Локальная БД логов из appsettings.Development.json проекта Server, нужно больше
+    ///     трёх страниц; новые записи сверху ответ не меняют — Newer берёт ближайшие к курсору </summary>
+    [Fact]
+    public async Task Test10_PagingNewerAfterOlder() {
+        var serverDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AutoDispatch.Web.Server"));
+        var configuration = new ConfigurationBuilder().AddJsonFile(Path.Combine(serverDir, "appsettings.Development.json"), optional: true)
+            .AddEnvironmentVariables().Build();
+        var services = new ServiceCollection();
+        services.AddLinqToDBContext<LinqToDbContext>((provider, options) => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        services.AddLinqToDBContext<LogLinqToDbContext>((provider, options) => options.UseSqlServer(configuration.GetConnectionString("LogConnection")));
+        services.AddScoped<UnitOfWork>();
+        services.AddScoped(provider => new ServicesHost(provider.GetRequiredService<UnitOfWork>(), null, provider));
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ServicesHost>().GetService<LogService>();
+
+        var first = await service.SearchAsync(new LogFilterDto());
+        Assert.True(first.Count == AppSettings.LogPageSize, $"нужно больше {AppSettings.LogPageSize} записей в локальной таблице Log, есть {first.Count}");
+        var second = await service.SearchAsync(new LogFilterDto { Before = first[^1].Id });
+        Assert.Equal(AppSettings.LogPageSize, second.Count);
+        Assert.True(second[0].Id < first[^1].Id);
+        var third = await service.SearchAsync(new LogFilterDto { Before = second[^1].Id });
+        Assert.NotEmpty(third);
+
+        var newer = await service.SearchAsync(new LogFilterDto { After = third[0].Id });
+        Assert.Equal(second.Select(e => e.Id), newer.Select(e => e.Id));
     }
 }

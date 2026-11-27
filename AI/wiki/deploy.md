@@ -41,10 +41,20 @@
 
 - `appsettings.Production.json` скопирован с V3 — осталось `AllowedHosts: v3.myautocall.net`, приложение отвечало 400
   «The request hostname is invalid» (HostFiltering). Проверять при копировании конфига.
+- **`/health`** (2026-11-27): без авторизации, 200 `OK` — процесс отвечает и обе БД доступны, иначе 503. Внешнего мониторинга
+  и оповещений нет — решено не делать, логи и метрики смотрят явно ([[plan]]).
 - **Метрика CPU**: у V3 скрипт стоит не на сервере БД, а на самом веб-хосте `67.220.74.190` — `/usr/local/bin/metric_cpu_2.sh`,
   cron root раз в минуту (`>> /var/log/cron`). Для AutoDispatch сделано так же: `/usr/local/bin/metric_cpu_3.sh`. То есть
   «DB CPU» (type 2) фактически измеряет CPU веб-хоста. `error code: 502` в `/var/log/cron` — от старого `metric_cpu.sh`
   (brokersnapshot.com), не наш.
+  **Проверено 2026-11-27 по `autocall_v3_log.Metric`:** в V3 DB CPU не работал ни в одном варианте. 27.10–08.11 (SQL-замер
+  `100 - SystemIdle` из ring buffer) — ровно 100 каждую минуту; с 09.11 (скрипт на веб-хосте) совпадает с Web CPU в 93–99 % минут
+  (оба 0–11 %). Сервер БД `db.myautocall.net` = `3.141.158.251` (AWS), это не веб-хост `67.220.74.190`; на нём SQL Server 2019
+  Standard **on Linux** (Ubuntu 20.04, `sys.dm_os_host_info`) — вероятно, поэтому ring buffer давал SystemIdle 0 и 100 %
+  (у readonly-логина нет VIEW SERVER STATE, сам буфер не проверен). Скрипт `metric_cpu.sh` читает `/proc/stat` и рассчитан на
+  Linux-сервер БД (так и написано в его шапке у V3) — чтобы DB CPU стал настоящим, его нужно поставить в cron на `3.141.158.251`
+  (для V3 и AutoDispatch, токены каждого) и убрать с веб-хоста. Нужен SSH на сервер БД — решение пользователя.
+  До этого колонка DB CPU на `/Admin/Metrics` скрыта (закомментирована в `Index.cshtml`), сбор работает.
 - Публикация с машины разработчика под пользователем, отличным от Administrator: Node стоит через nvm в профиле Administrator,
   `C:\Program Files\nodejs` — symlink туда. Нужен доступ `nata:(RX)` на `C:\Users\Administrator`, `\AppData`, `\AppData\Roaming`
   и рекурсивно на `\AppData\Roaming\nvm` (`icacls`), иначе `npm` падает с EPERM при realpath. Временный обход —
@@ -57,6 +67,8 @@
 Map:Key, Metric:Token` — как в V3; dispatch-специфичные: `CarrierView`, `Sms` (Voxbone, Bandwidth), `OpenAI`, `SaferFmcsa`,
 `Bnsf`, `DatRate`, `Keeppingin`, `Vodia` (FTP CDR для Call Report, как AutoCall V3 — без него Release не стартует), `GmailSmtp` (если письма компаний идут через Gmail, а не Mailgun — **уточнить**),
 `SetupPacketVersion`, `FilesPath: /files` (подкаталоги `_recycle`, `_temp`, `_fonts` — последний для `wingding.ttf`, которого нет в репозитории, см. [[plan]] «Шрифты в репозитории»). `AllowedHosts` = `dispatch.myautocall.net`.
+
+**OpenAI (проверено 2026-11-27):** ключ `sk-oaRqV…IMYO` — тот же, что в исходниках V1, — OpenAI отклоняет (`Incorrect API key provided` в `logs/openai` от 2026-11-20 и 2026-11-22). Разбор rate confirmation из PDF не работает, пока в `Secrets:OpenAI:ApiKey` не будет действующий ключ. Проверять только на сервере: OpenAI забирает страницы PDF по URL `{Website}/Temp/…`, с `localhost` он их не получит.
 
 ## Что меняется в `Program.cs` относительно V3
 

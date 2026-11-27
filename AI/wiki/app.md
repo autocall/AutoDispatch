@@ -36,7 +36,11 @@ AutoCall V3 (`AutoCallV3/Repo/AI/wiki/app-v3.md`). Сделано 2026-11-19; с
 - **Настройки** — `SettingsService`: секции `Api/Settings` в кэше, запись только изменённых, при закрытии окна — с ожиданием ([[user-settings]]).
   Перенесённый JSON V1 читается Newtonsoft без разрешения `$type` (проверено 2026-11-19 на секциях `autodispatch.dbo.UserSetting`). Имя входа и сканер — локально
   `%AppData%\AutoDispatch\settings.json` (как `LocalSettingsService` V3).
-- **Логи** — Serilog: файл `%AppData%\AutoDispatch\logs` (7 дней, как `DeleteOldLogs` V1) и `ServerLogSink` → `Api/Logs`; `_webl` — Scope `web`.
+- **Логи** — Serilog: файл `%AppData%\AutoDispatch\logs` (7 дней, как `DeleteOldLogs` V1) и `ServerLogSink` → `Api/Logs`; `_webl` — Scope `web`,
+  без ограничения V1 «раз в минуту» (2026-11-27). Scope `dispatch` (`EngineManager`): `Connection lost: …` / `Connection restored after N s`,
+  `Slow request {Name}` (> 5 с; обработчик ответа не замеряется — многие открывают модальное окно, app-testing 9.7); `MetricsReporter` — `High memory usage` (> 1500 МБ);
+  `MainWindow` — исход истёкшей сессии. Отчёт метрик (`ClientMetrics`) — ещё `SlowRequests`.
+  Пачка логов с ответом 401 (истёкший токен) не выбрасывается, а ждёт повторного входа (`LogsApi`, app-testing 9.17); 408 и 429 — тоже повтор. Решение и отступления — [[plan]] «Логи и метрики перед запуском».
 - **Карты** — WebView2 (`%LocalAppData%\AutoDispatch\WebView2`): маршрут — `MapWindow` + `MapRouteHelper` (`/Map`, вместо `MapRouteDialog` на EO.WebBrowser),
   выбор места — `EditLocationDialog` (`Map/SelectLocation`, результат `postMessage`), остановки — `EditStopsDialog` (`Map/OrderStops`, `window.reorder`) — [[public-site]].
 - **Софтфоны** — AutoPhone (MicroSIP), AutoPhone v.2 (Abto), None; окно Settings — только Call Services. Под .NET 10 из V3: `Application.ExitThread` вместо

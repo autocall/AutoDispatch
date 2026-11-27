@@ -1,8 +1,12 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Common.Extensions;
+using AutoDispatch.Web.Data.Enums;
+using AutoDispatch.Web.Logic.Monitoring;
 
 namespace AutoDispatch.Web.Logic.WebServices.CarrierView;
 
@@ -15,18 +19,27 @@ public class CarrierViewWebService : BaseWebService {
         Timeout = AppSettings.ExternalTimeout
     };
 
-    public CarrierViewWebService(ServicesHost host) { }
+    private readonly MetricCollector _metrics;
+
+    public CarrierViewWebService(ServicesHost host) {
+        this._metrics = host.ServiceProvider.GetRequiredService<MetricCollector>();
+    }
 
     // {"success":false,"error_code":"required_fields_errors","errors":["Driver phone: Only US numbers available"]}
     // {"success":false,"error_code":"required_fields_errors","errors":{"driver_phone":["The driver phone field is required."]}}
     // {"success":false,"error_code":"creation_error","errors":{"code":"landline"}} - received unexpected format
     public Task<ApiResult<Response>> CreateLoadAsync(string token, CreateLoadRequest requestData) {
-        _l.i("CreateLoad Request: " + DispatchJson.Serialize(requestData, TypeNameHandling.None));
+        // тело запроса (V1 писал его в текст) — в Details: сообщение остаётся коротким
+        using (_l.Property(AppSettings.LogDetailsProperty, DispatchJson.Serialize(requestData, TypeNameHandling.None))) {
+            _l.i($"CarrierView CreateLoad: load {requestData.load_id}");
+        }
         return SendAsync<Response>(token, HttpMethod.Post, "/api/loads", requestData);
     }
 
     public Task<ApiResult<Response>> EditLoadAsync(string token, int id, EditRequest requestData) {
-        _l.i("EditLoad Request: " + DispatchJson.Serialize(requestData, TypeNameHandling.None));
+        using (_l.Property(AppSettings.LogDetailsProperty, DispatchJson.Serialize(requestData, TypeNameHandling.None))) {
+            _l.i($"CarrierView EditLoad: tracker {id}");
+        }
         return SendAsync<Response>(token, HttpMethod.Patch, $"/api/loads/{id}", requestData);
     }
 
@@ -45,7 +58,14 @@ public class CarrierViewWebService : BaseWebService {
         return SendAsync<Response>(token, HttpMethod.Patch, $"/api/loads/{requestData.Id}/disable", null);
     }
 
-    private static async Task<ApiResult<T>> SendAsync<T>(string token, HttpMethod method, string url, object body) {
+    private async Task<ApiResult<T>> SendAsync<T>(string token, HttpMethod method, string url, object body) {
+        var stopwatch = Stopwatch.StartNew();
+        var result = await SendCoreAsync<T>(token, method, url, body);
+        _metrics.AddExternal(MetricTypeEnum.CarrierViewLatency, stopwatch.Elapsed, result.Success);
+        return result;
+    }
+
+    private static async Task<ApiResult<T>> SendCoreAsync<T>(string token, HttpMethod method, string url, object body) {
         try {
             using var request = new HttpRequestMessage(method, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

@@ -113,4 +113,62 @@ public class Metrics_Test {
         var response = await http.PostAsJsonAsync(url, new { type = 2, value = 42 });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    /// <summary>
+    ///     Медленные запросы App складываются за минуту; отчёт старого App без поля — ноль </summary>
+    [Fact]
+    public void Test05_ClientSlowRequests() {
+        var collector = new MetricCollector(() => _now);
+        collector.AddClientReport(User1, new ClientMetricsDto { SlowRequests = 2 });
+        collector.AddClientReport(User2, new ClientMetricsDto { SlowRequests = 1 });
+        collector.AddClientReport(User3, Report());
+
+        _now = _now.AddMinutes(1);
+        var rows = collector.TakeClosed();
+
+        Assert.Equal(3, Value(rows, MetricTypeEnum.AppSlowRequests));
+        Assert.Equal(3, Value(rows, MetricTypeEnum.OnlineUsers));
+    }
+
+    /// <summary>
+    ///     Внешний вызов: задержка — медиана, успешные и ошибки — раздельные счётчики; у каждого сервиса свои три метрики </summary>
+    [Fact]
+    public void Test06_ExternalCalls() {
+        var collector = new MetricCollector(() => _now);
+        collector.AddExternal(MetricTypeEnum.SmsLatency, TimeSpan.FromMilliseconds(100), true);
+        collector.AddExternal(MetricTypeEnum.SmsLatency, TimeSpan.FromMilliseconds(300), true);
+        collector.AddExternal(MetricTypeEnum.SmsLatency, TimeSpan.FromMilliseconds(5000), false);
+        collector.AddExternal(MetricTypeEnum.CarrierViewLatency, TimeSpan.FromMilliseconds(50), false);
+
+        _now = _now.AddMinutes(1);
+        var rows = collector.TakeClosed();
+
+        Assert.Equal(300, Value(rows, MetricTypeEnum.SmsLatency));
+        Assert.Equal(2, Value(rows, MetricTypeEnum.SmsCounter));
+        Assert.Equal(1, Value(rows, MetricTypeEnum.SmsErrorCounter));
+        Assert.Equal(1, Value(rows, MetricTypeEnum.CarrierViewErrorCounter));
+        Assert.DoesNotContain(rows, e => e.MetricId == MetricTypeEnum.CarrierViewCounter);
+        // шкала задержки внешних сервисов
+        Assert.Equal(1, MetricConverter.GetStep(MetricTypeEnum.SmsLatency, 5000));
+        // у каждого сервиса три разные метрики, тройки не пересекаются
+        var all = MetricConverter.Externals.SelectMany(e => new[] { e.Latency, e.Calls, e.Errors }).ToList();
+        Assert.Equal(all.Count, all.Distinct().Count());
+        Assert.All(all, e => Assert.True(Enum.IsDefined(e)));
+    }
+
+    /// <summary>
+    ///     Карточка Server на /Admin/Monitor: процент, дни до заполнения при среднем приросте, ступень диска </summary>
+    [Fact]
+    public void Test07_ServerStats() {
+        var stats = new ServerStatsDto { DiskTotalMb = 1_000_000, DiskFreeMb = 600_000, DiskDayAverageMb = 1000 };
+        Assert.Equal(400_000, stats.DiskUsedMb);
+        Assert.Equal(40, stats.DiskPercent);
+        Assert.Equal(600, stats.DaysUntilFull);
+        // прироста нет или он неизвестен — дней нет
+        Assert.Null(new ServerStatsDto { DiskTotalMb = 1000, DiskFreeMb = 500, DiskDayAverageMb = -10 }.DaysUntilFull);
+        Assert.Null(new ServerStatsDto { DiskTotalMb = 1000, DiskFreeMb = 500 }.DaysUntilFull);
+        Assert.Equal(0, MetricConverter.DiskStep(84));
+        Assert.Equal(1, MetricConverter.DiskStep(85));
+        Assert.Equal(2, MetricConverter.DiskStep(97));
+    }
 }

@@ -31,8 +31,9 @@
 <body class="min-h-screen flex flex-col">
     <div class="navbar flex-wrap border-b shadow-sm">
         <div class="flex min-w-0 flex-1 items-center gap-3">
-            @if (company?.LogoBig != null) {
-                <img class="max-h-12" src="@company.LogoBig" alt="" />
+            @* маленький логотип, как в подвале (2026-11-27, по просьбе пользователя; V1 показывал здесь LogoBig) *@
+            @if (company?.LogoSmall != null) {
+                <img class="h-8 w-8" src="@company.LogoSmall" alt="" />
             }
             <span class="truncate text-lg font-semibold">@company?.LegalName</span>
         </div>

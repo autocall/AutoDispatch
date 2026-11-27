@@ -129,7 +129,7 @@ public partial class DispatchService {
         var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
 
         var email = await DispatchEmailGenerator.GenerateSetupPacketAsync(datCompnayDto, companyDto, request.Emails);
-        await EmailUtils.SendEmailAsync(Smtp(company), email);
+        await SendEmailAsync(Smtp(company), email);
 
         if (datCompnayDto.SetupPacketEmailSent == null) {
             datCompnayDto.SetupPacketEmailSent = request.Emails;
@@ -177,7 +177,7 @@ public partial class DispatchService {
         var companyDto = DispatchCompanyConverter.ToDto(company, Mapper);
 
         var email = await DispatchEmailGenerator.GenerateEditSetupPacketAsync(datCompnayDto, companyDto, datCompnayDto.SetupPacketEmailSent);
-        await EmailUtils.SendEmailAsync(Smtp(company), email);
+        await SendEmailAsync(Smtp(company), email);
 
         // Sets Version
         if (datCompany.SetupPacketId != null) {
@@ -214,7 +214,7 @@ public partial class DispatchService {
     public async Task<BindLoadsResponseData> BindLoads(BindLoadsRequestData request) {
         Guid? groupId = null;
         var loads = await Alive<Load>().Where(l => request.LoadIds.Contains(l.EntityId)).ToListAsync();
-        loads.ForEach(l => CheckCompany(l.CompanyId)); // аудит D1: до любых изменений
+        loads.ForEach(l => CheckCompany(l.CompanyId, $"Load {l.EntityId}")); // аудит D1: до любых изменений
         int? historyId = null;
         switch (request.ParentType) {
             case LoadParentType.Warehouse: {
@@ -382,7 +382,7 @@ public partial class DispatchService {
             // Creates letter
             var email = await DispatchEmailGenerator.GenerateInvoiceAsync(datBrokerDto, loadDto, companyDto, emails,
                 request.SendInvoice, request.SendPOD, request.SendConfirmation, request.SendLumper, request.Merged, request.Text);
-            await EmailUtils.SendEmailAsync(Smtp(company), email);
+            await SendEmailAsync(Smtp(company), email);
 
             if (loadDto.EmailInvoiceSentDate == null) {
                 loadDto.EmailInvoiceSentDate = DateTime.UtcNow;
@@ -431,7 +431,10 @@ public partial class DispatchService {
 
     public async Task<ConfirmationSendResponseData> ConfirmationSend(ConfirmationSendRequestData request) {
         try {
-            _l.i($"ConfirmationSend\n:{DispatchJson.Serialize(request)}");
+            // запрос целиком (V1 писал его в текст) — в Details
+            using (_l.Property(AppSettings.LogDetailsProperty, DispatchJson.Serialize(request))) {
+                _l.i($"ConfirmationSend: load {request.LoadId} to {String.Join(", ", request.Emails ?? [])}");
+            }
             CheckEmails(request.Emails);
 
             var load = await GetByIdAsync<Load>(request.LoadId);
@@ -455,7 +458,7 @@ public partial class DispatchService {
 
             // Creates letter
             var email = await DispatchEmailGenerator.GenerateConfirmationAsync(carrierDto, loadDto, childrenDtos, companyDto, request.Emails);
-            await EmailUtils.SendEmailAsync(Smtp(company), email);
+            await SendEmailAsync(Smtp(company), email);
 
             loadDto.EmailConfirmationSentDate = DateTime.UtcNow;
             loadDto.EmailConfirmationSent = request.Emails;
@@ -498,7 +501,7 @@ public partial class DispatchService {
 
         if (String.IsNullOrEmpty(load.EmailConfirmationSent) == false) {
             var email = await DispatchEmailGenerator.GenerateConfirmedAsync(carrierDto, loadDto, companyDto, request.Emails);
-            await EmailUtils.SendEmailAsync(Smtp(company), email);
+            await SendEmailAsync(Smtp(company), email);
         } else {
             _l.w($"No email is specified. LoadId: '{loadDto.EntityId}'");
         }
@@ -547,7 +550,7 @@ public partial class DispatchService {
         var smtpSettings = new SmtpSettings(company.SMTP_SchemeEmail, company.SMTP_SchemePassword, company.SMTP_SchemeHost, company.SMTP_SchemePort);
         foreach (var email in emails) {
             var emailObj = await DispatchEmailGenerator.GenerateSchemeEmailAsync(email, request.TrailerNumber, request.Data, companyDto);
-            await EmailUtils.SendEmailAsync(smtpSettings, emailObj);
+            await SendEmailAsync(smtpSettings, emailObj);
         }
         return new SendSchemeEmailResponseData() { Result = true };
     }

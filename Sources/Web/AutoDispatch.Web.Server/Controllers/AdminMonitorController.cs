@@ -16,6 +16,7 @@ public class AdminMonitorController : BaseController {
     private MonitorService Service => Host.GetService<MonitorService>();
     private LogService LogService => Host.GetService<LogService>();
     private LoginService LoginService => Host.GetService<LoginService>();
+    private MetricService MetricService => Host.GetService<MetricService>();
 
     private readonly IWebHostEnvironment _environment;
 
@@ -29,10 +30,12 @@ public class AdminMonitorController : BaseController {
 
     [HttpGet("~/Admin/Monitor")]
     public async Task<ActionResult> Index() {
+        var startedAt = Process.GetCurrentProcess().StartTime.ToUniversalTime();
         return View(new MonitorIndexViewModel {
             Version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
             Environment = _environment.EnvironmentName,
-            StartedAt = Process.GetCurrentProcess().StartTime.ToUniversalTime(),
+            StartedAt = startedAt,
+            Server = await MetricService.GetServerStatsAsync(startedAt),
             Databases = await Service.PingAsync(),
             LogTable = await LogService.GetTableSizeAsync(),
             Online = Service.GetOnline(),

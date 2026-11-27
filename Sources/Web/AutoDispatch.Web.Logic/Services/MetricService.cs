@@ -7,6 +7,7 @@ using AutoDispatch.Web.Data.Entities.Log;
 using AutoDispatch.Web.Data.Enums;
 using AutoDispatch.Web.Logic.Dtos.App;
 using AutoDispatch.Web.Logic.Monitoring;
+using AutoDispatch.Web.Logic.Services.Dispatch;
 
 namespace AutoDispatch.Web.Logic.Services;
 
@@ -35,6 +36,59 @@ public class MetricService : BaseService {
             Collector.Add(MetricTypeEnum.WebCpu, web);
         }
     }
+
+    /// <summary>
+    ///     Память процесса (МБ), занято на разделе с документами (МБ), пользователи в long-polling </summary>
+    public void MeasureServer() {
+        Collector.Add(MetricTypeEnum.WebMemory, MemoryMb());
+        Collector.Add(MetricTypeEnum.DispatchPollUsers, Host.ServiceProvider.GetRequiredService<DispatchPollRegistry>().Count);
+        if (GetDisk(AppSettings.FilesPath) is { } disk) {
+            Collector.Add(MetricTypeEnum.WebDiskUsedMb, (int)(disk.TotalMb - disk.FreeMb));
+        }
+    }
+
+    /// <summary>
+    ///     Карточка Server на /Admin/Monitor. Память — текущий запуск: пик с начала суток или со старта, «24 ч назад» — только если
+    ///     процесс тогда уже работал (после перезапуска память начинается заново). Диск — сейчас и прирост по минутам Metric </summary>
+    public async Task<ServerStatsDto> GetServerStatsAsync(DateTime startedAtUtc) {
+        var now = DateTime.UtcNow;
+        var metrics = UnitOfWork.LogContext.GetTable<Metric>();
+        var dayAgo = now.AddDays(-1);
+        var result = new ServerStatsDto { MemoryMb = MemoryMb() };
+
+        var peakSince = startedAtUtc > dayAgo ? startedAtUtc : dayAgo;
+        result.MemoryPeakMb = await metrics.Where(e => e.MetricId == MetricTypeEnum.WebMemory && e.DateTime >= peakSince)
+            .MaxAsync(e => (int?)e.Value);
+        if (startedAtUtc <= dayAgo) {
+            result.MemoryDayAgoMb = await ValueAtAsync(metrics, MetricTypeEnum.WebMemory, dayAgo);
+        }
+
+        if (GetDisk(AppSettings.FilesPath) is { } disk) {
+            result.DiskTotalMb = disk.TotalMb;
+            result.DiskFreeMb = disk.FreeMb;
+            var used = disk.TotalMb - disk.FreeMb;
+            if (await ValueAtAsync(metrics, MetricTypeEnum.WebDiskUsedMb, dayAgo) is { } dayAgoUsed) {
+                result.DiskLastDayMb = used - dayAgoUsed;
+            }
+            // среднее за 7 дней — от самой ранней минуты в окне (у свежего сервера окно короче)
+            var first = await metrics.Where(e => e.MetricId == MetricTypeEnum.WebDiskUsedMb && e.DateTime >= now.AddDays(-7))
+                .OrderBy(e => e.DateTime).FirstOrDefaultAsync();
+            if (first != null && now - first.DateTime >= TimeSpan.FromDays(1)) {
+                result.DiskDayAverageMb = (used - first.Value) / (now - first.DateTime).TotalDays;
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    ///     Значение минуты, ближайшей к моменту at в пределах 10 минут; null — замеров не было (сервер не работал) </summary>
+    private static async Task<int?> ValueAtAsync(ITable<Metric> metrics, MetricTypeEnum type, DateTime at) {
+        var row = await metrics.Where(e => e.MetricId == type && e.DateTime >= at.AddMinutes(-10) && e.DateTime <= at.AddMinutes(10))
+            .OrderBy(e => e.DateTime).FirstOrDefaultAsync();
+        return row?.Value;
+    }
+
+    private static int MemoryMb() => (int)(Environment.WorkingSet / (1024 * 1024));
 
     /// <summary>
     ///     Закрытые минуты — в таблицу Metric </summary>
@@ -101,6 +155,18 @@ public class MetricService : BaseService {
     }
 
     #region [ private ]
+
+    /// <summary>
+    ///     Размер и свободное место раздела, на котором лежит каталог, МБ; null — раздел не определяется.
+    ///     В контейнере — раздел хоста со смонтированным /home/autodispatch/files (весь раздел, не только документы) </summary>
+    private static (long TotalMb, long FreeMb)? GetDisk(string path) {
+        try {
+            var drive = new DriveInfo(Path.GetFullPath(path));
+            return drive.TotalSize > 0 ? (drive.TotalSize / (1024 * 1024), drive.AvailableFreeSpace / (1024 * 1024)) : null;
+        } catch (Exception) {
+            return null;
+        }
+    }
 
     /// <summary>
     ///     Значения метрики за минуту или час: сумма, максимум и число минут — из них сворачиваются любые периоды </summary>

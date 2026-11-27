@@ -4,7 +4,8 @@ using AutoDispatch.Web.Common;
 namespace AutoDispatch.Web.Logic.WebServices;
 
 /// <summary>
-///     Vodia PBX по FTP: CDR-лог звонков за день (CSV, первая строка — заголовок). Копия AutoCall V3 </summary>
+///     Vodia PBX по FTP: CDR-лог звонков за день (CSV, первая строка — заголовок). Копия AutoCall V3.
+///     Без метрики (Call Report открывают редко, 2026-11-27): сбой — error в лог </summary>
 public class VodiaWebService : BaseWebService {
 
     public VodiaWebService(ServicesHost host) { }
@@ -13,6 +14,7 @@ public class VodiaWebService : BaseWebService {
     ///     Строки CDR за дату без заголовка; файла нет (день без звонков или будущий) — пустой список </summary>
     public async Task<ApiResult<List<string>>> GetCdrAsync(DateTime date) {
         if (AppSettings.VodiaFtpLogin == null) {
+            _l.w("Vodia CDR is not loaded: Vodia FTP is not configured");
             return ApiResult<List<string>>.Failed(HttpStatusCode.ServiceUnavailable, "Vodia FTP is not configured");
         }
         var url = String.Format(AppSettings.VodiaCdrUrl, date);

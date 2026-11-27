@@ -39,13 +39,27 @@ public sealed class MetricsReporter : IDisposable {
         _cancellation = null;
     }
 
+    /// <summary>
+    ///     Память процесса выше — warning один раз, пока не опустится ниже MemoryWarningReset (V1 падал с OutOfMemory) </summary>
+    public const long MemoryWarningMb = 1500;
+    public const long MemoryWarningResetMb = 1200;
+
     private async Task RunAsync(CancellationToken cancellation) {
         bool failed = false;
+        bool memoryWarned = false;
         while (!cancellation.IsCancellationRequested) {
             try {
                 await Task.Delay(Interval, cancellation);
             } catch (OperationCanceledException) {
                 return;
+            }
+            long memoryMb = Environment.WorkingSet / (1024 * 1024);
+            if (!memoryWarned && memoryMb > MemoryWarningMb) {
+                memoryWarned = true;
+                _logger.Warning("High memory usage: {MemoryMb} MB", memoryMb);
+            } else if (memoryWarned && memoryMb < MemoryWarningResetMb) {
+                memoryWarned = false;
+                _logger.Information("Memory usage back to {MemoryMb} MB", memoryMb);
             }
             try {
                 bool sent = await _api.ReportAsync(ClientMetrics.TakeReport(), cancellation);

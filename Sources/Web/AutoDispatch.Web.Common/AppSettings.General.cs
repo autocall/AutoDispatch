@@ -187,6 +187,12 @@ public partial class AppSettings {
     public static readonly TimeSpan EventWaitTimeout = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan EventPollInterval = TimeSpan.FromSeconds(1);
     /// <summary>
+    ///     Api/Dispatch/Request дольше — warning в лог с именем метода и метрика DispatchRequestSlowCounter </summary>
+    public static readonly TimeSpan DispatchSlowRequest = TimeSpan.FromSeconds(5);
+    /// <summary>
+    ///     Итерация фоновой задачи дольше — warning в лог (BaseBackgroundService) </summary>
+    public static readonly TimeSpan BackgroundSlowIteration = TimeSpan.FromMinutes(1);
+    /// <summary>
     ///     Телефон склада TORPEDO для SMS о грузах из WA (V1 LoadSendSms_Process, захардкожено) и компания, для которой это работает </summary>
     public const string LoadSendSmsPhone = "(203) 500-6917";
     public static readonly Guid LoadSendSmsCompanyId = new Guid("D2FD7AFF-5982-4E20-A0B9-06C4DE600684");

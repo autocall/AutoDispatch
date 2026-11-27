@@ -14,7 +14,7 @@
 - Разбивка ставки как в V1 `Index.cshtml`: доплаты (`Gains` → `GainViewModel`, `TypeDescription`), CarrierView tracking и line haul — только если
   `DispatchHelper.GetRate` ≠ line haul; телефон карриера — `DatCompanyService.GetFieldsAsync` (Safer), **необязателен**: карриер не найден или Safer
   недоступен — страница без телефона (V1 падала бы исключением), warning в лог.
-- Layout `Views/Shared/_PublicLayout.cshtml`: без навигации сайта, в шапке и подвале логотип и `LegalName` компании (`ViewData["Company"]`),
+- Layout `Views/Shared/_PublicLayout.cshtml`: без навигации сайта, в шапке и подвале логотип и `LegalName` компании (в шапке с 2026-11-27 — маленький `LogoSmall` 32×32, как в подвале; V1 показывал там `LogoBig`) (`ViewData["Company"]`),
   favicon — `LogoSmall`; тема — как в `_Layout` (localStorage/системная) с переключателем. На этапе 6 его же берёт `CarrierRegistration`.
 - `ConfirmationController` — `[AllowAnonymous]`, `[Route("Confirmation")]`; модель `ConfirmationViewModel` (`Models/ConfirmationViewModels.cs`)
   с готовыми строками (валюта, оборудование, вес, окна pickup/delivery) — view без логики.

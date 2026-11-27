@@ -124,6 +124,13 @@ public class LogService : BaseService {
         if (filter.EffectiveTo() is { } to) {
             query = query.Where(e => e.TimeStamp < to);
         }
+        if (filter.After != null) {
+            // страница сразу над курсором: берём ближайшие по возрастанию, показываем по убыванию
+            var newer = await SafeAsync(() => query.Where(e => e.Id > filter.After).OrderBy(e => e.Id).Take(AppSettings.LogPageSize).ToListAsync(),
+                new List<LogEntry>());
+            newer.Reverse();
+            return newer;
+        }
         if (filter.Before != null) {
             query = query.Where(e => e.Id < filter.Before);
         }

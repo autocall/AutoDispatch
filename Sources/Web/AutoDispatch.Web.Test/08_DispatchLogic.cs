@@ -274,4 +274,35 @@ public class DispatchLogic_Test {
     public void Test15_IsImageIgnoresCase(string name, bool expected) {
         Assert.Equal(expected, ImageHelper.IsImage(name));
     }
+
+    /// <summary>
+    ///     Галочка setup packet (ReportService.Check) — ✓ (U+2713) шрифтом DejaVu Sans, как V1, и подстановка [company_name]. Константа была испорчена символом U+1000:
+    ///     в PDF «Factoring Companies: á€€3?» (app-testing 9.14) </summary>
+    [Fact]
+    public void Test16_SetupPacketCheckMarkAndCompanyName() {
+        // FillRtfTemplate как в SendSetupPacketAceeptEmailAsync: логотип (1x1 PNG), галочка Factoring Company, [company_name]
+        var logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+        var fields = new Dictionary<string, string> {
+            ["ActualCompany.LogoBig"] = logo,
+            ["SetupPacket.UseFactoringCompany"] = ReportService.Check,
+            ["[company_name]"] = "TEST BROKER LLC"
+        };
+        var rtf = ReportService.FillRtfTemplate(Path.Combine(AppSettings.DocumentsPath, "000102040506071314_02.rtf"), new SetupPacketDto(), fields);
+        var pdf = TelerikPdfHelper.RtfToPdf(rtf);
+        using var document = UglyToad.PdfPig.PdfDocument.Open(pdf);
+        var pages = document.GetPages().ToList();
+        var page = pages.First(p => p.Text.Contains("Factoring Companies:"));
+        var label = page.Text.IndexOf("Factoring Companies:", StringComparison.Ordinal);
+        var after = String.Concat(page.Text.Skip(label + "Factoring Companies:".Length).Take(12));
+        var checkFonts = String.Join(", ", page.Letters.Where(l => l.Value == "✓").Select(l => l.FontName).Distinct());
+        Assert.True(after.TrimStart().StartsWith("✓"), $"after label: '{after}', check fonts: '{checkFonts}'");
+        Assert.Contains("DejaVu", checkFonts);
+        Assert.DoesNotContain("€", page.Text);
+        var allText = String.Concat(pages.Select(p => p.Text));
+        Assert.DoesNotContain("[company_name]", allText);
+        Assert.Contains("offered to you by TEST BROKER LLC", allText);
+        // в шаблоне 000102040506071314_02.rtf после плейсхолдера не было пробела — «LLCare», «LLCmust» (app-testing 9.14)
+        Assert.Contains("TEST BROKER LLC are", allText);
+        Assert.Contains("TEST BROKER LLC must", allText);
+    }
 }

@@ -49,6 +49,9 @@ public class LogFilterDto {
     ///     Курсор «старее»: Id меньше </summary>
     public int? Before { get; set; }
     /// <summary>
+    ///     Курсор «новее»: Id больше, ближайшие к нему записи; важнее Before </summary>
+    public int? After { get; set; }
+    /// <summary>
     ///     Автообновление страницы </summary>
     public bool Live { get; set; }
 

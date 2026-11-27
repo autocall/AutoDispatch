@@ -1,4 +1,5 @@
 @model MonitorIndexViewModel
+@using AutoDispatch.Web.Logic.Monitoring
 @{
     ViewData["Title"] = "Overview";
     var uptime = DateTime.UtcNow - Model.StartedAt;
@@ -14,6 +15,27 @@
             <h2 class="card-title text-base">Application</h2>
             <p>Version @Model.Version, @Model.Environment</p>
             <p>Up @((int)uptime.TotalHours)h @uptime.Minutes m, since @Model.StartedAt.ToString("yyyy-MM-dd HH:mm")</p>
+            @* память — текущий запуск (после перезапуска начинается заново); диск — весь раздел с документами, рост как у Log table *@
+            @{ var server = Model.Server; }
+            <h2 class="card-title text-base mt-2">Server</h2>
+            <p title="Process working set. Peak and 24 h ago — this run only: memory starts over after a restart">
+                <span class="badge badge-soft badge-sm @StepBadge(MetricConverter.GetStep(MetricTypeEnum.WebMemory, server.MemoryMb) ?? 0)">@server.MemoryMb MB</span>
+                Memory now
+                @if (server.MemoryPeakMb is { } peak) { <span class="opacity-70">· peak 24 h @peak MB</span> }
+                @if (server.MemoryDayAgoMb is { } dayAgo) { <span class="opacity-70">· 24 h ago @dayAgo MB</span> }
+            </p>
+            @if (server.DiskTotalMb > 0) {
+                <p title="Whole partition with the documents (@AppSettings.FilesPath), not only the documents">
+                    <span class="badge badge-soft badge-sm @StepBadge(MetricConverter.DiskStep(server.DiskPercent))">@server.DiskPercent%</span>
+                    Disk @Gb(server.DiskUsedMb) of @Gb(server.DiskTotalMb) GB, @Gb(server.DiskFreeMb) GB free
+                </p>
+                <p class="opacity-70">
+                    Growth: last 24 h @(server.DiskLastDayMb is { } lastDay ? $"{GbSigned(lastDay)} GB" : "—"),
+                    avg per day (7 d) @(server.DiskDayAverageMb is { } average ? $"{GbSigned(average)} GB" : "—")@if (server.DaysUntilFull is { } days) {<text>, ~@days.ToString("N0") days until full</text>}
+                </p>
+            } else {
+                <p class="opacity-70">Disk: not available</p>
+            }
         </div>
     </div>
     <div class="card bg-base-100 shadow-sm">
@@ -105,3 +127,19 @@
         </div>
     </div>
 </div>
+
+@functions {
+    /// <summary>
+    ///     Ступень шкалы (0 — норма, 1 — предупреждение, 2 — ошибка) → цвет метки, как статусы Databases </summary>
+    private static string StepBadge(int step) => step switch {
+        0 => "badge-success",
+        1 => "badge-warning",
+        _ => "badge-error"
+    };
+
+    private static string Gb(long mb) => (mb / 1024.0).ToString("N1", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>
+    ///     Прирост со знаком: +1.2 / -0.3 </summary>
+    private static string GbSigned(double mb) => (mb / 1024.0).ToString("+0.0;-0.0;0.0", System.Globalization.CultureInfo.InvariantCulture);
+}

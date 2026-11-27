@@ -25,6 +25,10 @@ public class ClientMetricsDto {
     /// <summary>
     ///     Необработанные исключения App за 30 с </summary>
     public int Exceptions { get; set; }
+
+    /// <summary>
+    ///     Долгие запросы App к серверу (старый App поле не шлёт — 0) </summary>
+    public int SlowRequests { get; set; }
 }
 
 public class ClientCallMetricsDto {

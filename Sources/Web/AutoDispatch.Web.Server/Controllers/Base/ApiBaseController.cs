@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using AutoDispatch.Web.Common;
 using AutoDispatch.Web.Logic;
 
 namespace AutoDispatch.Web.Server.Controllers;
@@ -22,6 +23,8 @@ public abstract class ApiBaseController : BaseController {
         if (context.ActionDescriptor.EndpointMetadata.OfType<IAllowAnonymous>().Any() == false) {
             var user = await Host.UserManager.FindByIdAsync(GetUserId().ToString());
             if (user == null || user.IsDeleted) {
+                // повторы одного пользователя режет LogDeduplicator (5 в минуту)
+                _l.w($"Api 401: user {GetUserId()} {(user == null ? "not found" : "is deleted")}");
                 context.Result = JsonFail(HttpStatusCode.Unauthorized, "Unauthorized");
                 return;
             }

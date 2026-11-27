@@ -291,7 +291,7 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
     public async Task SendAsync(DatCompanyDto carrier, Email.Email email) {
         var company = await GetByIdAsync<DispatchCompany>(carrier.ActualCompanyId);
         var smtpSettings = new SmtpSettings(company.SMTP_Email, company.SMTP_Password, company.SMTP_Host, company.SMTP_Port);
-        await EmailUtils.SendEmailAsync(smtpSettings, email);
+        await SendEmailAsync(smtpSettings, email);
         carrier.SetupPacketCompleted = true;
         await Host.GetService<DatCompanyService>().SaveAsync(carrier, carrier.CreatedById);
     }

@@ -26,14 +26,17 @@
         }
         return details;
     }
-    var lastId = Model.Entries.Count == AppSettings.LogPageSize ? Model.Entries[^1].Id : (int?)null;
+    // полная страница — дальше могут быть ещё; со стороны курсора записи есть всегда
+    var full = Model.Entries.Count == AppSettings.LogPageSize;
+    var olderId = Model.Entries.Count > 0 && (full || filter.After != null) ? Model.Entries[^1].Id : (int?)null;
+    var newerId = Model.Entries.Count > 0 && (filter.Before != null || (full && filter.After != null)) ? Model.Entries[0].Id : (int?)null;
     // в БД UTC, на странице и в календаре — локальное время сервера (в контейнере это TZ контейнера), как на Metrics
     var invariant = System.Globalization.CultureInfo.InvariantCulture;
     string Local(DateTime utc, string format) => DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime().ToString(format, invariant);
     var range = filter.DayRange();
 }
 
-@* hx-boost: теги, форма и Older меняют только #logs, адрес обновляется; Live — тот же запрос раз в 10 с *@
+@* hx-boost: теги, форма, Newer и Older меняют только #logs, адрес обновляется; Live — тот же запрос раз в 10 с *@
 <div id="logs" hx-boost="true" hx-select="#logs" hx-target="#logs" hx-swap="outerHTML"
      @if (filter.Live) { <text>hx-get="@pageUrl" hx-trigger="every 10s"</text> }>
 
@@ -154,6 +157,14 @@
             <tr><th>Time</th><th>Level</th><th>Scope</th><th>User</th><th>Session</th><th>Path</th><th>Message</th></tr>
         </thead>
         <tbody>
+        @* новые записи сверху — Newer между шапкой и списком, Older под таблицей *@
+        @if (newerId != null) {
+            <tr>
+                <td colspan="7" class="text-center">
+                    <a class="btn btn-ghost btn-sm" href="@Model.Link(f => { f.Before = null; f.After = newerId; }, keepPage: true)">Newer</a>
+                </td>
+            </tr>
+        }
         @foreach (var entry in Model.Entries) {
             <tr>
                 @* серверное время; подсказка — локальное время браузера *@
@@ -195,9 +206,9 @@
         }
         </tbody>
     </table>
-    @if (lastId != null) {
-        <div class="p-2 text-center">
-            <a class="btn btn-ghost btn-sm" href="@Model.Link(f => f.Before = lastId, keepPage: true)">Older</a>
+    @if (olderId != null) {
+        <div class="p-2 flex justify-center">
+            <a class="btn btn-ghost btn-sm" href="@Model.Link(f => { f.After = null; f.Before = olderId; }, keepPage: true)">Older</a>
         </div>
     }
 </div>
