@@ -36,8 +36,6 @@ namespace AutoCall.Logic.ViewModels {
         private bool volumeMute;
         private bool allowHold;
 
-        public InboundCallViewModel InboundCall { get; set; } = new InboundCallViewModel();
-
         public bool AllowHold {
             get => allowHold;
             set {

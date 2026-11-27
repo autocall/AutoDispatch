@@ -24,7 +24,7 @@
 2. DNS A-запись `dispatch.myautocall.net` → `67.220.74.190`.
 3. `Deploy/nginx/dispatch.myautocall.net.conf`: `proxy_pass http://127.0.0.1:5005` с `X-Forwarded-*`, `client_max_body_size 100m` под загрузку
    документов (проверено 2026-11-18: App V1 не пускает файл больше 20 МБ — `FileSizeHelper.Check20MBSize`; в конверте `Request` это ~27 МБ base64;
-   на сервере `Request`/`RequestZip`/`ExtractLoadFromPdf` с `DisableRequestSizeLimit`, так что предел задаёт nginx; в V3 дефолт 1 МБ не подойдёт).
+   на сервере `Request`/`ExtractLoadFromPdf` с `DisableRequestSizeLimit`, так что предел задаёт nginx; в V3 дефолт 1 МБ не подойдёт).
    Лимит по IP (2026-11-26, [[audit]] D10, отличие от V3 — [[plan]] «Лимит входа и сброса пароля (D10)»): POST на вход (`Account/LogIn`,
    `Api/Account/SignIn`) и на сброс пароля (`Account/ForgotPassword`, `Api/Account/ForgotPassword`) — по 20 за 5 минут, отдельный счётчик на
    каждую пару; дальше 429 `{ error }`, отказы — `limiting requests` в `/var/log/nginx/error.log`. На хост — вручную в файл после certbot

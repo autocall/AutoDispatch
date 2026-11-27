@@ -13,18 +13,18 @@
 | `Services/Dispatch/Base` | `DispatchBaseService` (`Db`, `Table<T>`, `Alive<T>`, `GetByIdAsync`, Insert/Update/Delete целиком по PK, кэш user→company), `DispatchCrudService<TDto,TEntity>` | `HostService`, `EntityCrudService`, `EntityRepository` |
 | `Services/Dispatch/DispatchService*.cs` | 9 partial-файлов: ядро и события компании, `Location`, `Load` (поиск истории, `LoadHistory2` сырой SQL с гаверсинусом, статистика), `Save` (все Save*/Delete*, история и снимки), `Files` (дефекты, файлы, страховка), `Emails` (SMTP компании, setup packet, инвойсы, confirmation, SMS), `Undo`, `Trackers` (CarrierView, BNSF, Waiting), `Events` (long-polling `EventNotificationAsync`) | `DispatchService.cs` 4651 строка |
 | `Services/Dispatch/IDispatchService.cs` | 74 метода с `[MinAccess]` — таблица `Name → handler` для `Api/Dispatch/Request` (этап 4) | `IDispatchService` |
-| `Services/Dispatch/*Service.cs` | `DatCompanyService`, `DispatchCompanyService` (=ActualCompany), `CensusService`, `SetupPacketService`, `ConfirmationService`, `CustomStatusService`, `CustomerCompanyService`, `ShipperReceiverCompanyService`, `FactoringCompanyService`, `HistoryCleanupService`, `GeocodeService`, `FixLocationLoadsService`, `ReportService`, `OpenAIService` | те же имена |
+| `Services/Dispatch/*Service.cs` | `DatCompanyService`, `DispatchCompanyService` (=ActualCompany), `CensusService`, `SetupPacketService`, `ConfirmationService`, `CustomStatusService`, `CustomerCompanyService`, `ShipperReceiverCompanyService`, `FactoringCompanyService`, `HistoryCleanupService`, `GeocodeService`, `ReportService`, `OpenAIService` | те же имена |
 | `Mapping/Dispatch/*`, `DispatchMappingProfile` | конвертеры — статические классы `XConverter.ToModel/ToDto` (с 2026-11-18, см. ниже), профиль — только автоматические пары (`ReverseMap`, простой `ForMember`); профиль добавлен в `Program.cs` | `Converters/Dispatch/**`, `BllMappingProfile` |
 | `WebServices/` | `CarrierView`, `Bnsf` (HttpClient + cookies на запрос), `Safer` (FMCSA + `BrokersnapshotWebService.CompanyAsync/DownloadCertificateAsync`), `SmsWebService` (Bandwidth), `OpenAI` | `DataServices/*` |
 | `Helpers/Dispatch/` | `StateHelper` (статика State/Country/Zone, снята с боевой БД 2026-11-13), `DispatchHelper` (номера грузов и инвойсов, rate), `DispatchFileHelper` (пути `FilesPath/{EntityId}`), `LoadCompanyNames`, `UserNameCache`, `SetupPacketBinaryHelper`, `DatCompanyContactHelper`, `LocationHelper`, `ImageHelper` (SkiaSharp), `CompareEntities`, `ExpressionHelper` | `Helpers/*` |
 | `Utils/` | `DispatchPdfGenerator` (iTextSharp: подпись confirmation, merge, схема), `DispatchEmailGenerator` (шаблоны `Resources/Emails`) | `PdfGenerator`, `EmailGenerator` |
 | `Email/` | `Email*`, `EmailUtils.SendEmailAsync` (System.Net.Mail по SMTP компании) | `AutoCall.Common.Email` |
 | `Common/Extensions` | `DispatchJson` (+`MscorlibBinder`), `ZipExtension`, `BinaryHelper`, `DispatchStringExtension`, `StringBuilderExtension`, `CollectionExtension`; `Helpers/MathHelper`, `DistanceHelper`; `AccessDeniedException` | `AutoCall.Common` |
-| `Server/BackgroundServices` | `HistoryCleanupBackgroundService` (24 ч: чистка истории + индекс грузов за сутки), `LoadWaitingBackgroundService` (5 мин), `LoadSendSmsBackgroundService` (5 мин), `BnsfRefreshBackgroundService` (30 мин, выключен флагом) | Quartz `JobScheduler.cs` |
+| `Server/BackgroundServices` | `HistoryCleanupBackgroundService` (раз в сутки в `HistoryCleanupTimeUtc`: чистка `HistoryObject`/`Event` старше `HistoryExpiresDays`; индекса грузов нет — `CacheLoadIndex` не перенесён), `LoadWaitingBackgroundService` (5 мин), `LoadSendSmsBackgroundService` (5 мин), `BnsfRefreshBackgroundService` (30 мин, выключен флагом) | Quartz `JobScheduler.cs` |
 | `Server/Resources` | `Emails/*.html`, `Documents/*.rtf` + `fw9.pdf`, `Fonts/*.ttf` (OFL: Carlito, Liberation, DancingScript — подпись как в Safer) — копируются в выход, `AppSettings.ResourcesPath` | `Web/Emails`, `Web/Documents`, `Content/fonts` |
 | `AppSettings` | `#region Dispatch` в General (интервалы джобов, `HistoryExpiresDays`, `SetupPacketVersion`, OpenAI model/url, пути `Resources`, `TempPath`, `OpenAiLogsPath`), Secrets: `Sms:Bandwidth:*`, `OpenAI:ApiKey`, `Keeppingin:ApiKey`, `GoogleMap:Api`; `RecyclePath = FilesPath/_recycle` | `Web/AppSettings.cs`, `web.config` |
 
-Пакеты Logic: AutoMapper 13, HtmlAgilityPack, iTextSharp.LGPLv2.Core 3.8.7 (как в Safer, там 3.7.12; API iTextSharp 4.x), SkiaSharp (ImageSharp 4.x требует ключ Six Labors), PdfPig, PDFtoImage (pdfium), Telerik.Documents.Flow + Flow.FormatProviders.Pdf 2022.1.217 (локальный источник `Sources/Web/Libraries/Telerik`).
+Пакеты Logic: AutoMapper 13, HtmlAgilityPack, iTextSharp.LGPLv2.Core 3.8.7 (как в Safer, там 3.7.12; API iTextSharp 4.x), SkiaSharp (ImageSharp 4.x требует ключ Six Labors), PDFtoImage (pdfium), Telerik.Documents.Flow + Flow.FormatProviders.Pdf 2022.1.217 (локальный источник `Sources/Web/Libraries/Telerik`). PdfPig — только в тестах (проверка шрифтов PDF), из Logic убран вместе с текстовой веткой OpenAI 2026-11-26.
 
 ## Как перенесено
 
@@ -53,7 +53,7 @@
 - **PDF.** W9 — AcroForm `fw9.pdf` через iTextSharp (LGPL-порт, тот же API 4.x). Подпись confirmation/merge — тот же iTextSharp.
   RTF→PDF (`ReportService.RtfToPdf`) — `Helpers/Dispatch/TelerikPdfHelper`: Telerik Document Processing .NET Standard 2022.1.217 (Flow Rtf → Pdf),
   шрифты через `FontsProviderBase` из `Resources/Fonts` — OFL-замены шрифтов Microsoft (Carlito, Liberation; Wingdings — с хоста `/files/_fonts`), PNG → JPEG через SkiaSharp ([[plan]]).
-  Текст PDF для OpenAI — PdfPig с разделителями `----------- PageN -----------` (формат Telerik, на него завязан разбор страниц),
+  Для OpenAI PDF отправляется картинками (текстовая ветка V1 `RequestAsync(text)` с PdfPig не вызывалась — удалена 2026-11-26, [[audit]] E1),
   PNG — PDFtoImage.
 
 

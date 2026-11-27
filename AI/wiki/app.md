@@ -26,10 +26,10 @@ AutoCall V3 (`AutoCallV3/Repo/AI/wiki/app-v3.md`). Сделано 2026-11-19; с
   (`IDispatchService`, `I*Manager`, `I*DataService`, `IServicesHost`, `IUserSession` удалены); в окнах и диалогах — `App.Services.GetRequiredService<T>()`.
 - **AutoMapper 12** — `BllMappingProfile`: QueryLoad, HistoryObject, Census, CensusSearch, GridViewSettings↔GridSettingsViewModel, колонки,
   CarrierHistory→RequestHistory2Dto; `ViewMappingProfile`: double↔`GridViewLength` для ширины колонок. Остальное — статические `XConverter.ToVm/ToDto`
-  (`Converters/<Entity>/<Entity>Converter.cs`, `BaseConverter.Fill*`, `ObjectConverter`), `ConverterHelper` — таблица «тип DTO → конвертер» вместо `Map<T>`.
+  (`Converters/<Entity>/<Entity>Converter.cs`, `BaseConverter.Fill*`; `ObjectConverter` без вызовов удалён 2026-11-26), `ConverterHelper` — таблица «тип DTO → конвертер» вместо `Map<T>`.
   Свои статические конвертеры AutoCall-частей: `CallServiceSettingsConverter`, `BoardSettingsConverter`, `PhoneContactConverter` (разбор телефона из `DatPowerRecordVmToVm`).
 - **Сервер** — `BaseApi` V3 (HttpClient на `Settings.WebUrl`, Bearer `UserSession.Current`, `X-Request-Id`), маршруты [[protocol]]:
-  `Api/Dispatch/Request|Response` (Newtonsoft с `$type`, как V1), `Api/Account/SignIn|Session|ForgotPassword`, `Api/Dispatch/Helpers/*`, `Api/DatCompany/Search`,
+  `Api/Dispatch/Request|Response` (Newtonsoft с `$type`, как V1), `Api/Account/SignIn|ForgotPassword` (цепочка `CheckTokenAsync` → `Api/Account/Session` есть, но не вызывается — [[audit]] E2), `Api/Dispatch/Helpers/*`, `Api/DatCompany/Search`,
   `Api/Census/Search`, `Api/ActualCompany`, `Api/SetupPacket/FactoringCompanies`, `Api/Settings`, `Api/Maps/*`, `Api/Logs`, `Api/Metrics`.
 - **Вход** — один `Api/Account/SignIn` (V1 — вход AutoCall + вход dispatch). Роли: имена сервера → битовая сумма `RoleName` (на ней App проверяет права).
   SIP-учётка — `SessionDto.SipLogin/SipPassword`. После входа — `SettingsService.LoadAsync`.
@@ -79,7 +79,7 @@ WPF привязывает при загрузке через reflection, поэ
 ## Мёртвый код V1 — закомментирован с пометкой
 
 DAT rate (`GetHybridRate`: окно груза, «Refresh» — показывает «DISABLED», как V1; тестовый груз), `ScanFileHelper.FindFile/RenameTempFile` и вызов в `DispatchActions`,
-`EditBaseLoadControl.Phone_OnMouseUp` (XAML не ссылается), `PhoneControl` (не входил в сборку V1), `ChangePasswordDialog` и проверка `DefaultPassword` во входе,
+`EditBaseLoadControl.Phone_OnMouseUp` (XAML не ссылается), `PhoneControl` (не входил в сборку V1), проверка `DefaultPassword` во входе (`ChangePasswordDialog` удалён 2026-11-26, [[audit]] E3),
 кнопка Details AutoPhone v.2 по записи DAT, `BinaryHelper.ByteArrayToObject/ObjectToByteArray` (BinaryFormatter), `DatCompanyDataService.SendSetupPocket`.
 
 ## Проверено 2026-11-19

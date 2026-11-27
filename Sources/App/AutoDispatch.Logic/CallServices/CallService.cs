@@ -111,11 +111,7 @@ namespace AutoCall.Logic.Services {
             Logger.Warning("Call failed. Record {RecordId}, line {Line}, {Service}", recordId, line, CallServiceType.GetDescription());
             CallChanged?.Invoke(recordId, CallStatus.CallEnded, line);
         }
-        /// <summary>
-        ///     Raise phone ringing event </summary>
-        protected void OnRinging(string phone, string displayName) {
-            CallRinging?.Invoke(phone, displayName);
-        }
+        // V1 OnRinging (входящий звонок) поднимал только BriaCallService — не перенесён, событие удалено вместе с панелью входящего звонка
 
         #endregion [ Protected ]
 
@@ -198,9 +194,6 @@ namespace AutoCall.Logic.Services {
         /// <summary>
         ///     Call changed </summary>
         public event CallServiceCallChangedEventHandler CallChanged;
-        /// <summary>
-        ///     Phone Ringing </summary>
-        public event CallServiceCallRingingEventHandler CallRinging;
 
         #endregion [ Events ]
     }

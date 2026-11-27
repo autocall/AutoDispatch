@@ -170,20 +170,6 @@ public class SetupPacketService : DispatchCrudService<SetupPacketDto, SetupPacke
         await dispatchService.SaveSetupPacket(new SaveSetupPacketRequestData(userId) { SetupPacket = dto });
     }
 
-    /// <summary>
-    ///     Сохранение без события и истории (шаги публичной формы) </summary>
-    public async Task OnlySaveAsync(SetupPacketDto dto, Guid userId) {
-        var model = await GetByIdAsync<SetupPacket>(dto.EntityId);
-        if (model != null) {
-            var newModel = SetupPacketConverter.ToModel(dto);
-            newModel.CreatedById = model.CreatedById;
-            newModel.CreatedDate = model.CreatedDate;
-            newModel.LastModifiedById = userId;
-            newModel.LastModifiedDate = DateTime.UtcNow;
-            await UpdateAsync(newModel);
-        }
-    }
-
     private async Task SaveReferencesAsync(Guid setupPacketId, List<SetupPacketReferenceDto> dtos) {
         var models = await Table<SetupPacketReference>().Where(e => e.SetupPacketId == setupPacketId).ToListAsync();
         // Adds

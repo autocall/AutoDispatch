@@ -326,19 +326,20 @@ public static class DispatchEmailGenerator {
 
     public static FileDto GenerateMergedInvoice(LoadDto load, bool sendInvoice, bool sendPOD, bool sendConfirmation, bool sendLumper) {
         var files = new List<string>();
-        if (sendInvoice && String.IsNullOrEmpty(load.InvoiceFile) == false && load.InvoiceFile.EndsWith(".pdf")) {
+        // аудит C5: .PDF тоже PDF — без учёта регистра (в V1 такие файлы в склеенный инвойс не попадали)
+        if (sendInvoice && String.IsNullOrEmpty(load.InvoiceFile) == false && load.InvoiceFile.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) {
             var attach_path = FilePath(load, load.InvoiceFile);
             if (File.Exists(attach_path)) files.Add(attach_path);
         }
-        if (sendPOD && String.IsNullOrEmpty(load.PODFile ?? load.BOLFile) == false && (load.PODFile ?? load.BOLFile).EndsWith(".pdf")) {
+        if (sendPOD && String.IsNullOrEmpty(load.PODFile ?? load.BOLFile) == false && (load.PODFile ?? load.BOLFile).EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) {
             var attach_path = FilePath(load, load.PODFile ?? load.BOLFile);
             if (File.Exists(attach_path)) files.Add(attach_path);
         }
-        if (sendConfirmation && String.IsNullOrEmpty(load.ConfirmedFile ?? load.ConfirmationFile) == false && (load.ConfirmedFile ?? load.ConfirmationFile).EndsWith(".pdf")) {
+        if (sendConfirmation && String.IsNullOrEmpty(load.ConfirmedFile ?? load.ConfirmationFile) == false && (load.ConfirmedFile ?? load.ConfirmationFile).EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) {
             var attach_path = FilePath(load, load.ConfirmedFile ?? load.ConfirmationFile);
             if (File.Exists(attach_path)) files.Add(attach_path);
         }
-        if (sendLumper && String.IsNullOrEmpty(load.LumperFile) == false && load.LumperFile.EndsWith(".pdf")) {
+        if (sendLumper && String.IsNullOrEmpty(load.LumperFile) == false && load.LumperFile.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) {
             var attach_path = FilePath(load, load.LumperFile);
             if (File.Exists(attach_path)) files.Add(attach_path);
         }

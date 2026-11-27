@@ -121,7 +121,8 @@ from #user u join #role r on r.LegacyUserId = u.Id;
 -- Settings.Binary V1 = gzip JSON (Json.NET, $type) словаря «свойство UserSettings -> значение»; Binary как есть не переносится —
 -- раскладывается по секциям, как в AutoCall V3: строка на свойство, Section = имя свойства. Свойства AutoCall (DataSourceSettings,
 -- Sound/HotKey/Connection/Zoom, BoardsSettings, Default*PatternSettings, PatternTabs, PatternsDialogGridView, ViewType, Volume*)
--- не переносятся; в BoardsSettings2 остаются только борды Dispatch*. byte[] (раскладки гридов Telerik, DockingLayout, Selected*Company)
+-- не переносятся; в BoardsSettings2 остаются только борды Dispatch*. DockingLayout не переносится (2026-11-26, аудит E2): App её не
+-- читает — загрузка закомментирована ещё в V1. byte[] (раскладки гридов Telerik, Selected*Company)
 -- — строка base64 без обёртки {"$type":"System.Byte[], mscorlib","$value":…}; остальные объекты — JSON Json.NET как есть (с $type).
 -- CallServiceSettings (софтфон) переносится с 2026-11-19 (у 13 из 17 пользователей, AI/wiki/plan.md «Софтфоны в App»).
 -- null-свойства не пишутся (секции нет -> App берёт дефолт). Проверено select'ом 2026-11-17: 17 пользователей, 201 строка, весь JSON валиден.
@@ -139,7 +140,7 @@ from #user u
 join autocall.dbo.Settings s on s.UserId = u.Id
 cross apply openjson(cast(decompress(s.Binary) as nvarchar(max))) j
 where j.type <> 0
-  and j.[key] in ('BoardsSettings2', 'DockingLayout', 'FiltersColumns', 'DefaultLoadSettings', 'DatCompaniesDialogGridView',
+  and j.[key] in ('BoardsSettings2', 'FiltersColumns', 'DefaultLoadSettings', 'DatCompaniesDialogGridView',
       'EquipmentsDialogGridViewDrivers', 'EquipmentsDialogGridViewTrucks', 'EquipmentsDialogGridViewTrailers',
       'EquipmentsDialogGridViewWarehouses', 'EquipmentsDialogGridViewYards',
       'SelectedCarrierCompany', 'SelectedBrokerCompany', 'ScanEmail', 'ScanBW', 'ScanADF', 'SearchTrailerWarehouseMode', 'CallServiceSettings');

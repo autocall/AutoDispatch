@@ -250,4 +250,28 @@ public class DispatchLogic_Test {
         var pdf = reportService.GenerateW9Pdf(w9Path, new SetupPacketDto { Version = version, W9CompanyType = 6, W9ForeignPartnersHas = true }, fields);
         Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString(pdf, 0, 4));
     }
+
+    /// <summary>
+    ///     Аудит C2: шрифт логотипа — из Resources/Fonts, а не системный Arial (в образе aspnet шрифтов нет); на логотипе есть белый текст </summary>
+    [Fact]
+    public void Test14_LogoFontFromResources() {
+        Assert.NotNull(LogoGenerator.Typeface);
+        Assert.Equal("Liberation Sans", LogoGenerator.Typeface.FamilyName);
+        var png = new LogoGenerator().GetBigLogoPng("SLEEK TRANSPORTATION INC");
+        using var bitmap = SkiaSharp.SKBitmap.Decode(Convert.FromBase64String(png.Substring("data:image/png;base64,".Length)));
+        Assert.Contains(bitmap.Pixels, p => p == SkiaSharp.SKColors.White);
+    }
+
+    /// <summary>
+    ///     Аудит C5: расширение картинки — без учёта регистра </summary>
+    [Theory]
+    [InlineData("photo.jpg", true)]
+    [InlineData("PHOTO.JPG", true)]
+    [InlineData("scan.Png", true)]
+    [InlineData("a.jpeg", true)]
+    [InlineData("doc.PDF", false)]
+    [InlineData("Load Confirm[1] (25).pdf.png", true)]
+    public void Test15_IsImageIgnoresCase(string name, bool expected) {
+        Assert.Equal(expected, ImageHelper.IsImage(name));
+    }
 }

@@ -201,7 +201,9 @@ public partial class DispatchService {
 
     private static FileDto ToFileDto(FileInfo info, Guid entityId, bool preview, byte[] data) {
         return new FileDto() {
-            CreatedDate = info.CreationTime,
+            // аудит C4: время изменения, а не создания — после переноса (FileZilla, rsync -a) время создания = дата копирования,
+            // время изменения сохраняется; у файлов, записанных V1, они совпадают
+            CreatedDate = info.LastWriteTime,
             Name = info.Name,
             Size = info.Length,
             Preview = preview,

@@ -34,12 +34,4 @@ public static class ZipExtension {
         bytes = Decompress(bytes);
         return DispatchJson.Deserialize<T>(BinaryHelper.GetString(bytes));
     }
-
-    public static Task<byte[]> SerializeObjectAsync<T>(T obj, TypeNameHandling typeNameHandling = TypeNameHandling.All) {
-        return Task.FromResult(SerializeObject(obj, typeNameHandling));
-    }
-
-    public static Task<T> DeserializeObjectAsync<T>(byte[] bytes) {
-        return Task.FromResult(DeserializeObject<T>(bytes));
-    }
 }

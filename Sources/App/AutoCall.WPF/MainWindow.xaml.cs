@@ -320,8 +320,8 @@ namespace AutoCall.WPF {
 
             _settings.SaveSettings();
 
-            // Call events (V1 CallChanged — статусы звонков у записей бордов DatPower, в App не нужен)
-            _manager.CallRinging += OnCallRinging;
+            // Call events (V1 CallChanged — статусы звонков у записей бордов DatPower, в App не нужен;
+            // V1 CallRinging — панель входящего звонка, сигнал давал только BriaCallService, не перенесён — удалена, аудит E2)
             _manager.PhoneStatusChanged += OnPhoneStatusChanged;
             _manager.OpenDetails2 = OpenDetailsHandler;
 
@@ -371,13 +371,8 @@ namespace AutoCall.WPF {
                         boardSettings[board.BoardType].RecordColumnSettings2 = _resetColumns ? null : data.RecordColumnSettings2;
                     }
                     _settings.SetBoardSettings2(boardSettings);
-                    var memStream = new MemoryStream();
-                    // Saves layout
-                    if (_resetColumns == false) {
-                        gridBoards.SaveLayout(memStream);
-                        memStream.Position = 0;
-                    }
-                    _settings.SetDockingLayout(BinaryHelper.ReadFully(memStream));
+                    // V1 сохранял раскладку панелей (gridBoards.SaveLayout → DockingLayout), но загрузку закомментировал («sometimes panels
+                    // will hidden») — раскладка не восстанавливалась, запись на сервер убрана (аудит E2)
                     // Saves selected companies
                     _settings.SetSelectedBrokerCompany(((ActualCompanyViewModel)Model.SelectedBrokerCompany)?.EntityId);
                     _settings.SetSelectedCarrierCompany(((ActualCompanyViewModel)Model.SelectedCarrierCompany)?.EntityId);
@@ -471,28 +466,7 @@ namespace AutoCall.WPF {
             }
         }
 
-        #region [ Inbound ]
-
-        private void OnCallRinging(string phone, string displayName) {
-            try {
-                // V1: проверка модуля AutoDispatch в сессии — в App он единственный
-                var company = DispatchBoardViewModel.Instance.DatCompanies.
-                    FirstOrDefault(e1 => e1.Contacts.Contacts.Any(e2 => e2.Type == ContactType.Phone &&
-                        ((ContactPhoneViewModel)e2).Phone?.Reverse1().Substring(0, 10) == phone.Reverse1().Substring(0, 10)));
-                if (company != null) {
-                    var viewModel = this.Model.InboundCall;
-                    if (viewModel.Visibility == Visibility.Collapsed) {
-                        viewModel.Visibility = Visibility.Visible;
-                        viewModel.Phone = phone;
-                        viewModel.DisplayName = displayName;
-                        viewModel.Rating = company.Rating;
-                        viewModel.CarrierName = company.Name;
-                        viewModel.CarrierId = company.EntityId;
-                    }
-                }
-            } catch (Exception) {
-            }
-        }
+        #region [ Call events ]
 
         private void OnPhoneStatusChanged(bool calling) {
             bCallingStatus.IsEnabled = calling;
@@ -509,22 +483,7 @@ namespace AutoCall.WPF {
             //_datPowerBoards.First(e => e.BoardType == BoardType.DatPowerPostTrucks).OpenDetails(loadId);
         }
 
-        private void CloseInbound_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-            e.Handled = true;
-            //this.Model.InboundCall.Visibility = Visibility.Collapsed; NOTES: will trigger in animation
-        }
-
-        private void OpenInbound_MouseLeftButtonUp(object sender, MouseButtonEventArgs args) {
-            this.Model.InboundCall.Visibility = Visibility.Collapsed;
-
-            var company = DispatchBoardViewModel.Instance.DatCompanies.FirstOrDefault(e => e.EntityId == Model.InboundCall.CarrierId);
-            if (company != null) {
-                ((DispatchBoardBase)_boards.First(e => e.BoardType == BoardType.DispatchCarrier))
-                    .DispatchActions.EditCarrierAction(new Wrapper1LoadViewModel() { DatCompany = (DatCompanyViewModel)company.Clone() });
-            }
-        }
-
-        #endregion [ Inbound ]
+        #endregion [ Call events ]
 
         #region [ Select actual company ]
 

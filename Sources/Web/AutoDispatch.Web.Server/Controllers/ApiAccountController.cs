@@ -62,20 +62,6 @@ public class ApiAccountController : ApiBaseController {
         return AppSettings.SystemAllowedIps.Contains(address.ToString());
     }
 
-    [HttpPost]
-    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordDto dto) {
-        if (ModelState.IsValid == false) {
-            return JsonFail(GetErrors());
-        }
-        var user = await Host.UserManager.GetUserAsync(base.User);
-        if (user == null || user.IsDeleted) {
-            return JsonFail(HttpStatusCode.Unauthorized, "Unauthorized");
-        }
-        using var scope = _l.Scope("auth");
-        await PasswordService.ChangeAsync(user, dto.CurrentPassword, dto.NewPassword);
-        return JsonSuccess();
-    }
-
     /// <summary>
     ///     Письмо со ссылкой сброса; ответ одинаковый, существует email или нет </summary>
     [HttpPost, AllowAnonymous]
@@ -97,14 +83,5 @@ public class ApiAccountController : ApiBaseController {
             return JsonFail(HttpStatusCode.Unauthorized, "Unauthorized");
         }
         return JsonSuccess(await UserService.GetSessionAsync(user, null));
-    }
-
-    [HttpGet]
-    public async Task<ActionResult> Identity() {
-        var user = await Host.UserManager.GetUserAsync(base.User);
-        if (user == null || user.IsDeleted) {
-            return JsonFail(HttpStatusCode.Unauthorized, "Unauthorized");
-        }
-        return JsonSuccess(await UserService.GetIdentityAsync(user));
     }
 }

@@ -74,14 +74,12 @@ namespace AutoCall.Logic.Managers {
         public void InitializeCallService(CallServiceSettings settings) {
             if (_callServices.ContainsKey(CurrentCallService) && _callServices[CurrentCallService] != null) {
                 _callServices[CurrentCallService].CallChanged -= OnCallChanged;
-                _callServices[CurrentCallService].CallRinging -= OnCallRinging;
                 _callServices[CurrentCallService].PhoneStatusChanged -= OnPhoneStatusChanged;
             }
             CurrentCallService = settings.CallService;
             if (_callServices[CurrentCallService] != null) {
                 _callServices[CurrentCallService].SetCallSettings(settings);
                 _callServices[CurrentCallService].CallChanged += OnCallChanged;
-                _callServices[CurrentCallService].CallRinging += OnCallRinging;
                 _callServices[CurrentCallService].PhoneStatusChanged += OnPhoneStatusChanged;
             }
         }
@@ -107,11 +105,6 @@ namespace AutoCall.Logic.Managers {
             if (dispatcher == null || dispatcher.HasShutdownStarted) return;
             await dispatcher.InvokeAsync(new Action(() => CallChanged?.Invoke(recordId, status, line)));
         }
-        private async void OnCallRinging(string phone, string displayName) {
-            var dispatcher = Application.Current?.Dispatcher;
-            if (dispatcher == null || dispatcher.HasShutdownStarted) return;
-            await dispatcher.InvokeAsync(new Action(() => CallRinging?.Invoke(phone, displayName)));
-        }
         private async void OnPhoneStatusChanged(bool calling) {
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher == null || dispatcher.HasShutdownStarted) return;
@@ -121,8 +114,6 @@ namespace AutoCall.Logic.Managers {
         public event CallServicePhoneStatusChangedEventHandler PhoneStatusChanged;
 
         public event CallServiceCallChangedEventHandler CallChanged;
-
-        public event CallServiceCallRingingEventHandler CallRinging;
 
         /// <summary>
         ///     Кнопка Details в AutoPhone v.2 по loadId. Карточка записи DAT (V1 OpenDetails(DatPowerRecordViewModel)) — модуль AutoCall, не перенесена </summary>

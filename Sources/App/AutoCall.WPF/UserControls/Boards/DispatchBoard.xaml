@@ -32,9 +32,6 @@
         <c:AnyToBooleanConverter x:Key="AnyToBooleanConverter"/>
         <c:AnyToVisibilityConverter x:Key="AnyToVisibilityConverter" />
         <c:InverseBooleanConverter x:Key="InvertedBooleanConverter" />
-        <c:BooleanToObjectConverter x:Key="BooleanToBackgroundConverter" True="{x:Static DependencyProperty.UnsetValue}" False="{x:Static Brushes.Red}"/>
-        <c:BooleanToObjectConverter x:Key="BooleanToFontWeightConverter" True="{x:Static DependencyProperty.UnsetValue}" False="{x:Static FontWeights.Bold}"/>
-        <c:BooleanToObjectConverter x:Key="BooleanToForegroundConverter" True="{x:Static DependencyProperty.UnsetValue}" False="{x:Static Brushes.White}"/>
         <c:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
         <c:EnumToKeyValuesConverter x:Key="EnumToKeyValuesConverter" />
         <c:ExpirationConverter x:Key="ExpirationConverter"/>
@@ -44,7 +41,6 @@
         <c:NotNullToBoolConverter x:Key="ObjectToBoolConverter" />
         <c:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <c:BooleanToStringConverter x:Key="BooleanToLateConverter" TrueString="Yes" FalseString=""/>
-        <c:BooleanToBrushConverter x:Key="BooleanToBrushLateConverter" TrueBrush="Red" FalseBrush="Transparent"/>
         <dispatch:DispatchBoard_AnyChildrenConverter x:Key="AnyChildrenConverter"/>
         <dispatch:EditLoadDialog_PalletTypeToBrushConverter x:Key="palletTypeToBrushConverter"/>
         <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter"/>
@@ -128,9 +124,6 @@
         <Style TargetType="telerik:RadMenuSeparatorItem">
             <Setter Property="Margin" Value="0,-5,0,-5"/>
         </Style>
-        <DataTemplate x:Key="DatCompanyNameColumnTemplate">
-            <TextBlock Text="{Binding DatCompany.Name}" Margin="0,0,5,0"/>
-        </DataTemplate>
     </ucBoards:Board.Resources>
     <Grid>
         <Grid>

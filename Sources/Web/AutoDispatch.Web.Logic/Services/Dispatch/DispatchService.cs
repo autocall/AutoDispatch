@@ -30,10 +30,6 @@ public partial class DispatchService : DispatchBaseService, IDispatchService {
 
     private static readonly ConcurrentDictionary<Guid, int> _companyToEvent = new ConcurrentDictionary<Guid, int>();
 
-    public static void RemoveCompanyCache(Guid companyId) {
-        _companyToEvent.TryRemove(companyId, out _);
-    }
-
     private async Task<int> _getCurrentEventIdAsync(Guid companyId) {
         if (_companyToEvent.TryGetValue(companyId, out var value) == false) {
             int? eventId = await Table<Event>().Where(e => e.CompanyId == companyId).MaxAsync(e => (int?)e.Id);

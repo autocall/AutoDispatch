@@ -23,7 +23,6 @@
     <ucBoards:Board.Resources>
         <!-- Converters -->
         <c:AnyToBooleanConverter x:Key="AnyToBooleanConverter" />
-        <c:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True" />
         <c:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter" />
         <c:EnumToDescriptionConverter x:Key="EnumToDescriptionOrToStringConverter" AllowToString="True"/>
         <c:NotEmptyStringToBoolConverter x:Key="NotEmptyStringToBoolConverter" />

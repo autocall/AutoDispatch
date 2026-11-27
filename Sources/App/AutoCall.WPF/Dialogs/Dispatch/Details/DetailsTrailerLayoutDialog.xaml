@@ -19,7 +19,6 @@
     <Window.Resources>
         <converters:ColorToSolidColorBrushValueConverter x:Key="ColorToSolidColorBrushValueConverter"/>
         <converters:CompareToVisibilityConverter x:Key="CompareToVisibilityConverter"/>
-        <converters:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True"/>
         <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
         <converters:AnyToVisibilityConverter x:Key="AnyToVisibilityConverter"/>
         <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>

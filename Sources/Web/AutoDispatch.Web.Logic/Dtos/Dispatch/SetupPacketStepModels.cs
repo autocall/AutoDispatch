@@ -69,19 +69,6 @@ public class SetupPacketStep02Model : SetupPacketStepModel {
     #endregion [ Contacts ]
 }
 
-public class SetupPacketStep03Model : SetupPacketStepModel {
-    public string CVORNumber { get; set; }
-    public string NIRNumber { get; set; }
-    public string NSCNumber1 { get; set; }
-    public string NSCNumber2 { get; set; }
-    public byte? CountryServiceType { get; set; }
-    public bool? AuthorizedToHaulElectronics { get; set; }
-    public bool? HasReferBreakdown { get; set; }
-    public bool? HasNonOwnedAuto { get; set; }
-    public bool? HasActiveShipmentAtTimeOfReg { get; set; }
-    public bool AllowAcquirePolicyExclusions { get; set; }
-}
-
 public class SetupPacketStep04Model : SetupPacketStepModel {
     public bool AgreementAgree { get; set; }
     public DateTime? AgreementDate { get; set; }
@@ -129,54 +116,6 @@ public class SetupPacketStep07Model : SetupPacketStepModel {
     public bool W9Agree { get; set; }
     public DateTime? W9AgreeDate { get; set; }
     public string W9Signature { get; set; }
-}
-
-public class SetupPacketStep08Model : SetupPacketStepModel {
-    public List<bool> Step8Modes { get; set; }
-    public List<bool> Step8Commodities { get; set; }
-    public short TractorsCount { get; set; }
-    public string SCACCode { get; set; }
-    public short? DriversCount { get; set; }
-    public short? TeamsCount { get; set; }
-    public short? OperatorsCount { get; set; }
-    public string OwnerName { get; set; }
-    public string OwnerPhone { get; set; }
-    public string OwnerEmail { get; set; }
-    public bool HasMexico { get; set; }
-    public bool HasCanadian { get; set; }
-    public bool HasEmailCarrier { get; set; }
-    public bool? CertificationSmartWay { get; set; }
-    public bool? CertificationC_TPAT { get; set; }
-    public bool? CertificationFAST { get; set; }
-    public bool? CertificationTWIC { get; set; }
-    public bool? CertificationCARB { get; set; }
-    public bool? CertificationHazMatCertification { get; set; }
-    public bool? CertificationSafetyPermit { get; set; }
-    public bool SafetyAgree { get; set; }
-    public byte LoadUrgency { get; set; }
-}
-
-public class SetupPacketStep09Model : SetupPacketStepModel {
-    public short[] NumberOfUnits { get; set; }
-}
-
-public class SetupPacketStep10Model : SetupPacketStepModel {
-    public List<SetupPacketReferenceDto> References { get; set; }
-    public SetupPacketReferenceDto NewReference { get; set; }
-}
-
-public class SetupPacketStep11Model : SetupPacketStepModel {
-    public List<short> W8States { get; set; }
-}
-
-public class SetupPacketStep12Model : SetupPacketStepModel {
-    public bool? Diversity1M_WBE { get; set; }
-    public byte? Diversity1 { get; set; }
-    public byte? Diversity2 { get; set; }
-    public string Diversity2Other { get; set; }
-    public bool? Diversity3Certified { get; set; }
-    public byte? Diversity3 { get; set; }
-    public string Diversity3Other { get; set; }
 }
 
 /// <summary>

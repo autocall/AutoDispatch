@@ -18,7 +18,7 @@ public class AdRoleDto {
 }
 
 /// <summary>
-///     Ответ Api/Account/Identity и SignIn </summary>
+///     Модель главной страницы сайта (HomeController) </summary>
 public class IdentityDto {
     public Guid Id { get; set; }
     public Guid CompanyId { get; set; }

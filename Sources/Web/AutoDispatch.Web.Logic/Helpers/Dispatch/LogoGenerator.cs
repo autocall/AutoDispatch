@@ -1,4 +1,5 @@
 using SkiaSharp;
+using AutoDispatch.Web.Common;
 
 namespace AutoDispatch.Web.Logic.Helpers.Dispatch;
 
@@ -7,6 +8,11 @@ namespace AutoDispatch.Web.Logic.Helpers.Dispatch;
 ///     малый 64x64 — одна или две буквы, большой 500x100 — название; фон случайный, общий для обоих логотипов экземпляра </summary>
 public class LogoGenerator {
     private const string PngPrefix = "data:image/png;base64,";
+
+    /// <summary>
+    ///     Arial Bold V1 → Liberation Sans (OFL, метрики Arial) из Resources/Fonts, полужирный — Embolden: в образе aspnet шрифтов нет,
+    ///     и FromFamilyName("Arial") там давал логотип без текста (аудит C2). Та же замена, что для RTF→PDF (TelerikPdfHelper) </summary>
+    public static readonly SKTypeface Typeface = SKTypeface.FromFile(Path.Combine(AppSettings.FontsPath, "LiberationSans-Regular.ttf"));
 
     private readonly Random _rand = new Random();
     private SKColor? _backColor;
@@ -47,8 +53,7 @@ public class LogoGenerator {
         using var bitmap = new SKBitmap(width, height);
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(BackColor);
-        using var typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold);
-        using var font = new SKFont(typeface, fontSize);
+        using var font = new SKFont(Typeface, fontSize) { Embolden = true };
         using var paint = new SKPaint { Color = SKColors.White, IsAntialias = true };
         canvas.DrawText(text, 0, y - font.Metrics.Ascent, font, paint);
         using var image = SKImage.FromBitmap(bitmap);

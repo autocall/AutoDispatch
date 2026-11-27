@@ -15,11 +15,6 @@
         <!-- Proxy -->
         <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
         <Style x:Key="title" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource titleTextBlock}"/>
-        <Style x:Key="fieldRadPhoneTextInput" TargetType="{x:Type userControls:RadPhoneTextInput}">
-            <Setter Property="Margin" Value="0,5,5,5"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="Padding" Value="4"/>
-        </Style>
     </Window.Resources>
     <StackPanel>
         <!-- Actual Company -->

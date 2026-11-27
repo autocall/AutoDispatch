@@ -18,7 +18,6 @@
     <dialogs:BaseDispatchDialog.Resources>
         <converters:DictionaryToValueConverter x:Key="DictionaryToValueConverter"/>
         <converters:EnumToDescriptionsConverter x:Key="EnumToDescriptionsConverter"/>
-        <converters:FileNameToBitmapImageConverter x:Key="FileNameToBitmapImageConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True"/>
         <toUri:InsuranceStateTypeToUriConverter x:Key="InsuranceStateTypeToUriConverter"/>

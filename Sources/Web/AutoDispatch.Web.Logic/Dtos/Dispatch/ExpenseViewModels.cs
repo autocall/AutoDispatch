@@ -4,23 +4,8 @@ using AutoCall.Common.Extensions;
 namespace AutoDispatch.Web.Logic.Dtos.Dispatch;
 
 // Expenses/Gains груза хранятся в Load.Expenses/Gains как JSON view-моделей клиента
-// (AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses, $type с именем сборки клиента). Сервер читает их для писем
-// и ставки; типы повторяют клиентские (V1 Converters/Dispatch/Expenses), без атрибутов DescriptionShort/Calculable
-
-public enum ExpenseType {
-    [Description("")] none = 0,
-    [Description("Pickup")] pick = 1,
-    [Description("Delivery")] del = 2,
-    [Description("Warehouse")] whs = 3,
-    [Description("Ingate")] @in = 4,
-    [Description("Outgate")] @out = 5,
-    [Description("Late Delivery")] lateDelivery = 6,
-    [Description("Pick Up Late")] pickupLate = 7,
-    [Description("Other")] Other1 = 8,
-    [Description("Other")] Other2 = 9,
-    [Description("Other")] Other3 = 10,
-    [Description("Other")] Other4 = 11,
-}
+// (AutoDispatch.Logic.Contracts.ViewModels.Items.Expenses, $type с именем сборки клиента). Сервер читает только Gains — для писем
+// и ставки (Expenses не читаются, их тип удалён); типы повторяют клиентские (V1 Converters/Dispatch/Expenses), без атрибутов DescriptionShort/Calculable
 
 public enum GainType {
     [Description("")] none = 0,
@@ -43,14 +28,6 @@ public enum GainType {
 public enum WeightType : byte {
     [Description("kLbs")] kLbs,
     [Description("Lbs")] Lbs
-}
-
-public class ExpenseViewModel {
-    public decimal? Cost { get; set; }
-    public string Comment { get; set; }
-    public bool Paid { get; set; }
-    public DateTime? PaidDate { get; set; }
-    public ExpenseType Type { get; set; }
 }
 
 public class GainViewModel {

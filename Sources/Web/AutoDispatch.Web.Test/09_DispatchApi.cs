@@ -20,7 +20,7 @@ namespace AutoDispatch.Web.Test;
 
 /// <summary>
 ///     Таблица обработчиков без сервера и HTTP-тесты Api/Dispatch против поднятого сервера: конверт EventRequest с $type,
-///     как шлёт App V1 (DispatchJson), Request/RequestZip, long-polling Response с отменой предыдущего ожидания </summary>
+///     как шлёт App V1 (DispatchJson), Request, long-polling Response с отменой предыдущего ожидания </summary>
 public class DispatchApi_Test {
 
     private readonly ITestOutputHelper _output;
@@ -103,14 +103,6 @@ public class DispatchApi_Test {
         var unknown = await Read(await Post(http, "Request", new EventRequest { Name = "NoSuchMethod", Data = new GetModulesRequestData(userId) }));
         Assert.Equal(ResponseStatus.Failed, unknown.Status);
         _output.WriteLine($"Unknown: {unknown.ErrorMessage}");
-
-        // RequestZip: тот же конверт gzip-ом
-        var zipBody = new ByteArrayContent(ZipExtension.SerializeObject(new EventRequest { Name = "GetModules", Data = new GetModulesRequestData(userId) }));
-        zipBody.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        var zipResponse = await http.PostAsync($"{AppSettings.Website}/Api/Dispatch/RequestZip", zipBody);
-        Assert.Equal(HttpStatusCode.OK, zipResponse.StatusCode);
-        var zipResult = ZipExtension.DeserializeObject<EventResponse>(await zipResponse.Content.ReadAsByteArrayAsync());
-        Assert.Equal(ResponseStatus.Success, zipResult.Status);
 
         // Response без EventId — текущий Id компании сразу, без ожидания
         var stopwatch = Stopwatch.StartNew();

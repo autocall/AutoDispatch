@@ -28,11 +28,6 @@
         System.Windows.Data Error: 4 : Cannot find source for binding with reference 'ElementName=WatermarkTextBox'. BindingExpression:Path=ActualWidth; DataItem=null; target element is 'AutoCompleteBoxesWrapPanel' (Name=''); target property is 'Width' (type 'Double')
         -->
         <!-- Load types provider -->
-        <ObjectDataProvider x:Key="loadTypes" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-            <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="enums:LoadType"/>
-            </ObjectDataProvider.MethodParameters>
-        </ObjectDataProvider>
         <!-- proxy -->
         <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
         <!-- Converters -->
@@ -53,7 +48,6 @@
         <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter"/>
         <dispatch:DatCompaniesDialog_IdToActualCompanyLogoSmallConverter x:Key="IdToActualCompanyLogoSmallConverter"/>
         <telerik:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
-        <telerik:InvertedBooleanConverter x:Key="InvertedConverter"/>
         <!-- Drop down item template -->
         <DataTemplate x:Key="searchQueryLoadKey" >
             <Grid Margin="2">

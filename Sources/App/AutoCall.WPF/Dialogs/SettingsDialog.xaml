@@ -13,10 +13,6 @@
         Background="{x:Static SystemColors.ControlBrush}"
         Loaded="Window_Loaded">
     <Window.Resources>
-        <autoCall:SettingsDialog_TestPortStateToBooleanConverter x:Key="TestPortStateToBooleanConverter" Inverted="True"/>
-        <autoCall:SettingsDialog_TestPortStateToVisibilityConverter x:Key="TestPortStateToVisibilityConverter" Inverted="False"/>
-        <autoCall:SettingsDialog_TestPortStateToVisibilityConverter x:Key="TestPortStateToInvertVisibilityConverter" Inverted="True"/>
-        <autoCall:SettingsDialog_TestPortStateToColorConverter x:Key="TestPortStateToColorConverter"/>
         <converters:FullPathToFileNameConverter x:Key="FullPathToFileNameConverter"/>
         <converters:CompareConverter x:Key="InvertedCompareConverter" Inverted="True"/>
         <converters:CompareConverter x:Key="CompareConverter"/>

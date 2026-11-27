@@ -29,14 +29,6 @@ public static class DispatchStringExtension {
     }
 
     /// <summary>
-    ///     (520) 223-0230 -> 15202230230 </summary>
-    public static string ToUsPhone(string phone) {
-        if (phone == null) return null;
-        phone = OnlyNumbers(phone);
-        return phone.Length == 10 ? "1" + phone : phone;
-    }
-
-    /// <summary>
     ///     (520) 223-0230 -> 5202230230 </summary>
     public static string ToLocalPhone(string phone) {
         if (phone == null) return null;

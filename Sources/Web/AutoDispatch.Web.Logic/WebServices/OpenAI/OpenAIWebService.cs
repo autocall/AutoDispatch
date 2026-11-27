@@ -48,10 +48,6 @@ public class RequestImageData : RequestData {
     public MessageImageData[] messages { get; set; }
 }
 
-public class RequestTextData : RequestData {
-    public MessageTextData[] messages { get; set; }
-}
-
 public class MessageTextData {
     public string role { get; set; }
     public string content { get; set; }

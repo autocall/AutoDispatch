@@ -24,17 +24,13 @@
         <!-- Proxy -->
         <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
         <!-- Converters -->
-        <converters:CompareConverter x:Key="InvertedCompareContainerTypeConverter" Inverted="True" />
-        <converters:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:InvertableBooleanToVisibilityConverter x:Key="InvertableBooleanToVisibilityConverter"/>
         <dispatch:BookLoadDialog_HeaderMultiConverter x:Key="ToLoadHeaderMultiConverter"/>
         <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
         <converters:SubSizeConverter x:Key="SubSizeConverter"/>
         <dispatch:BookLoadDialog_BorderTypeToVisibilityConverter x:Key="BorderTypeToVisibilityConverter"/>
-        <dispatch:LocationDetailsMultiConverter x:Key="LocationDetailsMultiConverter"/>
         <dispatch:EditBookLoad_ToTrailerNumberConverter x:Key="ToTrailerNumberConverter"/>
-        <converters:NotNullToStringConverter x:Key="NotNullToStringConverter"/>
         <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
         <system:Int32 x:Key="SubSizeValue">5</system:Int32>
     </dialogs:BaseDispatchDialog.Resources>

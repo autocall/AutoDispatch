@@ -13,9 +13,6 @@ namespace AutoCall.Logic.Services {
     /// <summary>
     ///     Occurs when call changed </summary>
     public delegate void CallServiceCallChangedEventHandler(string recordId, CallStatus status, int? line);
-    /// <summary>
-    ///     Occurs when phone ringing </summary>
-    public delegate void CallServiceCallRingingEventHandler(string phone, string displayName);
 
     /// <summary>
     ///     Represents call service interface </summary>
@@ -81,9 +78,6 @@ namespace AutoCall.Logic.Services {
         /// <summary>
         ///     Call changed </summary>
         event CallServiceCallChangedEventHandler CallChanged;
-        /// <summary>
-        ///     Call changed </summary>
-        event CallServiceCallRingingEventHandler CallRinging;
 
         #endregion [ Events ]
     }

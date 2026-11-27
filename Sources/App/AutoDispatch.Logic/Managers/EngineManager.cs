@@ -197,12 +197,6 @@ namespace AutoDispatch.Logic.Managers {
         private bool _responseRun;
 
         /// <summary>
-        ///     Stop Notification </summary>
-        public void ResponseStop() {
-            _responseRun = false;
-        }
-
-        /// <summary>
         ///     Start Notification </summary>
         public void StartResponse(EventTypeDto[] eventTypes) {
             lock (_lock) {

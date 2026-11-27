@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Globalization;
 using System.Text;
 using AutoMapper;
 using LinqToDB;
@@ -36,6 +37,9 @@ namespace AutoDispatch.Web.Server;
 
 public class Program {
     public static void Main(string[] args) {
+        // культура — как у сервера WebV1 (en-US; пояс US Central — ENV TZ в Dockerfile): код V1 форматирует даты ToShortDateString()
+        // в письмах и PDF и считает «сегодня» по DateTime.Now. Отличие от V3 (там UTC и invariant) — AI/wiki/plan.md, аудит C1
+        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en-US");
         var builder = WebApplication.CreateBuilder(args);
         AppSettings.Init(key => builder.Configuration[key]);
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

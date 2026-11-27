@@ -19,9 +19,6 @@ public class ReportService : BaseService {
     private static readonly Dictionary<byte, string> CountryServiceTypeDictionary = new() {
         { 1, "Domestic US ONLY" }, { 2, "Domestic Canada ONLY" }, { 3, "Both Canada and US" }
     };
-    private static readonly Dictionary<byte, string> W9CompanyTypeDictionary = new() {
-        { 1, "Individual/Sole Proprietor or single-member LLC" }, { 2, "C Corporation" }, { 3, "S Corporation" }, { 4, "Partnership" }, { 5, "Trust/Estate" }, { 6, "Limited Liability Company" }, { 7, "Other" }
-    };
     private static readonly Dictionary<byte, string> W9TaxClassificationDictionary = new() {
         { 1, "C" }, { 2, "S" }, { 3, "P" }
     };

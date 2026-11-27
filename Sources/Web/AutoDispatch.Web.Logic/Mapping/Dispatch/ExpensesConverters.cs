@@ -10,12 +10,6 @@ namespace AutoDispatch.Web.Logic.Mapping.Dispatch;
 ///     Пустой или null JSON → список всех типов без сумм, как в V1 </summary>
 public static class ExpensesConverter {
 
-    public static List<ExpenseViewModel> ToExpenses(string json) {
-        var expenses = Deserialize<ExpenseViewModel>(json, "Expenses");
-        return Enum.GetValues(typeof(ExpenseType)).Cast<ExpenseType>()
-            .Select(t => expenses.FirstOrDefault(e => e.Type == t) ?? new ExpenseViewModel() { Type = t }).ToList();
-    }
-
     public static List<GainViewModel> ToGains(string json) {
         var gains = Deserialize<GainViewModel>(json, "Gains");
         return Enum.GetValues(typeof(GainType)).Cast<GainType>()

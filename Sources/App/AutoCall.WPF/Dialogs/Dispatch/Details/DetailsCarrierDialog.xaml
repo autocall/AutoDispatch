@@ -38,17 +38,11 @@
 
         <converters:AnyToVisibilityConverter x:Key="AnyToVisibilityConverter"/>
         <converters:CompareToVisibilityConverter x:Key="CompareToVisibilityConverter"/>
-        <converters:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True"/>
-        <converters:FilterCollectionMultiConverter x:Key="FilterCollectionMultiConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True"/>
         <converters:StringToFlowDocumentConverter x:Key="StringToFlowDocumentConverter"/>
         <converters:ToStringConverter x:Key="ToStringConverter"/>
         <dispatch:ContactsControl_CountToVisibilityConverter x:Key="CountToVisibilityConverter" Count="1"/>
-        <dispatch:DatCompanyDetailsDialog_VisibilityConfirmationConverter x:Key="VisibilityEditConfirmationConverter" OrderProperty="EditConfirmation"/>
-        <dispatch:DatCompanyDetailsDialog_VisibilityConfirmationConverter x:Key="VisibilityNewConfirmationConverter" OrderProperty="NewConfirmation"/>
-        <dispatch:DatCompanyDetailsDialog_VisibilityConfirmationConverter x:Key="VisibilityResendConverter" OrderProperty="Resend"/>
-        <dispatch:DatCompanyDetailsDialog_VisibilityConfirmationConverter x:Key="VisibilitySendConverter" OrderProperty="Send"/>
         <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <core:BindingProxy x:Key="proxy" Data="{Binding}"/>
         <core:BindingProxy x:Key="rootProxy" Data="{Binding RelativeSource={RelativeSource AncestorType={x:Type dispatch1:DetailsBaseDialog}, Mode=FindAncestor}}"/>

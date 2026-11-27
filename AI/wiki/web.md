@@ -11,9 +11,9 @@ Common (`AppSettings` partial: `General`, `Secrets`, `Environment.Remote/Local`)
 Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `CompanyService`, `LoginService`, `LogService`,
 `MetricService`, `MonitorService`, `PasswordService`, `DownloadService`, `MapService`, `PlaceService`, `UserSettingService`;
 `WebServices/` Mailgun и Brokersnapshot), Server (`Account`, `Admin{Companies,Users,Logs,Monitor,Metrics}`, `ApiAccount`,
-`ApiLogs`, `ApiMetrics`, `ApiMaps`, `ApiPlaces`, `Map`, `Download`, `Home`, `Test`; `RequestContextMiddleware`, `ExceptionHandler`,
+`ApiLogs`, `ApiMetrics`, `ApiMaps`, `Map`, `Download`, `Home`, `Test`; `RequestContextMiddleware`, `ExceptionHandler`,
 фоновые `ActivityFlush`, `Retention`, `MetricBackground`), фронт (`Client/` htmx + Stimulus + Tailwind v4 + daisyUI, те же
-контроллеры), тесты `01_Account`, `02_Places`, `04_Metrics`, `05_Logging`.
+контроллеры), тесты `01_Account`, `04_Metrics`, `05_Logging`. `ApiPlaces` скелета V3 и тест `02_Places` удалены 2026-11-26 — App ходит в `Api/Dispatch/Helpers/Place*` ([[audit]] E1).
 
 ## Что вырезано
 

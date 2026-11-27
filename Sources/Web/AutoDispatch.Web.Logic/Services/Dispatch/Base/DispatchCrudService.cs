@@ -76,8 +76,4 @@ public abstract class DispatchCrudService<TDto, TEntity> : DispatchBaseService
             .Set(e => e.LastModifiedDate, DateTime.UtcNow)
             .UpdateAsync();
     }
-
-    public virtual async Task DeleteIdAsync(Guid id) {
-        await Table<TEntity>().Where(e => e.EntityId == id).DeleteAsync();
-    }
 }

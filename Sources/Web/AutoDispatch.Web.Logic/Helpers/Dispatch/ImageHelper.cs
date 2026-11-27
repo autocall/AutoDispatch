@@ -28,6 +28,8 @@ public static class ImageHelper {
     }
 
     public static bool IsImage(string fileName) {
-        return fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg");
+        // аудит C5: без учёта регистра — .JPG/.PNG тоже картинки (в V1 сравнение было с учётом регистра, превью у них не было)
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension is ".png" or ".jpg" or ".jpeg";
     }
 }

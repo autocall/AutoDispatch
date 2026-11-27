@@ -14,7 +14,7 @@ namespace AutoDispatch.Web.Server.Controllers;
 
 /// <summary>
 ///     Канал App (V1 DispatchApiController, протокол — AI/wiki/protocol.md): один POST Request на все методы IDispatchService
-///     по EventRequest.Name, Response — long-polling событий компании, *Zip — то же с gzip. Тело — JSON с $type (DispatchJson),
+///     по EventRequest.Name, Response — long-polling событий компании (варианты *Zip с gzip App не вызывал — удалены). Тело — JSON с $type (DispatchJson),
 ///     читается из потока: V1-клиент шлёт его с Content-Type x-www-form-urlencoded. Ответ всегда 200 с EventResponse,
 ///     ошибка — Status Failed + ErrorMessage, как в V1. UserId в Data сверяется с токеном; статус пользователя (IsDeleted)
 ///     проверяется на каждом запросе в ApiBaseController — удалённому 401, а не 200 с Failed. Request работает только с записями
@@ -23,7 +23,6 @@ namespace AutoDispatch.Web.Server.Controllers;
 public class ApiDispatchController : ApiBaseController {
 
     private const string JsonContentType = "application/json";
-    private const string BinaryContentType = "application/octet-stream";
 
     private readonly DispatchPollRegistry _polls;
 
@@ -40,13 +39,6 @@ public class ApiDispatchController : ApiBaseController {
         return Content(DispatchJson.Serialize(response), JsonContentType);
     }
 
-    [HttpPost, DisableRequestSizeLimit]
-    public async Task<ActionResult> RequestZip() {
-        var wrapper = ZipExtension.DeserializeObject<EventRequest>(await ReadBinaryAsync());
-        var response = await InvokeAsync(wrapper);
-        return File(ZipExtension.SerializeObject(response), BinaryContentType);
-    }
-
     /// <summary>
     ///     Long-polling: ждёт события компании новее Data.EventId (DispatchService.EventNotificationAsync) </summary>
     [HttpPost]
@@ -54,13 +46,6 @@ public class ApiDispatchController : ApiBaseController {
         var wrapper = DispatchJson.Deserialize<EventRequest>(await ReadBodyAsync());
         var response = await WaitEventsAsync(wrapper);
         return Content(DispatchJson.Serialize(response), JsonContentType);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult> ResponseZip() {
-        var wrapper = ZipExtension.DeserializeObject<EventRequest>(await ReadBinaryAsync());
-        var response = await WaitEventsAsync(wrapper);
-        return File(ZipExtension.SerializeObject(response), BinaryContentType);
     }
 
     #region [ private ]
@@ -125,12 +110,6 @@ public class ApiDispatchController : ApiBaseController {
     private async Task<string> ReadBodyAsync() {
         using var reader = new StreamReader(base.Request.Body);
         return await reader.ReadToEndAsync();
-    }
-
-    private async Task<byte[]> ReadBinaryAsync() {
-        using var memory = new MemoryStream();
-        await base.Request.Body.CopyToAsync(memory);
-        return memory.ToArray();
     }
 
     #endregion [ private ]

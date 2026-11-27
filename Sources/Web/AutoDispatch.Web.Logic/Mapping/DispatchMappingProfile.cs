@@ -30,16 +30,10 @@ public class DispatchMappingProfile : Profile {
         CreateMap<SetupPacketStep00Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep01Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep02Model, SetupPacketDto>().ReverseMap();
-        CreateMap<SetupPacketStep03Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep04Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep05Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep06Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep07Model, SetupPacketDto>().ReverseMap();
-        CreateMap<SetupPacketStep08Model, SetupPacketDto>().ReverseMap();
-        CreateMap<SetupPacketStep09Model, SetupPacketDto>().ReverseMap();
-        CreateMap<SetupPacketStep10Model, SetupPacketDto>().ReverseMap();
-        CreateMap<SetupPacketStep11Model, SetupPacketDto>().ReverseMap();
-        CreateMap<SetupPacketStep12Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep13Model, SetupPacketDto>().ReverseMap();
         CreateMap<SetupPacketStep14Model, SetupPacketDto>().ReverseMap();
     }

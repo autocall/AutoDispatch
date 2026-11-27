@@ -621,3 +621,66 @@ B11 — подписи «City, ST» проверены в App: поиск без
 ## [2026-11-26] fix | [[audit]] D2, D5, D6, D15–D17, D19, D20, D22 — ошибки V1 и клиент
 
 Воспроизведено тестами `19_V1Bugs` на старом коде и исправлено: D2 — строка кастомизации чужой компании dispatch из формы переезжала в компанию Owner (`DispatchCompanyService` пропускает её); D5 — `SaveLoads` с новым подгрузом без `IndexExtra` падал (фильтр `!=` → `==`, `NextIndexExtra` без пустых; из App не достижимо — App нумерует сам); D6 — `LoadHistory2` считал удалённые (DDM: 211 вместо 164, 42 строки на странице из 50), `[IsDeleted]=0` и последняя страница при выходе за конец. D22: `Confirmation/Download` — без удалённых грузов; таймаут SMTP в .NET 10 действует и на `SendMailAsync` (замечание аудита верно только для V1) — по умолчанию 100 с вместо 10. App (проверено сборкой Debug и Release): D15 `Connect(3000)` к MicroSIP, D16 выход при завершении Dispatcher, D17 флаг `_closed` в диалогах WebView2, D19 ссылка Custom Status из `Settings.WebUrl`, итоги компании `D2FD7AFF` и Debug-скан с путём V1 убраны, кнопка Test — только Debug; D20 кнопка Debug — только Debug-сборка. Тесты, меняющие локальную БД (15, 16, 17, 19), — в одной последовательной коллекции xUnit `LocalData`. Web 65/65 дважды. D7, D12, D13, D14, D18, D21 — решено не трогать.
+
+## [2026-11-26] fix | [[audit]] E2, E3 — панель входящего звонка и ресурсы App удалены
+
+Решения пользователя: Bria не переносится — цепочка входящего звонка (сигнал давал только V1 `BriaCallService`) удалена целиком: `CallRinging`/`OnRinging`, обработчики и панель `MainWindow`, `InboundCallViewModel`; D18 закрыт. AutoCall теперь отдельно — удалены ресурсы без ссылок: 66 `<Resource>` (иконки лоадбордов, брокеров, телефонии модуля AutoCall), 17 файлов вне csproj, 12 звуков `sounds-*.wav`, `Properties/Resources.resx` с дизайнером — 97 файлов, 3,6 МБ, `AutoDispatch.dll` Release 4,07 → 2,86 МБ. Иконки CarrierView (имена собираются в конвертере), SDK софтфона и `telephone-ring.wav` оставлены. Проверка: поиск по имени без учёта регистра, после удаления все 71 путь `Resources/…` в XAML и коде существуют (кроме `zoiper.png` — только в комментарии и в HEAD тоже не было); сборка Debug и Release. App не запускался. Мёртвый код (остальное E) — не трогать до решения пользователя.
+
+## [2026-11-26] fix | [[audit]] E2, E3 — один экземпляр App, раскладка панелей не сохраняется
+
+Один экземпляр: в V1 — запускатель `AutoCall.Launch` (mutex + `WM_SHOWME`), в AutoCall V3 и здесь запрета не было. Восстановлен в `App.Application_Startup` (mutex в сеансе Windows, Debug — своё имя), проверен двумя запусками; отличие от V3 — [[plan]] «Один экземпляр App». `DockingLayout`: V1 писал раскладку при закрытии, а загрузку закомментировал — запись, методы `SettingsService` и секция в скрипте переноса убраны, [[user-settings]] обновлён. Сборка App Debug и Release.
+
+## [2026-11-26] fix | [[audit]] E — удалён мёртвый код группы «смело удалять» (E1–E3)
+
+Перед удалением каждый пункт перепроверен по именам типов и методов. Аудит искал по имени файла и дал ложные пункты: атрибуты валидации
+`LoadViewModel`/`TrailerViewModel`, `FullPathToFileNameConverter`, `OpenDetailsHandler`, `SyncLocationClass`, `SearchTrailerWarehouseViewModel`,
+`ApiLoginRequest.Version` используются; ветка `AgreementAgree` версии 1 в `Step04` достижима (packet'ы версии 0–1) и, похоже, ломает шаг 4
+у старых packet'ов — не тронута, вынесена отдельно. Скелет V3 (`_l.d/dt`, `GetEmail`, `IsInRole(Enum)`, `NotDefaultAttribute`, `IApi`) оставлен.
+Web: `ApiPlacesController` + тест `02_Places`, `ApiAccount.ChangePassword/Identity` + `ChangePasswordDto` (решение пользователя: только здесь,
+в V3 не трогать — [[plan]] «Мёртвые API скелета V3»), `RequestZip/ResponseZip`, шаги регистрации 3 и 8–12 (действия, модели, маппинг),
+`FixLocationLoadsService`, текстовая ветка OpenAI (PdfPig — в тестовый проект), 9 методов, `Appendix1.rtf`.
+App: `ResponseStop`, 4 метода `DispatchService`, 19 классов `Logic.Contracts`, 45 файлов WPF (конвертеры, диалоги, расширения, `Annotations.cs`),
+49 неиспользуемых ресурсов XAML и 4 словаря, `ViewHistoryCarrierCommand`, `EditCheckCommand`, параметры `MapRouteHelper`, `App.IsDebug`.
+Проверка: Web build + тесты 64/64; App Debug/Release собираются (Release `AutoDispatch.dll` 2,86 → 2,75 МБ), App запускается до окна входа.
+Главное окно и диалоги, где убраны ресурсы, вручную не открывались. Страницы: [[audit]], [[plan]], [[protocol]], [[setup-packet]], [[web]], [[web-logic]], [[app]], [[deploy]].
+
+## [2026-11-26] check | Прокликан App после удаления мёртвого кода; баг шага 4 setup packet'а записан
+
+App (Debug, под отладчиком VS, локальный сервер): пять досок, Loads History с поиском, Trailer (`DetailsTrailerLayoutDialog`), Edit Load
+с дочерним грузом, New Load, View Carrier, Edit Contacts, Edit Carrier, Brokers → Edit Broker, Factoring Company, Settings — без ошибок.
+XAML Binding Failures — только «ItemTemplate … ignored … RadWatermarkTextBox» (×28), к удалённым ресурсам не относится.
+Не проверен `EditContainerLoadControl` (нет контейнерного груза).
+Баг `Step04` для packet'ов версии 0–1 (форма не шлёт `AgreementAgree`, сохранение молча не проходит) — решение пользователя: оставить как есть;
+записан в [[setup-packet]], [[plan]] «SetupPacket: views версии 1», [[audit]] E1.
+
+## [2026-11-26] fix | [[audit]] E1 — имя пакета в package-lock.json
+
+`AutoDispatch.Web.Server/package-lock.json`: `name` `autocall.web` → `autodispatch.web` (две строки, как в `package.json`); `npm ci --dry-run` — без ошибок.
+`npm install --package-lock-only` дописывал посторонние записи (wasm-зависимости Tailwind) — не принято, правка только имени.
+Остальные пункты раздела E — решение пользователя: пока оставить как есть.
+
+## [2026-11-26] lint | [[audit]] F — расхождения wiki с кодом исправлены
+
+Сверено с кодом: `IDispatchService` — 79 методов (`LoadHistory2` и др.), `DispatchMap.EntityTypes` — 27, `ApiBaseController` проверяет `IsDeleted`
+на каждом запросе, `HistoryCleanupBackgroundService` — только чистка истории. Исправлено: [[protocol]] (79, `FileDelete`/`FileRename`,
+`ProviderEnabled/Disabled`), [[plan]] (§0 — эталоны V3 читаются по месту; §2 — из 29 сущностей V1 перенесены 27; этап 4 — `RequestZip/ResponseZip`
+удалены), [[app]] (`ObjectConverter` удалён, `Session` не вызывается), [[web-logic]] (фоновая чистка истории без индекса грузов).
+Строки про `IsDeleted`, `DockingLayout`, `Api/Places`/`Identity`, PdfPig уже были закрыты раньше — помечены ✅.
+
+## [2026-11-26] fix | [[audit]] C1 — часовой пояс и культура контейнера как у сервера WebV1
+
+V3 их не задаёт (UTC, invariant), но код V1 считает «сегодня» по `DateTime.Now` и форматирует даты `ToShortDateString()`. Сервер WebV1:
+пояс US Central — из боевой БД (`DeliveredDate` по `Now` против `LastModifiedDate` по `UtcNow`: −5 ч летом, −6 ч зимой), культура en-US —
+`8/22/2025` в серверном `setup_packet_2025_08_22.pdf` (confirmation не подходит: его формирует App). Сделано: `ENV TZ=America/Chicago`
+в `Deploy/AutoDispatch.Web/Dockerfile`, en-US по умолчанию в `Program.cs`; образ `aspnet:10.0` — Ubuntu 24.04 с `tzdata` и `libicu74`
+(это же снимает опасение C3). Сборка сервера — без ошибок. Отличие от V3 — [[plan]] «Часовой пояс и культура сервера».
+Проверить после публикации: `date` в контейнере, дата в письме и PDF.
+
+## [2026-11-26] fix | [[audit]] C2, C4, C5 — шрифт логотипа, дата документов, регистр расширений
+
+C2: `LogoGenerator` рисует `LiberationSans-Regular.ttf` из `Resources/Fonts` (Embolden вместо Arial Bold), тест `08.Test14`.
+C4: `FileDto.CreatedDate` — `LastWriteTime`; в [[data-migration]] «Файлы» — FileZilla с сохранением времени. На хосте файлов ещё нет
+(`/files` контейнера — только `_recycle`, `_temp`), проверка — после заливки.
+C5: оказался багом V1, а не Linux (`EndsWith` с учётом регистра и на Windows; в выборке 738 из 14 276 файлов `.PDF/.PNG/.JPG`) — расширения без
+учёта регистра в `ImageHelper.IsImage` и `GenerateMergedInvoice`, тест `08.Test15`, отступление — [[plan]] «Расширения файлов без учёта регистра».
+Регистр имён БД ↔ диск в выборке совпадает, подкаталогов `Insurance` нет — без изменений. Сборка Web, тесты 71/71.

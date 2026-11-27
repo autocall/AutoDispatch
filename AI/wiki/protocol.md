@@ -16,7 +16,7 @@ public class EventRequest {
 ```
 
 Ответ `EventResponse { Status (Success/Failed), Data (*ResponseData), ErrorMessage, EventId }`.
-`RequestZip/ResponseZip` — то же с gzip тела, используется для `LoadLoadsZip`.
+`RequestZip/ResponseZip` V1 — то же с gzip тела; в App V1 вызов был закомментирован, в AutoDispatch V3 не переносятся (сервер их удалил 2026-11-26, [[audit]] E1).
 
 ## Как сервер вызывает метод (V1, `DispatchApiController.cs:94-143`)
 
@@ -62,7 +62,7 @@ if (result is Task) { await task; result = task.GetType().GetProperty("Result").
 `Controllers/ApiDispatchController.cs` — `[Route("Api/Dispatch/[action]")]` на `ApiBaseController` (JWT Bearer). Все четыре действия — POST
 (V1-клиент шлёт и `Response` POST-ом с `EventRequest` в теле); тело читается из потока, а не `[FromBody]` — клиент ставит
 `Content-Type: application/x-www-form-urlencoded`. Ответ всегда 200 с `EventResponse`, ошибка — `Status = Failed` + `ErrorMessage` (как V1);
-`InfoException` (V1 `DispatchException`) в лог не пишется. `RequestZip/ResponseZip` — `ZipExtension` (gzip + UTF-16 JSON), `application/octet-stream`.
+`InfoException` (V1 `DispatchException`) в лог не пишется.
 
 - `Logic/Services/Dispatch/DispatchRequestHandlers.cs` — `All: Name → DispatchRequestHandler {RequestType, MinAccess, Invoke}`, строится один раз
   из методов `IDispatchService` с одним параметром `*RequestData`; `Invoke` — скомпилированный Expression (`Task<T>` и синхронные методы приводятся
@@ -74,9 +74,9 @@ if (result is Task) { await task; result = task.GetType().GetProperty("Result").
   того же пользователя (V1 `CurrentTasks`), `End` снимает своё; отменённый запрос получает `Failed` с `EventId` = входящий, без записи в лог. `Count` — для метрик (этап 9).
 - `DispatchJson.MscorlibBinder.BindToType` — `$type` только из сборок `AutoDispatch.Dtos`, `System.Private.CoreLib`, `System.Collections`
   (рекурсивно по generic-аргументам и массивам), иначе `JsonSerializationException`.
-- `[DisableRequestSizeLimit]` на `Request/RequestZip` (V1 `maxRequestLength` ≈ без ограничения, `FileSave` несёт файл в JSON); в nginx нужен `client_max_body_size`.
+- `[DisableRequestSizeLimit]` на `Request` (V1 `maxRequestLength` ≈ без ограничения, `FileSave` несёт файл в JSON); в nginx нужен `client_max_body_size`.
 - Тест `AutoDispatch.Web.Test/09_DispatchApi.cs`: таблица и роли без сервера; whitelist binder; HTTP против поднятого сервера — SignIn, `GetModules`,
-  чужой `UserId`, неизвестное имя, `RequestZip`, `Response` без `EventId` (текущий Id сразу), второй опрос отменяет первый, пустой ответ по `EventWaitTimeout`.
+  чужой `UserId`, неизвестное имя, `Response` без `EventId` (текущий Id сразу), второй опрос отменяет первый, пустой ответ по `EventWaitTimeout`.
 
 ## Остальные эндпоинты App (маршруты V3, решено 2026-11-17)
 
@@ -108,15 +108,15 @@ JWT Bearer, ответ — данные как есть через `JsonSuccess`
 Не переносятся: `api/DatCompany/SendSetupPocket` (на сервере V1 отсутствует), `Api/Account/Logout` (JWT без серверной сессии).
 `/Temp/{guid}.png` — статика из `AppSettings.TempPath` без авторизации, как `Web/Temp` V1 (OpenAI забирает картинки по URL).
 
-## Методы `IDispatchService` (V1: 77; V3: 74)
+## Методы `IDispatchService` (V1: 77; V3: 79)
 
 GetUsers GetModules Location*Changed(5) LoadHistory2 LoadHistoryLocation*(5) LoadHistoryChangesLoad LoadDrivers LoadTrucks
 LoadTrailers LoadWarehouses LoadYards LoadLoads LoadLoadsZip LoadHistoryObjects LoadTotalHistoryLoads LoadDatCompanies
 LoadDatDrivers LoadSetupPackets LoadShipperReceiverCompanies LoadCustomerCompanies Save*(Driver, Truck, Trailer, Warehouse, Yard,
 Load, Loads, DatCompany, DatDriver, SetupPacket, FactoringCompany) FixLoad Delete*(Driver, Truck, Trailer, Warehouse, Yard, Load,
 Loads, DatCompany, DatDriver, SetupPacket, Defect, DefectRepair) LoadDefects EventNotificationAsync FilesLoad FileLoad FileSave
-InsuranceLoad BindLoads InvoiceSend InvoiceMerge ConfirmationSend ConfirmedSend SetupPacketInviteSend SetupPacketEditSend
+FileDelete FileRename InsuranceLoad BindLoads InvoiceSend InvoiceMerge ConfirmationSend ConfirmedSend SetupPacketInviteSend SetupPacketEditSend
 UndoPreview UndoApply GetStatistics GetDatCompanyStatictics SendSms SendSchemeEmail BnsfRefresh
-Enable/Disable/SyncCarrierViewTracker.
+Enable/Disable/SyncCarrierViewTracker, ProviderEnabled/ProviderDisabled (заглушки V1, App не вызывает — [[audit]] E4).
 
 Не переносятся: GetTodayMessages, SendMessage (чат, решено 2026-11-11), ReportSimilarLoads (лоадборд AutoCall, рекомендация).

@@ -56,13 +56,6 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
         return SetEmptyData(DispatchCompanyConverter.ToDto(store, Mapper));
     }
 
-    /// <summary>
-    ///     Полная карточка с шаблонами (ConfirmationData/BOLData/InvoiceData) для писем и печати </summary>
-    public async Task<ActualCompanyDto> GetWithDataAsync(Guid id) {
-        var store = await GetByIdAsync<DispatchCompany>(id);
-        return store == null ? null : DispatchCompanyConverter.ToDto(store, Mapper);
-    }
-
     public async Task<List<ActualCompanyDto>> SearchFor2Async(System.Linq.Expressions.Expression<Func<DispatchCompany, bool>> predicate) {
         var stores = await Alive<DispatchCompany>().Where(predicate).ToListAsync();
         var ids = stores.Select(e => e.EntityId).ToList();
@@ -155,10 +148,5 @@ public class DispatchCompanyService : DispatchCrudService<ActualCompanyDto, Disp
     ///     OAuth V1 hasBnsfRailway: у компании есть ActualCompany с логином BNSF </summary>
     public Task<bool> HasBnsfRailwayAsync(Guid companyId) {
         return Alive<DispatchCompany>().AnyAsync(e => e.CompanyId == companyId && e.BnsfLogin != null);
-    }
-
-    public async Task<DateTime?> GetLastDoneAsync() {
-        var company = await Alive<DispatchCompany>().Where(e => e.BnsfLastDone != null).OrderByDescending(e => e.BnsfLastDone).FirstOrDefaultAsync();
-        return company?.BnsfLastDone;
     }
 }

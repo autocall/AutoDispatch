@@ -28,7 +28,6 @@ namespace AutoCall.Logic.Settings {
         #region [ Sections ]
 
         private const string BoardsSection = "BoardsSettings2";
-        private const string DockingLayoutSection = "DockingLayout";
         private const string FiltersColumnsSection = "FiltersColumns";
         private const string DefaultLoadSection = "DefaultLoadSettings";
         private const string DatCompaniesDialogGridViewSection = "DatCompaniesDialogGridView";
@@ -227,17 +226,7 @@ namespace AutoCall.Logic.Settings {
 
         #endregion [ Filter Columns ]
 
-        #region [ Docking Layout ]
-
-        public void SetDockingLayout(byte[] binary) {
-            Set(DockingLayoutSection, binary);
-        }
-
-        public byte[] GetDockingLayout() {
-            return Get<byte[]>(DockingLayoutSection);
-        }
-
-        #endregion [ Docking Layout ]
+        // V1 DockingLayout (раскладка панелей RadDocking) — не читалась с V1, запись убрана (аудит E2)
 
         #region [ Windows ]
 

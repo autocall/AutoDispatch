@@ -15,9 +15,6 @@ namespace AutoDispatch.Logic.Services {
     /// <summary>
     ///     Сервер ответил 401 (токен истёк, пользователь удалён): true — выполнен повторный вход, false — App закрывается </summary>
     public delegate System.Threading.Tasks.Task<bool> SessionExpiredHandler();
-    /// <summary>
-    ///     Message received delegate </summary>
-    public delegate void MessageReceivedHandler(MessageDto message);
     ///// <summary>
     /////     Event in module received delegate </summary>
     ///// <param name="module">Module enum</param>

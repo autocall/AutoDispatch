@@ -26,7 +26,6 @@
         <!-- Converters -->
         <c:AnyToBooleanConverter x:Key="AnyToBooleanConverter" />
         <c:InverseBooleanConverter x:Key="InvertedBooleanConverter" />
-        <c:CompareToVisibilityConverter x:Key="InvertedCompareToVisibilityConverter" Inverted="True" />
         <c:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter" />
         <c:NotEmptyStringToBoolConverter x:Key="NotEmptyStringToBoolConverter" />
         <c:NotNullToBoolConverter x:Key="ObjectToBoolConverter" />
@@ -35,7 +34,6 @@
         <c:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
         <c:ToStringConverter x:Key="ToStringConverter" />
         <c:BooleanToStringConverter x:Key="BooleanToLateConverter" TrueString="Yes" FalseString=""/>
-        <c:BooleanToBrushConverter x:Key="BooleanToBrushLateConverter" TrueBrush="Red" FalseBrush="Transparent"/>
         <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <dispatch:DispatchBoard_AnyChildrenConverter x:Key="AnyChildrenConverter"/>
         <dispatch:EditLoadDialog_PalletTypeToBrushConverter x:Key="palletTypeToBrushConverter"/>

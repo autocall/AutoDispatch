@@ -20,13 +20,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/AutoDispatch;component/Themes/AddRoundButton.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/CrossCheckBoxStyle.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/ExpanderHorizontal.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/ExpanderVertical.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/FixedGridSplitterStyle.xaml" />
-                <ResourceDictionary Source="/AutoDispatch;component/Themes/GridViewCellStyle.xaml" />
-                <ResourceDictionary Source="/AutoDispatch;component/Themes/GridViewRowStyle.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/GridViewRowStyle2.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/OneStarRadRatingItemStyle.xaml" />
                 <ResourceDictionary Source="/AutoDispatch;component/Themes/RadButtonControlTemplate.xaml" />
@@ -40,7 +37,6 @@
             <autoCall:Board_EquipmentTypeToCodeConverter x:Key="EquipmentTypeToCodeConverter"/>
             <c:BooleanToBrushConverter x:Key="BoolToBlackGrayConverter" TrueBrush="Black" FalseBrush="Gray"/>
             <c:ColumnsToMenuItemsConverter x:Key="ColumnsToMenuItemsConverter"/>
-            <c:EmptyConverter x:Key="EmptyConverter"/>
             <c:GroupColumnsToMenuItemsConverter x:Key="GroupColumnsToMenuItemsConverter"/>
             <c:PercentConterter x:Key="PercentConterter"/>
             <c:TextToUpperConverter x:Key="TextToUpperConverter" />
@@ -67,7 +63,6 @@
             <telerik:Windows8Theme x:Key="Windows8Theme" />
             <telerik:VistaTheme x:Key="Theme" />
             <telerik:Office_BlackTheme x:Key="Office_BlackTheme" />
-            <telerik:TransparentTheme x:Key="TransparentTheme" />
             <telerik:SummerTheme x:Key="SummerTheme" />
             <telerik:MaterialTheme x:Key="MaterialTheme" />
 
@@ -100,41 +95,12 @@
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Margin" Value="3,0,0,0"/>
             </Style>
-            <Style x:Key="valueRichTextBox" TargetType="{x:Type RichTextBox}">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="FontWeight" Value="Bold"/>
-                <Setter Property="HorizontalAlignment" Value="Left"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="IsReadOnly" Value="True"/>
-                <Setter Property="behaviors:TextBoxBehavior.TripleClickSelectAll" Value="True" />
-            </Style>
-            <Style x:Key="valueBindableTextBlock" BasedOn="{StaticResource valueTextBlock}" TargetType="{x:Type TextBlock}">
-                <EventSetter Event="MouseUp" Handler="valueBindableTextBlock_Comment_OnMouseUp"/>
-                <Setter Property="Cursor" Value="{x:Static Cursors.IBeam}"/>
-                <Setter Property="telerik:RadContextMenu.ContextMenu">
-                    <Setter.Value>
-                        <telerik:RadContextMenu>
-                            <telerik:RadMenuItem Header="Copy" Click="{x:Static helpers:CopyMenuHelper.Copy_OnClick}"/>
-                        </telerik:RadContextMenu>
-                    </Setter.Value>
-                </Setter>
-            </Style>
 
-            <Style x:Key="titleGroupBox" TargetType="{x:Type GroupBox}" BasedOn="{StaticResource {x:Type GroupBox}}">
-                <Setter Property="Foreground" Value="Gray"/>
-                <Setter Property="BorderBrush" Value="Silver"/>
-            </Style>
             <Style x:Key="titleTextBlock" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
                 <Setter Property="Margin" Value="0,5,5,5"/>
                 <Setter Property="HorizontalAlignment" Value="Right"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Foreground" Value="Gray"/>
-            </Style>
-            <Style x:Key="errorTextBlock" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
-                <Setter Property="Margin" Value="0,5,5,5"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
-                <Setter Property="Foreground" Value="Red"/>
             </Style>
 
             <Style x:Key="ButtonInDetailsStyle" TargetType="Button">
@@ -249,19 +215,11 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
-            <Style x:Key="fieldRadMaskedNumericInput" TargetType="{x:Type telerik:RadMaskedNumericInput}">
-                <Setter Property="HorizontalAlignment" Value="Left"/>
-                <Setter Property="Margin" Value="0,5,5,5"/>
-                <Setter Property="Padding" Value="4"/>
-            </Style>
             <!--*Skip! it doesn't good control <Style x:Key="fieldRadMaskedCurrencyInput" TargetType="{x:Type telerik:RadMaskedCurrencyInput}">
                 <Setter Property="HorizontalAlignment" Value="Left"/>
                 <Setter Property="Margin" Value="0,5,5,5"/>
                 <Setter Property="Padding" Value="4"/>
             </Style>-->
-            <Style x:Key="fieldRadSlider" TargetType="{x:Type telerik:RadSlider}">
-                <Setter Property="Margin" Value="0,5,5,5"/>
-            </Style>
             <!-- V1: SliderControl — диалоги паттернов DatPower (модуль AutoCall) -->
             <!--            <Style x:Key="fieldSliderControl" TargetType="{x:Type uc:SliderControl}">
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -310,16 +268,6 @@
                     <Trigger Property="IsEnabled" Value="False">
                         <Setter Property="BorderBrush" Value="#000000"/>
                         <Setter Property="Background" Value="#CBCBCB"/>
-                        <Setter Property="Foreground" Value="#5e5e5e"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-            <Style x:Key="fieldListView" TargetType="{x:Type ListView}">
-                <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                <Setter Property="Margin" Value="0,5,5,5"/>
-                <Setter Property="Padding" Value="0"/>
-                <Style.Triggers>
-                    <Trigger Property="IsEnabled" Value="False">
                         <Setter Property="Foreground" Value="#5e5e5e"/>
                     </Trigger>
                 </Style.Triggers>
@@ -452,40 +400,6 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            <Style x:Key="MapButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
-                <Setter Property="Margin" Value="5"/>
-                <Setter Property="IsDefault" Value="True"/>
-                <Setter Property="ContentTemplate">
-                    <Setter.Value>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/AutoDispatch;component/Resources/map-pointer-icon.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-            <Style x:Key="AddButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
-                <Setter Property="Margin" Value="5"/>
-                <Setter Property="HorizontalAlignment" Value="Left"/>
-                <Setter Property="Content" Value="Add"/>
-                <Setter Property="ContentTemplate">
-                    <Setter.Value>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/AutoDispatch;component/Resources/add.png" Height="16" Width="16" Margin="0,0,3,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-            <Style x:Key="DeleteButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
-                <Setter Property="Margin" Value="5"/>
-                <Setter Property="HorizontalAlignment" Value="Left"/>
-                <Setter Property="Content" Value="Delete"/>
-            </Style>
             <Style x:Key="CancelButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="{x:Type Button}">
                 <Setter Property="IsCancel" Value="True"/>
                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -554,48 +468,8 @@
             <SolidColorBrush x:Key="ActiveBorderBrush" Color="DarkBlue" />
 
             <!-- Style for a ListBoxItem displayed inside the embedded list box, to make it a check box when mode = multiple. -->
-            <Style x:Key="CheckBoxedItemStyleKey" TargetType="{x:Type ListBoxItem}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                            <Border Background="Transparent">
-                                <CheckBox Focusable="false" 
-                                      Foreground="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"
-                                      BorderBrush="{Binding Foreground, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Control}}}"                                           
-                                      Content="{TemplateBinding ContentPresenter.Content}"  
-                                      IsChecked="{Binding IsSelected, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
 
             <!-- Style for a ListBoxItem displayed inside the embedded list box, when mode = single -->
-            <Style x:Key="NormalItemStyleKey" TargetType="{x:Type ListBoxItem}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                            <Border x:Name="border" 
-                                Margin="0,-1"
-                                Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="1"
-                                SnapsToDevicePixels="true">
-                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="BorderBrush" Value="{x:Static SystemColors.HighlightBrush}" />
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
-                                    <Setter Property="Foreground" Value="{x:Static SystemColors.HighlightTextBrush}" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
 
             <!-- ListViewItem -->
             <Style x:Key="LoadsListViewItemStyle" TargetType="{x:Type ListViewItem}">
@@ -634,28 +508,6 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="LoadsListView2Style" TargetType="{x:Type ListView}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ListView}">
-                            <Border BorderBrush="{TemplateBinding Border.BorderBrush}" BorderThickness="{TemplateBinding Border.BorderThickness}" x:Name="Bd" Background="{TemplateBinding Panel.Background}" SnapsToDevicePixels="True" Padding="0">
-                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                            </Border>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-            <Style x:Key="LoadsRadTreeView2Style" TargetType="{x:Type telerik:RadTreeView}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type telerik:RadTreeView}">
-                            <Border BorderBrush="{TemplateBinding Border.BorderBrush}" BorderThickness="{TemplateBinding Border.BorderThickness}" x:Name="Bd" Background="{TemplateBinding Panel.Background}" SnapsToDevicePixels="True" Padding="0">
-                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                            </Border>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
 
             <Style x:Key="FocusVisualStyle">
                 <Setter Property="Control.Template">
@@ -673,67 +525,8 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="CreateNewItemButtonStyle" TargetType="{x:Type Button}">
-                <Setter Property="OverridesDefaultStyle" Value="True" />
-                <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualStyle}" />
-                <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="TextBlock.FontSize" Value="10" />
-                <Setter Property="BorderBrush" Value="{x:Static SystemColors.WindowTextBrush}" />
-                <Setter Property="Template" >
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type Button}">
-                            <Border Padding="3,0" BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Background="{TemplateBinding Background}"
-                                SnapsToDevicePixels="True">
-                                <ContentPresenter Content="{TemplateBinding Content}" />
-                            </Border>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-                <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{StaticResource ActiveButtonBrush}"/>
-                        <Setter Property="BorderBrush" Value="{StaticResource ActiveBorderBrush}"/>
-                    </Trigger>
-                    <Trigger Property="IsPressed" Value="True">
-                        <Setter Property="Background" Value="{StaticResource ActiveButtonBrush}"/>
-                        <Setter Property="BorderBrush" Value="{StaticResource ActiveBorderBrush}"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
 
             <!-- Template for the toggle button which is the main view of the control -->
-            <ControlTemplate x:Key="MultiSelectComboBoxToggleButtonTemplate" TargetType="{x:Type ToggleButton}">
-                <Border BorderThickness="{TemplateBinding BorderThickness}"
-                        Background="{TemplateBinding Background}" 
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        SnapsToDevicePixels="true">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <ContentPresenter Content="{TemplateBinding Content}" />
-
-                        <Border x:Name="arrowBorder" Grid.Column="1" Width="16" BorderBrush="{TemplateBinding BorderBrush}">
-                            <Path HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                Fill="{TemplateBinding BorderBrush}" Data="M 0 0 L 7 0 L 3.5 4 Z" />
-                        </Border>
-                    </Grid>
-                </Border>
-                <ControlTemplate.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="arrowBorder" Property="Background" Value="{StaticResource ActiveButtonBrush}" />
-                        <Setter TargetName="arrowBorder" Property="BorderThickness" Value="1,0,0,0" />
-                    </Trigger>
-                    <Trigger Property="IsChecked" Value="True">
-                        <Setter TargetName="arrowBorder" Property="Background" Value="{StaticResource ActiveButtonBrush}" />
-                        <Setter TargetName="arrowBorder" Property="BorderThickness" Value="1,0,0,0" />
-                    </Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate>
 
             <Style x:Key="HelpFilterStyle" TargetType="Image" BasedOn="{StaticResource ResourceKey=BoardButtonImageStyle}">
                 <Setter Property="Source" Value="/AutoDispatch;component/Resources/info_blue.png"/>

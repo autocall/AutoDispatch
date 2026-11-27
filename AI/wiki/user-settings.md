@@ -18,7 +18,7 @@ App V1 читал и писал настройки через WCF `svc/SettingsS
 | Секция | Содержимое | Где используется в V1 |
 |---|---|---|
 | `BoardsSettings2` | `Dictionary<BoardType, BoardSettings2>` — только ключи `DispatchCarrier`, `DispatchBroker`, `DispatchCarrierAccount`, `DispatchBrokerAccount`, `DispatchCarrierHistory` (колонки, зум, сплиттер, включён ли борд); ключи `DatPower*` отбрасываются | `Board`, `MainWindow` |
-| `DockingLayout` | `byte[]` — XML раскладки `RadDocking` (в нём и панели DatPower — App при загрузке пропускает неизвестные) | `MainWindow` |
+| ~~`DockingLayout`~~ | **не переносится и не пишется с 2026-11-26** ([[audit]] E2): `byte[]` — XML раскладки панелей `RadDocking`; V1 сохранял при закрытии, но загрузку закомментировал («sometimes panels will hidden») — раскладка не восстанавливалась | V1 `MainWindow` (только запись) |
 | `FiltersColumns` | `Dictionary<byte, FiltersColumnsSettings>` — именованные фильтры бордов | `DispatchBoardBase`, `FiltersDialog` |
 | `DefaultLoadSettings` | значения нового груза (оборудование, длина, температура…) — `GetDefaultPatternSettings(Dispatch*)` | `DispatchActions` |
 | `DatCompaniesDialogGridView` | `byte[]` — раскладка грида Telerik (`PersistenceManager`) | `DatCarriersDialog`, `DatBrokersDialog`, `SearchDatCompanyDialog`, `HistoryLoad*Dialog` |

@@ -29,9 +29,7 @@
         <converters:InvertableBooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionConverter"/>
         <converters:EnumToDescriptionConverter x:Key="EnumToDescriptionOrToStringConverter" AllowToString="True"/>
-        <telerik:InvertedBooleanConverter x:Key="InvertedConverter"/>
         <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
-        <converters:NotNullToBoolConverter x:Key="NullToBoolConverter" Invert="True"/>
         <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="True"/>
         <converters:CompareToVisibilityConverter x:Key="CompareToVisibilityConverter"/>

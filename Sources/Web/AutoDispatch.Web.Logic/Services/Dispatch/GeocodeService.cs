@@ -244,7 +244,7 @@ public class GeocodeService : BaseService {
 
     /// <summary>
     ///     Autocomplete (New) через Safer в форме legacy — {predictions:[{description, place_id, structured_formatting, types}], status}:
-    ///     её читают WPF (PlaceAutocompleteJsonParser) и FixLocationLoadsService. Ответ — gzip JSON (ZipExtension), как в V1 </summary>
+    ///     её читает WPF (PlaceAutocompleteJsonParser). Ответ — gzip JSON (ZipExtension), как в V1 </summary>
     public async Task<byte[]> GetPlaceAutocompleteAsync(string search) {
         var key = "Place Autocomplete " + search;
         if (_placeCache.TryGetValue(key, out var cached)) {

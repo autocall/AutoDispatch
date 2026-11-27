@@ -2250,22 +2250,6 @@ Do you want to link the loads?",
             }
         }
 
-        public void ViewHistoryCarrierAction(Wrapper1LoadViewModel wrapper) {
-            StackLogger.Push($"ViewHistoryCarrierAction");
-            if (wrapper.HistoryDatCompany != null) {
-                var dialog = new DetailsCarrierDialog(
-                    _dispatchService,
-                    _manager.GetCallService,
-                    _mapper,
-                    wrapper.HistoryDatCompany,
-                    DispatchBoardViewModel.Instance.DatDrivers,
-                    DispatchBoardViewModel.Instance.Loads,
-                    DispatchBoardViewModel.Instance.ActualCompanies,
-                    wrapper.ActualCompany);
-                dialog.ShowDialog();
-            }
-        }
-
         public void ViewHistoryLocationsAction(Wrapper1LoadViewModel wrapper) {
             StackLogger.Push($"ViewHistoryLocationsAction");
             var load = wrapper.Load;

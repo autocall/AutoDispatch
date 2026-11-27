@@ -1,13 +1,11 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using LinqToDB;
 using LinqToDB.Async;
 using Newtonsoft.Json;
 using SkiaSharp;
-using UglyToad.PdfPig;
 using AutoCall.Common.Enums;
 using AutoDispatch.Dtos.Dtos;
 using AutoDispatch.Dtos.Enums;
@@ -22,7 +20,7 @@ namespace AutoDispatch.Web.Logic.Services.Dispatch;
 
 /// <summary>
 ///     Разбор rate confirmation (PDF) в LoadDto через OpenAI chat/completions (V1 OpenAIService).
-///     PDF→текст — PdfPig, PDF→PNG — PDFtoImage (pdfium) вместо Telerik/Spire/Magick.NET (AI/wiki/plan.md); логи — AppSettings.OpenAiLogsPath </summary>
+///     PDF→PNG — PDFtoImage (pdfium) вместо Telerik/Spire/Magick.NET (AI/wiki/plan.md); логи — AppSettings.OpenAiLogsPath </summary>
 public class OpenAIService : DispatchBaseService {
 
     private OpenAIWebService WebService => Host.GetService<OpenAIWebService>();
@@ -30,20 +28,6 @@ public class OpenAIService : DispatchBaseService {
     public OpenAIService(ServicesHost host) : base(host) { }
 
     #region [ PDF ]
-
-    /// <summary>
-    ///     Текст PDF со страницами «----------- PageN -----------» (формат Telerik TextFormatProvider V1, на него завязан GetLengthByPage) </summary>
-    public string PdfToString(Stream stream) {
-        using var ms = new MemoryStream();
-        stream.CopyTo(ms);
-        using var document = PdfDocument.Open(ms.ToArray());
-        var sb = new StringBuilder();
-        foreach (var page in document.GetPages()) {
-            sb.AppendLine($"----------- Page{page.Number} -----------");
-            sb.AppendLine(page.Text);
-        }
-        return sb.ToString();
-    }
 
     public Task<List<byte[]>> PdfToPngAsync(Stream inputStream) {
         return Task.Run(() => {
@@ -74,33 +58,6 @@ public class OpenAIService : DispatchBaseService {
     #endregion [ PDF ]
 
     #region [ Request ]
-
-    public async Task<LoadDto> RequestAsync(string fileName, string documentText, DispatchBoardType board, Guid companyId) {
-        var log = new List<string>();
-        try {
-            log.Add($"-- Document --");
-            log.Add($"-- FileName: {fileName}");
-            log.Add($"-- DateTime: {DateTime.Now:f}");
-            log.Add(documentText);
-            if (documentText.Count(ch => Char.IsLetterOrDigit(ch)) < 100) {
-                throw new Exception("invalid content document");
-            }
-            log.Add($"-- Pages --");
-            var pages = this.GetLengthByPage(documentText);
-            log.Add(String.Join("\n", pages.Select(e => $"Page {e.Key}: {e.Value}")));
-
-            documentText = OptimizeDocument(pages, documentText);
-
-            var requestData = ConvertToRequestTextData(documentText);
-            return await RequestCoreAsync(requestData, board, companyId, log);
-        } catch (Exception e) {
-            log.Add($"-- Exception --");
-            log.Add(e.ToString());
-            throw;
-        } finally {
-            WriteLog(log);
-        }
-    }
 
     public async Task<LoadDto> RequestAsync(List<string> urlFiles, DispatchBoardType board, Guid companyId) {
         var log = new List<string>();
@@ -190,36 +147,6 @@ public class OpenAIService : DispatchBaseService {
             log = $"Count Exist Fields: {countExists}";
             return false;
         }
-    }
-
-    /// <summary>
-    ///     Gets pages </summary>
-    /// <returns>Page Number -> Page Length</returns>
-    private Dictionary<string, int> GetLengthByPage(string content) {
-        Dictionary<string, int> result = new Dictionary<string, int>();
-        var matches = Regex.Matches(content, @"----------- Page(?<page>[\d]+) -----------");
-        foreach (var match in matches.Cast<Match>().Reverse()) {
-            var index = content.IndexOf(match.Value);
-            result[match.Groups["page"].Value] = content.Length - index;
-            content = content.Substring(0, index);
-        }
-        return result.OrderBy(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
-    }
-
-    /// <summary>
-    ///     Page 1: 1671
-    ///     Page 2: 1700
-    ///     Page 3: 5022 remove
-    /// </summary>
-    private string OptimizeDocument(Dictionary<string, int> pages, string content) {
-        // удаляю с конца все страницы больше 4000 символов
-        for (int i = pages.Count - 1; i >= 0; i--) {
-            var list = pages.ToList();
-            if (list[i].Value > 4000) {
-                content = content.Substring(0, content.Length - list[i].Value);
-            }
-        }
-        return content;
     }
 
     private void WriteLog(List<string> log) {
@@ -565,18 +492,6 @@ public class OpenAIService : DispatchBaseService {
             }
         }
         return mappedLoad;
-    }
-
-    private RequestTextData ConvertToRequestTextData(string text) {
-        var requestData = new RequestTextData() {
-            model = AppSettings.OpenAiModel,
-            temperature = AppSettings.OpenAiTemperature,
-            messages = new MessageTextData[] {
-                new MessageTextData() { role = "user", content = $"Extract fields from carrier rate confirmation in JSON format: {String.Join(", ", GetFields())}. Fill '-' if empty" },
-                new MessageTextData() { role = "user", content = text },
-            }
-        };
-        return requestData;
     }
 
     private RequestImageData ConvertToRequestImageData(List<string> urlFiles) {

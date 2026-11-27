@@ -108,9 +108,6 @@ public class CarrierRegistrationController : BaseController {
         return await NextAsync(carrierId, model);
     }
 
-    [HttpPost("Step03"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Step03(Guid carrierId, [FromForm] SetupPacketStep03Model model) => NextAsync(carrierId, model);
-
     [HttpPost("Step04"), ValidateAntiForgeryToken]
     public async Task<ActionResult> Step04(Guid carrierId, [FromForm] SetupPacketStep04Model model) {
         return await NextAsync(carrierId, model, before: dto => {
@@ -178,25 +175,7 @@ public class CarrierRegistrationController : BaseController {
         return await NextAsync(carrierId, model);
     }
 
-    [HttpPost("Step08"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Step08(Guid carrierId, [FromForm] SetupPacketStep08Model model) => NextAsync(carrierId, model);
-
-    [HttpPost("Step09"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Step09(Guid carrierId, [FromForm] SetupPacketStep09Model model) => NextAsync(carrierId, model);
-
-    [HttpPost("Step10"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Step10(Guid carrierId, [FromForm] SetupPacketStep10Model model) => NextAsync(carrierId, model, before: dto => {
-        if (model.NewReference != null && String.IsNullOrEmpty(model.NewReference.Company) == false) {
-            dto.References ??= new List<SetupPacketReferenceDto>();
-            dto.References.Add(model.NewReference);
-        }
-    });
-
-    [HttpPost("Step11"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Step11(Guid carrierId, [FromForm] SetupPacketStep11Model model) => NextAsync(carrierId, model);
-
-    [HttpPost("Step12"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Step12(Guid carrierId, [FromForm] SetupPacketStep12Model model) => NextAsync(carrierId, model);
+    // шаги 3, 8–12 выключены (SetupPacketViewModel.Enabled) и не перенесены — действий и моделей для них нет (AI/wiki/setup-packet.md)
 
     /// <summary>
     ///     Документы: multipart с файлами MC и COI (V1 — base64 в JSON через knockout-file-bindings) </summary>
@@ -245,8 +224,6 @@ public class CarrierRegistrationController : BaseController {
     public Task<ActionResult> Prev01(Guid carrierId, [FromForm] SetupPacketStep01Model model) => PrevAsync(carrierId, model);
     [HttpPost("Prev02"), ValidateAntiForgeryToken]
     public Task<ActionResult> Prev02(Guid carrierId, [FromForm] SetupPacketStep02Model model) => PrevAsync(carrierId, model);
-    [HttpPost("Prev03"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Prev03(Guid carrierId, [FromForm] SetupPacketStep03Model model) => PrevAsync(carrierId, model);
     [HttpPost("Prev04"), ValidateAntiForgeryToken]
     public Task<ActionResult> Prev04(Guid carrierId, [FromForm] SetupPacketStep04Model model) => PrevAsync(carrierId, model);
     [HttpPost("Prev05"), ValidateAntiForgeryToken]
@@ -255,16 +232,6 @@ public class CarrierRegistrationController : BaseController {
     public Task<ActionResult> Prev06(Guid carrierId, [FromForm] SetupPacketStep06Model model) => PrevAsync(carrierId, model);
     [HttpPost("Prev07"), ValidateAntiForgeryToken]
     public Task<ActionResult> Prev07(Guid carrierId, [FromForm] SetupPacketStep07Model model) => PrevAsync(carrierId, model);
-    [HttpPost("Prev08"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Prev08(Guid carrierId, [FromForm] SetupPacketStep08Model model) => PrevAsync(carrierId, model);
-    [HttpPost("Prev09"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Prev09(Guid carrierId, [FromForm] SetupPacketStep09Model model) => PrevAsync(carrierId, model);
-    [HttpPost("Prev10"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Prev10(Guid carrierId, [FromForm] SetupPacketStep10Model model) => PrevAsync(carrierId, model);
-    [HttpPost("Prev11"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Prev11(Guid carrierId, [FromForm] SetupPacketStep11Model model) => PrevAsync(carrierId, model);
-    [HttpPost("Prev12"), ValidateAntiForgeryToken]
-    public Task<ActionResult> Prev12(Guid carrierId, [FromForm] SetupPacketStep12Model model) => PrevAsync(carrierId, model);
     [HttpPost("Prev13"), ValidateAntiForgeryToken]
     public Task<ActionResult> Prev13(Guid carrierId, [FromForm] SetupPacketStep13Model model) => PrevAsync(carrierId, model);
     [HttpPost("Prev14"), ValidateAntiForgeryToken]
@@ -330,16 +297,10 @@ public class CarrierRegistrationController : BaseController {
             0 => Mapper.Map<SetupPacketStep00Model>(packet),
             1 => new SetupPacketStep01Model(),
             2 => Mapper.Map<SetupPacketStep02Model>(packet),
-            3 => Mapper.Map<SetupPacketStep03Model>(packet),
             4 => Mapper.Map<SetupPacketStep04Model>(packet),
             5 => new SetupPacketStep05Model(),
             6 => Mapper.Map<SetupPacketStep06Model>(packet),
             7 => Mapper.Map<SetupPacketStep07Model>(packet),
-            8 => Mapper.Map<SetupPacketStep08Model>(packet),
-            9 => Mapper.Map<SetupPacketStep09Model>(packet),
-            10 => Mapper.Map<SetupPacketStep10Model>(packet),
-            11 => Mapper.Map<SetupPacketStep11Model>(packet),
-            12 => Mapper.Map<SetupPacketStep12Model>(packet),
             13 => new SetupPacketStep13Model(),
             _ => new SetupPacketStep14Model()
         };

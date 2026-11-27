@@ -369,50 +369,7 @@
                     </telerik:RadSplitContainer>
                 </telerik:RadDocking.DocumentHost>
             </telerik:RadDocking>
-            <!-- Inbound Call Carrier info -->
-            <Border Grid.RowSpan="10" TextBlock.FontSize="16" Name="borderInbound"
-                    Margin="5" BorderBrush="Gray" BorderThickness="1" Background="White"
-                    VerticalAlignment="Center" HorizontalAlignment="Center" 
-                    DataContext="{Binding InboundCall}" Visibility="{Binding Visibility}"
-                    MouseLeftButtonUp="OpenInbound_MouseLeftButtonUp">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <Border Grid.Row="0" Background="MediumBlue" BorderBrush="Gray" BorderThickness="0,0,0,1">
-                        <TextBlock Text="Incomming call info" FontSize="14" Margin="5" Foreground="White" FontWeight="Bold"/>
-                    </Border>
-                    <StackPanel Grid.Row="1" Orientation="Horizontal">
-                        <TextBlock Name="carrierInbound" Text="{Binding CarrierName}" VerticalAlignment="Center" FontWeight="Bold" Margin="10,5"/>
-                        <telerik:RadRating Name="ratingInbound" Value="{Binding Rating, Mode=OneWay}" IsReadOnly="True"
-                            Visibility="{Binding RatingVisibility}" Margin="5"/>
-                    </StackPanel>
-                    <StackPanel Grid.Row="2" Orientation="Horizontal">
-                        <TextBlock Name="phoneInbound" Text="{Binding PhoneFormat}" Margin="10,0,5,10"/>
-                        <TextBlock Name="displaynameInbound" Text="{Binding DisplayName}" Margin="10,0,20,10"/>
-                    </StackPanel>
-                    <Image Source="/AutoDispatch;component/Resources/Close.png" MouseLeftButtonUp="CloseInbound_MouseLeftButtonUp"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Width="16" Height="16" Cursor="Hand" Margin="5">
-                        <Image.Triggers>
-                            <EventTrigger RoutedEvent="StackPanel.MouseLeftButtonDown">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="borderInbound"
-                                            From="1.0" To="0" Duration="0:0:0.5"></DoubleAnimation>
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="borderInbound"
-                                            Storyboard.TargetProperty="Visibility">
-                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.5" Value="{x:Static Visibility.Collapsed}"/>
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Image.Triggers>
-                    </Image>
-                </Grid>
-            </Border>
+            <!-- V1: панель входящего звонка (сигнал давал только BriaCallService, не перенесён) — удалена, аудит E2 -->
         </Grid>
         <!-- V1: громкость звука уведомлений (VolumeButton, VolumePopup) — уведомления DAT модуля AutoCall, не перенесено -->
     </Grid>

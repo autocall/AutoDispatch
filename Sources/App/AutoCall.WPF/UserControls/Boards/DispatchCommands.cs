@@ -29,7 +29,6 @@ namespace AutoCall.WPF.UserControls.Boards {
 
         public Command ViewTrailerCommand { get; set; }
         public Command ViewCarrierCommand { get; set; }
-        public Command ViewHistoryCarrierCommand { get; set; }
 
         public Command SetDestinationWarehouseCommand { get; set; }
         public Command MoveToWarehouseCommand { get; set; }
@@ -49,7 +48,6 @@ namespace AutoCall.WPF.UserControls.Boards {
         public Command EditGainsCommand { get; set; }
         public Command EditConfirmationCommand { get; set; }
         public Command EditLineHaulCommand { get; set; }
-        public Command EditCheckCommand { get; set; }
         public Command EditInvoiceCommand { get; set; }
 
         public Command ChangeLocationCommand { get; set; }
@@ -290,7 +288,6 @@ namespace AutoCall.WPF.UserControls.Boards {
             this.UndoCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.UndoAction);
             this.ViewHistoryLocationsCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Agent, this.da.ViewHistoryLocationsAction);
             this.ViewHistoryChangesCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Warehouse, this.da.ViewHistoryChangesAction);
-            this.ViewHistoryCarrierCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Warehouse, this.da.ViewHistoryCarrierAction);
             this.EnableCarrierViewTrackerCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.EnableCarrierViewTrackerAction,
                 w => w.ActualCompany?.CarrierViewToken != null && w.Load.TrackerId == null);
             this.DisableCarrierViewTrackerCommand = new Command(this.dc?.DispatchBoardType, myRole, RoleName.Dispatcher, this.da.DisableCarrierViewTrackerAction,

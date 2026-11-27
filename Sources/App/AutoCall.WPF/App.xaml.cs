@@ -48,16 +48,6 @@ namespace AutoCall.WPF {
         public static IServiceProvider Services { get; private set; } = default!;
 
         /// <summary>
-        ///     Visibility for debug mode </summary>
-        public static Visibility IsDebug {
-#if DEBUG
-            get { return Visibility.Visible; }
-#else
-            get { return Visibility.Collapsed; }
-#endif
-        }
-
-        /// <summary>
         ///     Каталог логов в профиле пользователя, как V1 (%AppData%\AutoCall\logs) и V3 </summary>
         public static string LogDirectory { get; } = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AutoDispatch", "logs");
@@ -72,6 +62,17 @@ namespace AutoCall.WPF {
         /// <summary>
         ///     Причина выхода для записи «AutoDispatch exited» </summary>
         private static bool _crashed;
+
+        /// <summary>
+        ///     Один экземпляр App в сеансе Windows (имя без Global\ — пользователи сервера терминалов друг другу не мешают).
+        ///     V1 — запускатель AutoCall.Launch с mutex, в AutoCall V3 потерян (аудит E3). Debug — своё имя: рядом с установленной версией.
+        ///     Поле держит mutex до конца процесса </summary>
+#if DEBUG
+        private const string SingleInstanceName = "AutoDispatch.App.Debug";
+#else
+        private const string SingleInstanceName = "AutoDispatch.App";
+#endif
+        private static Mutex _singleInstance;
 
         public static bool DispatcherIsAlive() {
             return
@@ -109,6 +110,14 @@ namespace AutoCall.WPF {
         /// <summary>
         ///     On application startup </summary>
         private void Application_Startup(object sender, StartupEventArgs args) {
+            // уже запущен — показать открытое окно (SingleInstanceWindow ловит WM_SHOWME) и выйти, как V1 AutoCall.Launch
+            _singleInstance = new Mutex(true, SingleInstanceName, out var createdNew);
+            if (createdNew == false) {
+                NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWME, IntPtr.Zero, IntPtr.Zero);
+                Shutdown();
+                return;
+            }
+
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
 
@@ -275,14 +284,6 @@ namespace AutoCall.WPF {
             Serilog.Log.ForContext(LogProperties.Scope, LogScopes.Session)
                 .Information("AutoDispatch exited: {Reason}, code {Code}", _crashed ? "crash" : "closed", args.ApplicationExitCode);
             Serilog.Log.CloseAndFlush();
-        }
-
-        public void valueBindableTextBlock_Comment_OnMouseUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Left) {
-                RadContextMenu.GetContextMenu((FrameworkElement)sender).PlacementTarget = (UIElement)sender;
-                RadContextMenu.GetContextMenu((FrameworkElement)sender).IsOpen = true;
-                e.Handled = true;
-            }
         }
 
         private string GetMemoryInfo() {

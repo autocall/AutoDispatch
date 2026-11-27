@@ -325,32 +325,6 @@ namespace AutoDispatch.Logic.Services {
             _engine.PushEvent(wrapper);
         }
 
-        public void LoadHistoryLoads(DispatchBoardType board, DateTime? begin, DateTime? end, Func<ViewModelWrapper<List<byte[]>>, Task> viewCompleted) {
-            var request = new EventRequest() {
-                Name = nameof(LoadLoadsZip),
-                Data = new LoadLoadsRequestData(_session.UserId) {
-                    Types = new DispatchBoardType[] { board },
-                    HistoryBegin = begin,
-                    HistoryEnd = end
-                }
-            };
-            var wrapper = new EventRequestWrapper<List<byte[]>>(request, EventCompleted, viewCompleted);
-            _engine.PushEvent(wrapper);
-        }
-
-        public void LoadHistoryTrailers(DispatchBoardType board, DateTime? begin, DateTime? end, Func<ViewModelWrapper<List<TrailerViewModel>>, Task> viewCompleted) {
-            var request = new EventRequest() {
-                Name = nameof(LoadTrailers),
-                Data = new LoadTrailersRequestData(_session.UserId) {
-                    Types = new DispatchBoardType[] { board },
-                    HistoryBegin = begin,
-                    HistoryEnd = end
-                }
-            };
-            var wrapper = new EventRequestWrapper<List<TrailerViewModel>>(request, EventCompleted, viewCompleted);
-            _engine.PushEvent(wrapper);
-        }
-
         public void LoadTotalHistoryLoads(DispatchBoardType board, Func<ViewModelWrapper<Dictionary<DateTime, int>>, Task> viewCompleted) {
             var request = new EventRequest() {
                 Name = nameof(LoadTotalHistoryLoads),
@@ -771,44 +745,6 @@ namespace AutoDispatch.Logic.Services {
             };
             var wrapper = new EventRequestWrapper<List<LoadViewModel>>(request, EventCompleted, viewCompleted);
             _engine.PushEvent(wrapper);
-        }
-
-        public void SaveLoadAndSaveDatDriver(
-            DatDriverViewModel datDriver,
-            LoadViewModel load,
-            Func<ViewModelWrapper<DatDriverViewModel>,
-                   ViewModelWrapper<LoadViewModel>, Task> viewCompleted) {
-            var request1 = new EventRequest() {
-                Name = nameof(SaveDatDriver),
-                Data = new SaveDatDriverRequestData(_session.UserId) { DatDriver = DatDriverConverter.ToDto(datDriver) }
-            };
-            var request2 = new EventRequest() {
-                Name = nameof(SaveLoad),
-                Data = new SaveLoadRequestData(_session.UserId) { Load = LoadConverter.ToDto(load) }
-            };
-
-            GroupPushEvents(request1, request2, viewCompleted);
-            this.SetSavingFlag(load, true);
-        }
-
-        public void SaveDatDriverAndBindLoad(
-            DatDriverViewModel datDriver,
-            LoadViewModel load,
-            Func<ViewModelWrapper<DatDriverViewModel>, ViewModelWrapper<List<LoadViewModel>>, Task> viewCompleted) {
-            var request1 = new EventRequest() {
-                Name = nameof(SaveDatDriver),
-                Data = new SaveDatDriverRequestData(_session.UserId) { DatDriver = DatDriverConverter.ToDto(datDriver) }
-            };
-            var request2 = new EventRequest() {
-                Name = nameof(BindLoads),
-                Data = new BindLoadsRequestData(_session.UserId) {
-                    ParentId = datDriver.EntityId,
-                    ParentType = LoadParentType.DatDriver,
-                    LoadIds = new List<Guid>() { load.EntityId }
-                }
-            };
-
-            GroupPushEvents(request1, request2, viewCompleted);
         }
 
         public void SaveLoadAndAttachFile(

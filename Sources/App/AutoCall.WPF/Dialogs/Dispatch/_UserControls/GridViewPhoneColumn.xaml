@@ -9,7 +9,6 @@
     mc:Ignorable="d" >
     <telerik:GridViewColumn.Resources>
         <!-- uses in codebehind -->
-        <converters:ToStringConverter x:Key="ToStirngConverter"/>
     </telerik:GridViewColumn.Resources>
     <telerik:GridViewColumn.CellStyle>
         <Style TargetType="telerik:GridViewCell">

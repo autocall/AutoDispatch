@@ -10,6 +10,9 @@ VOLUME ["/logs", "/keys", "/download", "/files"]
 
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
+# пояс сервера WebV1 (US Central, летнее время): код V1 считает «сегодня» по DateTime.Now (SMS, статистика, DeliveredDate, даты в письмах);
+# культура en-US — в Program.cs. Отличие от V3 (там UTC) — AI/wiki/plan.md, аудит C1. aspnet:10.0 — Ubuntu 24.04, tzdata и libicu в нём есть
+ENV TZ=America/Chicago
 EXPOSE 8080
 
 COPY publish/ ./

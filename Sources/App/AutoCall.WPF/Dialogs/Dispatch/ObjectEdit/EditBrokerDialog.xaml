@@ -17,7 +17,6 @@
     <dialogs:BaseDispatchDialog.Resources>
         <converters:DictionaryToValueConverter x:Key="DictionaryToValueConverter"/>
         <converters:EnumToDescriptionsConverter x:Key="EnumToDescriptionsConverter"/>
-        <converters:FileNameToBitmapImageConverter x:Key="FileNameToBitmapImageConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
         <toUri:InsuranceStateTypeToUriConverter x:Key="InsuranceStateTypeToUriConverter"/>
         <telerik:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

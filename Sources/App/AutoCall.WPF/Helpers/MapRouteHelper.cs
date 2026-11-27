@@ -10,23 +10,19 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AutoCall.WPF.Helpers {
     /// <summary>
     ///     Маршрут на карте сервера — замена MapRouteDialog V1 (WinForms + EO.WebBrowser, ссылка Dispatch/RouteLocation?t=… собиралась
-    ///     в App). Ссылку выдаёт сервер (Api/Maps/Link), точки в ней зашифрованы — AI/wiki/public-site.md. Порядок точек — как в V1:
-    ///     точки машины (V1 initialOrigin/initialDestination, без «m») по краям — kind Pattern, точки груза («m») между ними — kind Record.
+    ///     в App). Ссылку выдаёт сервер (Api/Maps/Link), точки в ней зашифрованы — AI/wiki/public-site.md. Точки груза («m» V1) — kind Record;
+    ///     точки машины V1 (initialOrigin/initialDestination, kind Pattern по краям) в AutoDispatch не передавались — параметры удалены.
     ///     loadId — груз Show Trip: карта показывает историю его положений (V1 dispatchLoadId).
     ///     Пустой список — пустая карта (V1 RouteLocation2, кнопка Map главного окна) </summary>
     public static class MapRouteHelper {
 
         public static async Task OpenAsync(
-                LocationViewModel initialOrigin = null,
-                LocationViewModel initialDestination = null,
                 LocationViewModel origin = null,
                 LocationViewModel destination = null,
                 Guid? loadId = null) {
             var points = new List<MapPointDto>();
-            Add(points, initialOrigin, MapPointDto.KindPattern);
             Add(points, origin, MapPointDto.KindRecord);
             Add(points, destination, MapPointDto.KindRecord);
-            Add(points, initialDestination, MapPointDto.KindPattern);
 
             string url;
             try {
