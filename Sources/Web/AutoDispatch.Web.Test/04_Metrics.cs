@@ -171,4 +171,39 @@ public class Metrics_Test {
         Assert.Equal(1, MetricConverter.DiskStep(85));
         Assert.Equal(2, MetricConverter.DiskStep(97));
     }
+
+    /// <summary>
+    ///     Активность, как паттерны V3: пользователи с изменяющими запросами и грузы с позицией CarrierView — различные за минуту </summary>
+    [Fact]
+    public void Test08_ActiveUsersAndTrackedLoads() {
+        var collector = new MetricCollector(() => _now);
+        Guid load1 = Guid.NewGuid(), load2 = Guid.NewGuid();
+        collector.AddUser(MetricTypeEnum.ActiveUsers, User1, true);
+        collector.AddUser(MetricTypeEnum.ActiveUsers, User1, true);
+        collector.AddUser(MetricTypeEnum.ActiveUsers, User2, true);
+        collector.AddUser(MetricTypeEnum.TrackedLoads, load1, true);
+        collector.AddUser(MetricTypeEnum.TrackedLoads, load1, true);
+        collector.AddUser(MetricTypeEnum.TrackedLoads, load2, true);
+
+        _now = _now.AddMinutes(1);
+        var rows = collector.TakeClosed();
+
+        Assert.Equal(2, Value(rows, MetricTypeEnum.ActiveUsers));
+        Assert.Equal(2, Value(rows, MetricTypeEnum.TrackedLoads));
+    }
+
+    /// <summary>
+    ///     Изменяющие запросы App (ActiveUsers): чтение — Load*, Get*, FileLoad, FilesLoad, InsuranceLoad, UndoPreview </summary>
+    [Fact]
+    public void Test09_ChangeRequests() {
+        var handlers = AutoDispatch.Web.Logic.Services.Dispatch.DispatchRequestHandlers.All;
+        string[] reads = ["LoadLoads", "LoadDrivers", "GetModules", "GetStatistics", "FileLoad", "FilesLoad", "InsuranceLoad", "UndoPreview"];
+        string[] changes = ["SaveLoad", "DeleteLoad", "ConfirmationSend", "InvoiceSend", "FileSave", "LocationTruckChanged", "UndoApply", "BindLoads"];
+        foreach (var name in reads) {
+            Assert.False(handlers[name].IsChange, name);
+        }
+        foreach (var name in changes) {
+            Assert.True(handlers[name].IsChange, name);
+        }
+    }
 }

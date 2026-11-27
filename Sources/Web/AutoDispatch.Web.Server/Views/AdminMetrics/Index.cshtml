@@ -166,7 +166,7 @@
                     <td title="Users who saved, deleted or sent something in App (peak)">Active</td>
                     <td class="border-l" title="App users waiting for events (long-polling), average">Polling</td>
                     <td title="Api/Dispatch/Request: average latency in seconds, colored by peak: @Model.StepsHint(MetricTypeEnum.DispatchRequestLatency, e => Model.Seconds(e), "s") · calls · errors · slow (over @AppSettings.DispatchSlowRequest.TotalSeconds s)">Request<br /><span class="font-normal">latency, s · calls</span></td>
-                    <td title="Loads with a CarrierView driver position received (peak); none for hours while loads are tracked — webhook is not coming">Tracking</td>
+                    <td title="Loads that received a CarrierView driver position (peak). Empty for hours while loads are on tracking — the CarrierView webhook is not coming">Tracking</td>
                     @foreach (var external in externals) {
                         <td class="@(external == externals[0] ? "border-l" : "")"
                             title="Average latency in seconds, colored by peak: @Model.StepsHint(external.Latency, e => Model.Seconds(e), "s") · calls · errors">@external.Name</td>

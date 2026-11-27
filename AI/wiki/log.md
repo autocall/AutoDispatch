@@ -770,3 +770,10 @@ LegalName брокера; решение — [[plan]] «Галочки и [compa
 Повторный PDF setup packet: галочки ✓ в порядке, но «TEST BROKER LLCare», «LLCmust» — в `000102040506071314_02.rtf` после
 плейсхолдера не было пробела (в V1 не видно, плейсхолдер не заменялся). Добавлены пробелы в шаблон, `08.Test16` проверяет «LLC are» / «LLC must»;
 [[plan]] «Галочки и [company_name] в setup_packet.pdf».
+
+## [2026-11-27] feature | метрики активности Active и Tracking
+
+По аналогии с паттернами AutoCall V3: `ActiveUsers` (13) — пользователи с изменяющими запросами App (`DispatchRequestHandler.IsChange`),
+колонка Active в Users; `TrackedLoads` (14) — грузы с позицией от webhook CarrierView, колонка Tracking в Dispatch. По статусам грузов
+не делали: в боевой БД статусы забиты старыми грузами. Тесты `04.Test08`, `04.Test09` (поймал порядок статических полей в
+`DispatchRequestHandlers` — `ReadNames` объявлен до `All`). [[plan]] «Логи и метрики перед запуском», [[web]].

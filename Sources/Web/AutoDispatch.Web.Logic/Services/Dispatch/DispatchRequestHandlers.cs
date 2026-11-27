@@ -13,6 +13,9 @@ public class DispatchRequestHandler {
     public Type RequestType { get; init; }
     public MinAccessAttribute MinAccess { get; init; }
     public Func<DispatchService, BaseEventRequestData, Task<BaseEventResponseData>> Invoke { get; init; }
+    /// <summary>
+    ///     Запрос меняет данные или что-то отправляет (не чтение) — метрика ActiveUsers </summary>
+    public bool IsChange { get; init; }
 
     /// <summary>
     ///     Как V1 DispatchApiController.Request: каждая роль пользователя должна проходить MinAccess (иерархия RoleEnum по возрастанию
@@ -28,6 +31,11 @@ public class DispatchRequestHandler {
 ///     Делегаты — скомпилированные Expression, исключения метода приходят без TargetInvocationException.
 ///     EventNotificationAsync (два параметра) — не здесь, это Api/Dispatch/Response </summary>
 public static class DispatchRequestHandlers {
+
+    /// <summary>
+    ///     Чтение — Load*, Get* и эти; остальное (Save*, Delete*, *Send, File*, Location*Changed, Undo...) — изменение.
+    ///     Объявлено до All: статические поля инициализируются по порядку, Build() его читает </summary>
+    private static readonly HashSet<string> ReadNames = ["FileLoad", "FilesLoad", "InsuranceLoad", "UndoPreview"];
 
     public static readonly IReadOnlyDictionary<string, DispatchRequestHandler> All = Build();
 
@@ -53,10 +61,15 @@ public static class DispatchRequestHandlers {
                 Name = method.Name,
                 RequestType = parameters[0].ParameterType,
                 MinAccess = method.GetCustomAttribute<MinAccessAttribute>(),
-                Invoke = invoke
+                Invoke = invoke,
+                IsChange = IsChangeName(method.Name)
             };
         }
         return result;
+    }
+
+    public static bool IsChangeName(string name) {
+        return name.StartsWith("Load") == false && name.StartsWith("Get") == false && ReadNames.Contains(name) == false;
     }
 
     private static async Task<BaseEventResponseData> AwaitAsync<T>(Task<T> task) where T : BaseEventResponseData {

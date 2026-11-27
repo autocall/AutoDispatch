@@ -41,7 +41,7 @@ Logic (`ServicesHost`, `BaseService`, `AuthService` JWT, `UserService`, `Company
 - **Метрики** (2026-11-27, [[plan]] «Логи и метрики перед запуском»): Web CPU, DB CPU (фактически CPU веб-хоста, колонка скрыта),
   Geocoding (Brokersnapshot api/v2: геокодинг и маршруты; поиск компаний api/v3 — отдельно, Companies во внешних сервисах); память процесса и диск с документами пишутся в `Metric`, но показываются
   карточкой Server на `/Admin/Monitor` (сейчас, пик, прирост, дней до заполнения); dispatch — `Request` (задержка, вызовы, ошибки,
-  медленные) и пользователи в long-polling; внешние сервисы `MetricConverter.Externals` (CarrierView, SMS, SMTP, OpenAI,
+  медленные), пользователи в long-polling и Tracking (грузы, по которым пришла позиция CarrierView); Users — Online и Active (изменяющие запросы App, `DispatchRequestHandler.IsChange`); внешние сервисы `MetricConverter.Externals` (CarrierView, SMS, SMTP, OpenAI,
   Companies, Keeppingin, Google Distance; OpenAI скрыт на странице; Mailgun, Vodia, Safer FMCSA — только в логе); App — Online, телефония, исключения, медленные запросы (разрывы связи и повторные входы — только в логе App).
 - **Логи сверх V3**: `Session` у записей сервера — из `X-Request-Id` App (одна лента клиента и сервера на `/Admin/Logs`);
   фоновые задачи пишут запуск и каждую итерацию; отказ D1 — warning с записью и компаниями; 401 API — warning; `/health`.
